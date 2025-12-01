@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>📦 Catálogo — Produtos Ativos</title>
+  <style>
+    :root{ --bg:#0f172a; --line:#1f2937; --ink:#e5e7eb; --muted:#94a3b8; --ok:#22c55e; }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,Arial,sans-serif;background:#0b1220;color:var(--ink)}
+    header{position:sticky;top:0;background:linear-gradient(180deg,#0b1220,#0f172a 60%);padding:14px 16px;border-bottom:1px solid var(--line);z-index:10}
+    .brand{font-weight:800}
+    .sub{color:var(--muted);font-size:13px;margin-top:2px}
+    main{max-width:1100px;margin:0 auto;padding:16px}
+    .tools{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+    .inp{flex:1;min-width:220px;display:flex;align-items:center;gap:8px;background:#0b1220;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+    .inp input{all:unset;flex:1}
+    .pill{padding:8px 10px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:12px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+    .card{background:#0b1220;border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;justify-content:space-between;align-items:center}
+    .nm{font-weight:700}
+    .pr{font-weight:800}
+    .ok{color:var(--ok)}
+    .hint{font-size:12px;color:var(--muted)}
+    .empty{border:1px dashed #243247;color:var(--muted);padding:16px;border-radius:12px;text-align:center;margin-top:8px}
+    footer{color:var(--muted);font-size:12px;text-align:center;padding:12px}
+
+    /* categorias */
+    .cat{margin-bottom:18px}
+    .cat-title{display:flex;align-items:baseline;gap:8px;margin:14px 2px 8px;font-weight:800}
+    .cat-title .count{color:var(--muted);font-size:12px}
+    .divider{height:1px;background:var(--line);opacity:.6;margin:8px 0 12px;border-radius:999px}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">Catálogo — Produtos <span class="ok">ativos</span></div>
+    <div id="meta" class="sub">Conectando ao Firebase…</div>
+  </header>
+
+  <main>
+    <div class="tools">
+      <label class="inp" title="Buscar por nome ou código">🔎 <input id="q" placeholder="Buscar produto…" /></label>
+      <span class="pill" id="count">0 itens</span>
+      <span class="pill">Somente nome e preço de venda</span>
+    </div>
+
+    <div id="list" aria-live="polite"></div>
+    <div id="empty" class="empty" style="display:none">Nenhum produto encontrado com os filtros atuais.</div>
+  </main>
+
+  <footer><span id="ts">—</span></footer>
+
+  <script type="module">
+    // Importa db do seu server.js (tenta ./ e ../)
+    let db;
+    try { ({ db } = await import('./server.js')); }
+    catch (e1) {
+      try { ({ db } = await import('../server.js')); }
+      catch (e2) {
+        document.getElementById('meta').textContent = 'Erro ao importar server.js';
+        throw e2;
+      }
+    }
+
+    const $ = (s)=>document.querySelector(s);
+    const moneyBR = (n)=> Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+    const collator = new Intl.Collator('pt-BR', { sensitivity:'base', numeric:true });
+
+    const listEl = $('#list'), metaEl = $('#meta'), countEl = $('#count');
+    const tsEl = $('#ts'), emptyEl = $('#empty'), qEl = $('#q');
+
+    // 🔑 chaves (somente localStorage, não mexe no servidor)
+    const LS_VIEW  = 'produtos_view';
+    const FIELDRAW = 'produtos';   // origem no Firestore
+
+    // ⚙️ Filtros: por padrão estoque<=0 oculto; min=0 opcional via ?min=1
+    const params = new URLSearchParams(location.search);
+    const qsStock = params.get('stock'); // null | '0' | '1'
+    const FILTERS = {
+      hideNoStock: qsStock === null ? true : qsStock === '1',
+      hideMinZero: params.get('min') === '1',
+    };
+
+    let all = [];     // view local (limpa)
+    let unsub = null; // listener
+
+    // ---------- helpers ----------
+    function normalize(raw){
+      if (raw == null) return [];
+      let x = raw;
+      if (typeof x === 'string') {
+        const s = x.trim();
+        try { x = JSON.parse(s); }
+        catch { try { x = JSON.parse('['+s.replace(/}\\s*[\\n,]?\\s*\\{/g,'},{')+']'); } catch { return []; } }
+      }
+      let arr = Array.isArray(x) ? x : (x && typeof x === 'object' ? Object.values(x) : []);
+      return arr.map(it => typeof it==='string' ? (()=>{try{return JSON.parse(it)}catch{return null}})() : it).filter(Boolean);
+    }
+
+    // Ativo por padrão: só exclui se explicitamente inativo
+    function isActive(p){
+      if(!p) return false;
+      if (p.ativo === false || p.ativo === 0 || p.ativo === 'false' || p.ativo === '0') return false;
+      if ('status' in p) {
+        const s = String(p.status).toLowerCase();
+        if (['inativo','inactive','off','0','false'].includes(s)) return false;
+      }
+      return true;
+    }
+
+    function minVal(p){ const n = Number(p?.min); return Number.isFinite(n) ? n : null; }
+    function stockVal(p){
+      const names = ['estoque','qtd','quantidade','saldo','qtdEstoque','estoqueAtual','stock'];
+      for (const k of names) {
+        const v = p?.[k];
+        const n = Number(v);
+        if (Number.isFinite(n)) return n;
+      }
+      return null; // desconhecido → mantém
+    }
+
+    function buildLocalView(rawArray, { hideMinZero=false, hideNoStock=true } = {}){
+      let out = normalize(rawArray).filter(isActive);
+
+      if (hideMinZero) {
+        out = out.filter(p => minVal(p) !== 0);
+      }
+      if (hideNoStock) {
+        out = out.filter(p => {
+          const s = stockVal(p);
+          return s === null ? true : s > 0;
+        });
+      }
+
+      // ordena por nome (A→Z)
+      out.sort((a,b)=> collator.compare(a?.nome?.toString?.()||'', b?.nome?.toString?.()||''));
+      return out;
+    }
+
+    function groupByCategoria(arr){
+      const groups = new Map();
+      for (const p of arr) {
+        // mesma escrita (apenas trim). Vazio vira "Sem categoria".
+        let c = (p?.categoria ?? '').toString().trim();
+        if (!c) c = 'Sem categoria';
+        if (!groups.has(c)) groups.set(c, []);
+        groups.get(c).push(p);
+      }
+      // ordena categorias A→Z
+      const orderedCats = Array.from(groups.keys()).sort((a,b)=> collator.compare(a,b));
+      // ordena itens dentro de cada categoria (já vem ordenados, mas garantimos)
+      const result = orderedCats.map(cat => ({
+        cat,
+        items: groups.get(cat).slice().sort((a,b)=> collator.compare(a?.nome?.toString?.()||'', b?.nome?.toString?.()||'')),
+      }));
+      return result;
+    }
+
+    function render(filter=""){
+      const q = (filter||"").toLowerCase();
+
+      // aplica busca antes de agrupar
+      const filtered = all.filter(p =>
+        !q ||
+        (p.nome||'').toLowerCase().includes(q) ||
+        (p.codigoBarras||'').toLowerCase().includes(q)
+      );
+
+      // agrupa por categoria
+      const grouped = groupByCategoria(filtered);
+
+      // monta HTML
+      let totalShown = 0;
+      const html = grouped.map(g => {
+        if (!g.items.length) return '';
+        totalShown += g.items.length;
+        const cards = g.items.map(p => `
+          <div class="card">
+            <div>
+              <div class="nm">${p.nome || '—'}</div>
+              <div class="hint">
+                ${p.codigoBarras ? '#'+p.codigoBarras : ''}
+                ${p.categoria ? ' • '+p.categoria : ''}
+              </div>
+            </div>
+            <div class="pr">${moneyBR(+p.precoVenda||0)}</div>
+          </div>
+        `).join('');
+
+        return `
+          <section class="cat">
+            <div class="cat-title">
+              <div>${g.cat}</div>
+              <div class="count">${g.items.length} item${g.items.length===1?'':'s'}</div>
+            </div>
+            <div class="grid">${cards}</div>
+            <div class="divider"></div>
+          </section>
+        `;
+      }).join('');
+
+      listEl.innerHTML = html;
+      countEl.textContent = `${totalShown} item${totalShown===1?'':'s'}`;
+      emptyEl.style.display = totalShown ? 'none' : 'block';
+    }
+
+    function updateMeta(localCount, srcTotal, online){
+      const dt = new Date();
+      const flags = [
+        FILTERS.hideNoStock ? 'sem estoque oculto' : 'sem estoque visível',
+        FILTERS.hideMinZero ? 'min=0 oculto' : null,
+      ].filter(Boolean).join(' • ');
+      const msg = `${localCount ?? 0} exibidos de ${srcTotal ?? 0} (${flags || 'sem filtros'})`;
+      metaEl.textContent = `${online ? 'Conectado' : 'Sem conexão'} • ${msg}`;
+      tsEl.textContent = `${online ? 'Atualizado em' : 'Último cache em'} ${dt.toLocaleString('pt-BR')}`;
+    }
+
+    function loadFromLocal(){
+      try{
+        const raw = localStorage.getItem(LS_VIEW) || '[]';
+        const arr = JSON.parse(raw);
+        all = Array.isArray(arr) ? arr : [];
+        render(qEl.value);
+        updateMeta(all.length, all.length, false);
+      }catch{}
+    }
+
+    // ---------- Firestore -> somente localStorage ----------
+    const ref = db.collection('data').doc('keys');
+
+    (async () => {
+      try {
+        // primeira carga
+        const snap = await ref.get();
+        const d = snap.exists ? snap.data() : {};
+        const src = d[FIELDRAW];
+        const totalSrc = normalize(src).length;
+
+        const view = buildLocalView(src, FILTERS);
+        localStorage.setItem(LS_VIEW, JSON.stringify(view));
+
+        all = view;
+        render(qEl.value);
+        updateMeta(view.length, totalSrc, true);
+      } catch (err) {
+        console.error('[catalogo] erro na carga inicial', err);
+        loadFromLocal();
+      }
+
+      // tempo real: refaz view local sempre que "produtos" mudar
+      unsub = ref.onSnapshot(doc => {
+        const d = doc.exists ? doc.data() : {};
+        const src = d[FIELDRAW];
+        const totalSrc = normalize(src).length;
+
+        const view = buildLocalView(src, FILTERS);
+        localStorage.setItem(LS_VIEW, JSON.stringify(view));
+
+        all = view;
+        render(qEl.value);
+        updateMeta(view.length, totalSrc, true);
+      }, err => {
+        console.error('[catalogo] erro no listener', err);
+        metaEl.textContent = 'Erro no listener — mantendo último estado';
+      });
+    })();
+
+    // UI
+    qEl.addEventListener('input', ()=>render(qEl.value));
+    window.addEventListener('beforeunload', ()=>{ try{unsub && unsub();}catch{} });
+  </script>
+</body>
+</html>
