@@ -3,7 +3,7 @@ const firebaseConfig = {
     apiKey: "AIzaSyAnIJRcUxN-0swpVnonPbJjTSK87o4CQ_g",
     authDomain: "pedrad-814d0.firebaseapp.com",
     projectId: "pedrad-814d0",
-    storageBucket: "pedrad-814d0.appspot.com",
+    storageBucket: "pedrad-814d0.firebasestorage.app",
     messagingSenderId: "293587190550",
     appId: "1:293587190550:web:80c9399f82847c80e20637"
 };
@@ -11,7 +11,6 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
-const storage = firebase.storage();
 
 // State
 let currentUser = null;
@@ -328,7 +327,7 @@ function selectEmoji(emoji) {
     document.querySelectorAll('.emoji-item').forEach(el => el.classList.toggle('selected', el.textContent === emoji));
     productImageData = null;
     document.getElementById('productImageUpload').classList.remove('has-image');
-    document.getElementById('productImagePlaceholder').innerHTML = `<span>📷</span><div>Clique para enviar</div>`;
+    document.getElementById('productImagePlaceholder').innerHTML = `<span>📷</span><div>Clique para enviar (quadrada)</div>`;
 }
 
 function openProductModal() {
@@ -341,7 +340,7 @@ function openProductModal() {
     document.getElementById('productModalTitle').textContent = 'Novo Produto';
     productImageData = null;
     document.getElementById('productImageUpload').classList.remove('has-image');
-    document.getElementById('productImagePlaceholder').innerHTML = `<span>📷</span><div>Clique para enviar</div>`;
+    document.getElementById('productImagePlaceholder').innerHTML = `<span>📷</span><div>Clique para enviar (quadrada)</div>`;
     selectedEmoji = '🍔';
     initEmojiPicker();
     openModal('productModal');
@@ -362,6 +361,9 @@ function editProduct(productId) {
     if (p.imageUrl) {
         document.getElementById('productImageUpload').classList.add('has-image');
         document.getElementById('productImageUpload').innerHTML = `<img src="${p.imageUrl}"><input type="file" id="productImageInput" accept="image/*" onchange="handleProductImageUpload(event)">`;
+    } else {
+        document.getElementById('productImageUpload').classList.remove('has-image');
+        document.getElementById('productImagePlaceholder').innerHTML = `<span>📷</span><div>Clique para enviar (quadrada)</div>`;
     }
     
     selectedEmoji = p.emoji || '🍔';
@@ -372,7 +374,9 @@ function editProduct(productId) {
 async function handleProductImageUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
-    productImageData = await compressImage(file, 800, 0.7);
+    
+    // Comprime para 480x480 quadrado
+    productImageData = await compressImageSquare(file, 480, 0.75);
     document.getElementById('productImageUpload').classList.add('has-image');
     document.getElementById('productImageUpload').innerHTML = `<img src="${productImageData}"><input type="file" id="productImageInput" accept="image/*" onchange="handleProductImageUpload(event)">`;
 }
@@ -396,7 +400,10 @@ async function saveProduct() {
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
         
-        if (productImageData?.startsWith('data:')) data.imageUrl = productImageData;
+        // Salva imagem como base64 diretamente no Firestore
+        if (productImageData?.startsWith('data:')) {
+            data.imageUrl = productImageData;
+        }
         
         if (id) {
             await db.collection('products').doc(id).update(data);
@@ -459,7 +466,7 @@ async function deleteCategory(cat) {
 async function handleStoreImageUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
-    storeImageData = await compressImage(file, 400, 0.8);
+    storeImageData = await compressImageSquare(file, 400, 0.8);
     document.getElementById('storeImageUpload').classList.add('has-image');
     document.getElementById('storeImageUpload').innerHTML = `<img src="${storeImageData}"><input type="file" id="storeImageInput" accept="image/*" onchange="handleStoreImageUpload(event)">`;
 }
@@ -476,7 +483,10 @@ async function saveStoreInfo() {
             phone: document.getElementById('storePhone').value,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
-        if (storeImageData?.startsWith('data:')) data.imageUrl = storeImageData;
+        
+        if (storeImageData?.startsWith('data:')) {
+            data.imageUrl = storeImageData;
+        }
         
         await db.collection('stores').doc(currentStore.id).update(data);
         currentStore = { ...currentStore, ...data };
@@ -525,17 +535,32 @@ async function saveSettings() {
 
 // ==================== UTILITIES ====================
 
-function compressImage(file, maxWidth, quality) {
+// Comprime imagem para quadrado (crop central)
+function compressImageSquare(file, maxSize, quality) {
     return new Promise((resolve) => {
         const reader = new FileReader();
         reader.onload = (e) => {
             const img = new Image();
             img.onload = () => {
                 const canvas = document.createElement('canvas');
-                let w = img.width, h = img.height;
-                if (w > maxWidth) { h = (h * maxWidth) / w; w = maxWidth; }
-                canvas.width = w; canvas.height = h;
-                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                
+                // Pega o menor lado para fazer crop quadrado centralizado
+                const srcSize = Math.min(img.width, img.height);
+                const cropX = (img.width - srcSize) / 2;
+                const cropY = (img.height - srcSize) / 2;
+                
+                // Tamanho final (max 480)
+                const finalSize = Math.min(srcSize, maxSize);
+                canvas.width = finalSize;
+                canvas.height = finalSize;
+                
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(
+                    img,
+                    cropX, cropY, srcSize, srcSize,  // source (crop quadrado)
+                    0, 0, finalSize, finalSize       // destination
+                );
+                
                 resolve(canvas.toDataURL('image/jpeg', quality));
             };
             img.src = e.target.result;
