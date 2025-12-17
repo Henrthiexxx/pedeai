@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Pedrad - Painel da Loja</title>
+    <meta name="theme-color" content="#6366f1">
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <div class="toast" id="toast"></div>
+    
+    <!-- Auth -->
+    <div id="authPage" class="auth-container">
+        <div class="auth-box">
+            <div class="auth-logo">
+                <h1>🏪 Pedrad Loja</h1>
+                <p style="color: var(--text-muted); margin-top: 8px;">Painel do estabelecimento</p>
+            </div>
+            <div class="card">
+                <form onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label class="form-label">E-mail</label>
+                        <input type="email" class="form-input" id="loginEmail" placeholder="loja@email.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Senha</label>
+                        <input type="password" class="form-input" id="loginPassword" placeholder="••••••••" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Entrar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main App -->
+    <div id="mainApp" style="display: none;">
+        <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+        
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">🏪 Pedrad</div>
+                <div class="store-info">
+                    <div class="store-avatar" id="sidebarAvatar">🍔</div>
+                    <div>
+                        <div class="store-name" id="sidebarStoreName">Minha Loja</div>
+                        <div class="store-status" id="sidebarStatus">🟢 Aberto</div>
+                    </div>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Principal</div>
+                    <div class="nav-item active" onclick="showPage('dashboard')"><span>📊</span> Dashboard</div>
+                    <div class="nav-item" onclick="showPage('orders')"><span>📦</span> Pedidos <span class="nav-badge" id="pendingBadge" style="display:none;">0</span></div>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Cardápio</div>
+                    <div class="nav-item" onclick="showPage('products')"><span>🍽️</span> Produtos</div>
+                    <div class="nav-item" onclick="showPage('categories')"><span>📁</span> Categorias</div>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Configurações</div>
+                    <div class="nav-item" onclick="showPage('store')"><span>🏪</span> Minha Loja</div>
+                    <div class="nav-item" onclick="showPage('settings')"><span>⚙️</span> Configurações</div>
+                    <div class="nav-item" onclick="handleLogout()"><span>🚪</span> Sair</div>
+                </div>
+            </nav>
+        </aside>
+        
+        <!-- Main -->
+        <main class="main-content">
+            <header class="topbar">
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+                    <h1 class="topbar-title" id="pageTitle">Dashboard</h1>
+                </div>
+                <div class="topbar-actions">
+                    <div class="toggle" id="storeToggle" onclick="toggleStoreStatus()"></div>
+                </div>
+            </header>
+            
+            <!-- Dashboard -->
+            <div id="dashboardPage" class="page active">
+                <div class="stats-grid">
+                    <div class="stat-card"><div class="stat-icon warning">📦</div><div class="stat-value" id="statPending">0</div><div class="stat-label">Pedidos pendentes</div></div>
+                    <div class="stat-card"><div class="stat-icon primary">📋</div><div class="stat-value" id="statToday">0</div><div class="stat-label">Pedidos hoje</div></div>
+                    <div class="stat-card"><div class="stat-icon success">💰</div><div class="stat-value" id="statRevenue">R$ 0</div><div class="stat-label">Faturamento hoje</div></div>
+                    <div class="stat-card"><div class="stat-icon danger">🍽️</div><div class="stat-value" id="statProducts">0</div><div class="stat-label">Produtos ativos</div></div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><div class="card-title">📦 Pedidos Recentes</div><button class="btn btn-secondary btn-sm" onclick="showPage('orders')">Ver todos</button></div>
+                    <div id="recentOrders"></div>
+                </div>
+            </div>
+            
+            <!-- Orders -->
+            <div id="ordersPage" class="page">
+                <div class="orders-filters">
+                    <div class="filter-chip active" onclick="filterOrders('all')">Todos</div>
+                    <div class="filter-chip" onclick="filterOrders('pending')">🟡 Pendentes</div>
+                    <div class="filter-chip" onclick="filterOrders('preparing')">🔵 Preparando</div>
+                    <div class="filter-chip" onclick="filterOrders('ready')">🟣 Pronto</div>
+                    <div class="filter-chip" onclick="filterOrders('delivering')">🟢 Entregando</div>
+                    <div class="filter-chip" onclick="filterOrders('delivered')">✅ Entregues</div>
+                </div>
+                <div id="ordersList"></div>
+            </div>
+            
+            <!-- Products -->
+            <div id="productsPage" class="page">
+                <div class="products-header">
+                    <input type="text" class="form-input" style="max-width: 300px;" placeholder="🔍 Buscar produto..." id="productSearch" oninput="filterProductsList()">
+                    <button class="btn btn-primary" onclick="openProductModal()">+ Novo Produto</button>
+                </div>
+                <div class="products-grid" id="productsList"></div>
+            </div>
+            
+            <!-- Categories -->
+            <div id="categoriesPage" class="page">
+                <div class="products-header">
+                    <h3>Categorias do Cardápio</h3>
+                    <button class="btn btn-primary" onclick="openCategoryModal()">+ Nova Categoria</button>
+                </div>
+                <div id="categoriesList"></div>
+            </div>
+            
+            <!-- Store -->
+            <div id="storePage" class="page">
+                <div class="card">
+                    <div class="card-title" style="margin-bottom: 20px;">🏪 Informações da Loja</div>
+                    <div class="form-group">
+                        <label class="form-label">Logo / Imagem da Loja</label>
+                        <div class="image-upload" id="storeImageUpload" onclick="document.getElementById('storeImageInput').click()">
+                            <div class="image-upload-placeholder" id="storeImagePlaceholder"><span>📷</span><div>Clique para enviar imagem</div></div>
+                            <input type="file" id="storeImageInput" accept="image/*" onchange="handleStoreImageUpload(event)">
+                        </div>
+                    </div>
+                    <div class="form-group"><label class="form-label">Nome da Loja</label><input type="text" class="form-input" id="storeName" placeholder="Nome do estabelecimento"></div>
+                    <div class="form-group">
+                        <label class="form-label">Categoria</label>
+                        <select class="form-input" id="storeCategory">
+                            <option value="Hambúrgueres">🍔 Hambúrgueres</option>
+                            <option value="Pizzaria">🍕 Pizzaria</option>
+                            <option value="Japonesa">🍣 Japonesa</option>
+                            <option value="Açaí e Sorvetes">🍇 Açaí e Sorvetes</option>
+                            <option value="Brasileira">🍛 Brasileira</option>
+                            <option value="Lanches">🌭 Lanches</option>
+                            <option value="Doces">🍰 Doces</option>
+                            <option value="Bebidas">🍹 Bebidas</option>
+                            <option value="Outro">📦 Outro</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label class="form-label">Descrição</label><textarea class="form-input" id="storeDescription" placeholder="Fale sobre sua loja..."></textarea></div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="form-group"><label class="form-label">Tempo de entrega</label><input type="text" class="form-input" id="storeDeliveryTime" placeholder="30-45 min"></div>
+                        <div class="form-group"><label class="form-label">Taxa de entrega (R$)</label><input type="number" class="form-input" id="storeDeliveryFee" placeholder="5.00" step="0.50"></div>
+                    </div>
+                    <div class="form-group"><label class="form-label">Endereço</label><input type="text" class="form-input" id="storeAddress" placeholder="Rua, número - Bairro"></div>
+                    <div class="form-group"><label class="form-label">Telefone / WhatsApp</label><input type="tel" class="form-input" id="storePhone" placeholder="(00) 00000-0000"></div>
+                    <button class="btn btn-primary btn-block" onclick="saveStoreInfo()">Salvar Informações</button>
+                </div>
+            </div>
+            
+            <!-- Settings -->
+            <div id="settingsPage" class="page">
+                <div class="settings-section">
+                    <div class="settings-title">🚚 Entrega</div>
+                    <div class="form-group">
+                        <label class="form-label">Tipo de entregador</label>
+                        <div class="radio-cards">
+                            <div class="radio-card" id="deliveryApp" onclick="selectDeliveryType('app')"><div class="radio-card-icon">🛵</div><div class="radio-card-title">Entregador do App</div><div class="radio-card-desc">Entregadores parceiros</div></div>
+                            <div class="radio-card" id="deliveryOwn" onclick="selectDeliveryType('own')"><div class="radio-card-icon">👨‍💼</div><div class="radio-card-title">Entregador Próprio</div><div class="radio-card-desc">Sua equipe</div></div>
+                            <div class="radio-card" id="deliveryBoth" onclick="selectDeliveryType('both')"><div class="radio-card-icon">🔄</div><div class="radio-card-title">Ambos</div><div class="radio-card-desc">Conforme disponibilidade</div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <div class="settings-title">🕐 Horário de Funcionamento</div>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <div class="setting-label">Segunda a Sexta</div>
+                            <div style="display: flex; gap: 8px; margin-top: 8px;">
+                                <input type="time" class="form-input" id="weekdayOpen" value="18:00" style="width: auto;">
+                                <span style="align-self: center;">às</span>
+                                <input type="time" class="form-input" id="weekdayClose" value="23:00" style="width: auto;">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <div class="setting-label">Sábado e Domingo</div>
+                            <div style="display: flex; gap: 8px; margin-top: 8px;">
+                                <input type="time" class="form-input" id="weekendOpen" value="11:00" style="width: auto;">
+                                <span style="align-self: center;">às</span>
+                                <input type="time" class="form-input" id="weekendClose" value="23:00" style="width: auto;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <div class="settings-title">🔔 Notificações</div>
+                    <div class="setting-item">
+                        <div class="setting-info"><div class="setting-label">Som de novo pedido</div><div class="setting-desc">Tocar som quando receber pedido</div></div>
+                        <div class="toggle active" id="soundToggle" onclick="toggleSetting('sound')"></div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-info"><div class="setting-label">Aceitar automaticamente</div><div class="setting-desc">Confirmar pedidos sem aprovação</div></div>
+                        <div class="toggle" id="autoAcceptToggle" onclick="toggleSetting('autoAccept')"></div>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="saveSettings()">Salvar Configurações</button>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Product Modal -->
+    <div class="modal" id="productModal">
+        <div class="modal-content">
+            <div class="modal-header"><div class="modal-title" id="productModalTitle">Novo Produto</div><button class="modal-close" onclick="closeModal('productModal')">×</button></div>
+            <div class="modal-body">
+                <input type="hidden" id="productId">
+                <div class="form-group">
+                    <label class="form-label">Imagem do Produto</label>
+                    <div class="image-upload" id="productImageUpload" onclick="document.getElementById('productImageInput').click()">
+                        <div class="image-upload-placeholder" id="productImagePlaceholder"><span>📷</span><div>Clique para enviar imagem</div></div>
+                        <input type="file" id="productImageInput" accept="image/*" onchange="handleProductImageUpload(event)">
+                    </div>
+                </div>
+                <div class="form-group"><label class="form-label">Ou escolha um ícone</label><div class="emoji-picker" id="emojiPicker"></div></div>
+                <div class="form-group"><label class="form-label">Nome do Produto</label><input type="text" class="form-input" id="productName" placeholder="Ex: X-Burger Especial"></div>
+                <div class="form-group"><label class="form-label">Descrição</label><textarea class="form-input" id="productDescription" placeholder="Ingredientes, tamanho..." style="min-height: 60px;"></textarea></div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group"><label class="form-label">Preço (R$)</label><input type="number" class="form-input" id="productPrice" placeholder="0.00" step="0.10"></div>
+                    <div class="form-group"><label class="form-label">Categoria</label><select class="form-input" id="productCategory"></select></div>
+                </div>
+                <div class="setting-item" style="margin-top: 8px;">
+                    <div class="setting-info"><div class="setting-label">Produto ativo</div><div class="setting-desc">Visível no cardápio</div></div>
+                    <div class="toggle active" id="productActiveToggle"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('productModal')">Cancelar</button>
+                <button class="btn btn-primary" onclick="saveProduct()">Salvar</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Category Modal -->
+    <div class="modal" id="categoryModal">
+        <div class="modal-content">
+            <div class="modal-header"><div class="modal-title">Nova Categoria</div><button class="modal-close" onclick="closeModal('categoryModal')">×</button></div>
+            <div class="modal-body">
+                <div class="form-group"><label class="form-label">Nome da Categoria</label><input type="text" class="form-input" id="categoryName" placeholder="Ex: Lanches, Bebidas..."></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('categoryModal')">Cancelar</button>
+                <button class="btn btn-primary" onclick="saveCategory()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+    <script src="index.js"></script>
+</body>
+</html>
