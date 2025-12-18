@@ -466,12 +466,7 @@ async function repairImageFieldsIfNeeded() {
 }
 
 // exemplo de onde plugar:
-(async () => {
-  // ... após auth/login:
-  await loadAllData();
-  await repairImageFieldsIfNeeded();   // 🔧
-  updateDashboard();                   // re-render com URLs boas
-})();
+
 </script>
 
     <script>
@@ -1011,62 +1006,53 @@ async function repairImageFieldsIfNeeded() {
             reader.readAsDataURL(file);
         }
         
-        async function saveProduct() {
-            const id = document.getElementById('productId').value;
-            const name = document.getElementById('productName').value.trim();
-            const description = document.getElementById('productDescription').value.trim();
-            const price = parseFloat(document.getElementById('productPrice').value);
-            const category = document.getElementById('productCategory').value;
-            const active = document.getElementById('productActiveToggle').classList.contains('active');
-            
-            if (!name || !price) {
-                showToast('Preencha nome e preço');
-                return;
-            }
-            
-            try {
-                let imageUrl = null;
-                
-                // Upload image if exists
-                if (productImageData && productImageData.startsWith('data:')) {
-                    const filename = `products/${currentStore.id}/${Date.now()}.jpg`;
-                    const ref = storage.ref(filename);
-                    await ref.putString(productImageData, 'data_url');
-                    imageUrl = await ref.getDownloadURL();
-                }
-                
-                const data = {
-                    name,
-                    description,
-                    price,
-                    category,
-                    active,
-                    emoji: selectedEmoji,
-                    storeId: currentStore.id,
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                };
-                
-                if (imageUrl) {
-                    data.imageUrl = imageUrl;
-                }
-                
-                if (id) {
-                    await db.collection('products').doc(id).update(data);
-                } else {
-                    data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-                    await db.collection('products').add(data);
-                }
-                
-                closeModal('productModal');
-                await loadProducts();
-                loadCategories();
-                showToast('Produto salvo!');
-                
-            } catch (err) {
-                console.error(err);
-                showToast('Erro ao salvar produto');
-            }
-        }
+       async function saveProduct() {
+  const id = document.getElementById('productId').value;
+  const name = document.getElementById('productName').value.trim();
+  const description = document.getElementById('productDescription').value.trim();
+  const price = parseFloat(document.getElementById('productPrice').value);
+  const category = document.getElementById('productCategory').value;
+  const active = document.getElementById('productActiveToggle').classList.contains('active');
+
+  if (!name || !price) {
+    showToast('Preencha nome e preço');
+    return;
+  }
+
+  try {
+    const data = {
+      name,
+      description,
+      price,
+      category,
+      active,
+      emoji: selectedEmoji,
+      storeId: currentStore.id,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    // ✅ imagem em base64 direto no Firestore
+    if (productImageData?.startsWith('data:')) {
+      data.imageUrl = productImageData;
+    }
+
+    if (id) {
+      await db.collection('products').doc(id).update(data);
+    } else {
+      data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('products').add(data);
+    }
+
+    closeModal('productModal');
+    await loadProducts();
+    loadCategories();
+    showToast('Produto salvo!');
+  } catch (err) {
+    console.error(err);
+    showToast('Erro ao salvar produto');
+  }
+}
+
         
         async function deleteProduct(productId) {
             if (!confirm('Excluir este produto?')) return;
