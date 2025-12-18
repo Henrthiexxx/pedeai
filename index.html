@@ -401,7 +401,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+    
     <script>
 // considera "url" quebrada se usa ?name=... ou se não tem alt=media
 function looksBrokenStorageUrl(url) {
@@ -488,7 +488,7 @@ async function repairImageFieldsIfNeeded() {
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
-        const storage = firebase.storage();
+        
         
         // State
         let currentUser = null;
