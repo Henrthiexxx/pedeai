@@ -4,23 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Pedrad - Painel da Loja</title>
-    <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#6366f1">
     <link rel="stylesheet" href="index.css">
-
 </head>
 <body>
-    <!-- Toast -->
     <div class="toast" id="toast"></div>
     
-    <!-- Auth Page -->
+    <!-- Auth -->
     <div id="authPage" class="auth-container">
         <div class="auth-box">
             <div class="auth-logo">
                 <h1>🏪 Pedrad Loja</h1>
                 <p style="color: var(--text-muted); margin-top: 8px;">Painel do estabelecimento</p>
             </div>
-            
             <div class="card">
                 <form onsubmit="handleLogin(event)">
                     <div class="form-group">
@@ -53,45 +49,27 @@
                     </div>
                 </div>
             </div>
-            
             <nav class="sidebar-nav">
                 <div class="nav-section">
                     <div class="nav-section-title">Principal</div>
-                    <div class="nav-item active" onclick="showPage('dashboard')">
-                        <span>📊</span> Dashboard
-                    </div>
-                    <div class="nav-item" onclick="showPage('orders')">
-                        <span>📦</span> Pedidos
-                        <span class="nav-badge" id="pendingBadge" style="display:none;">0</span>
-                    </div>
+                    <div class="nav-item active" onclick="showPage('dashboard')"><span>📊</span> Dashboard</div>
+                    <div class="nav-item" onclick="showPage('orders')"><span>📦</span> Pedidos <span class="nav-badge" id="pendingBadge" style="display:none;">0</span></div>
                 </div>
-                
                 <div class="nav-section">
                     <div class="nav-section-title">Cardápio</div>
-                    <div class="nav-item" onclick="showPage('products')">
-                        <span>🍽️</span> Produtos
-                    </div>
-                    <div class="nav-item" onclick="showPage('categories')">
-                        <span>📁</span> Categorias
-                    </div>
+                    <div class="nav-item" onclick="showPage('products')"><span>🍽️</span> Produtos</div>
+                    <div class="nav-item" onclick="showPage('categories')"><span>📁</span> Categorias</div>
                 </div>
-                
                 <div class="nav-section">
                     <div class="nav-section-title">Configurações</div>
-                    <div class="nav-item" onclick="showPage('store')">
-                        <span>🏪</span> Minha Loja
-                    </div>
-                    <div class="nav-item" onclick="showPage('settings')">
-                        <span>⚙️</span> Configurações
-                    </div>
-                    <div class="nav-item" onclick="handleLogout()">
-                        <span>🚪</span> Sair
-                    </div>
+                    <div class="nav-item" onclick="showPage('store')"><span>🏪</span> Minha Loja</div>
+                    <div class="nav-item" onclick="showPage('settings')"><span>⚙️</span> Configurações</div>
+                    <div class="nav-item" onclick="handleLogout()"><span>🚪</span> Sair</div>
                 </div>
             </nav>
         </aside>
         
-        <!-- Main Content -->
+        <!-- Main -->
         <main class="main-content">
             <header class="topbar">
                 <div style="display: flex; align-items: center; gap: 16px;">
@@ -103,41 +81,21 @@
                 </div>
             </header>
             
-            <!-- Dashboard Page -->
+            <!-- Dashboard -->
             <div id="dashboardPage" class="page active">
                 <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon warning">📦</div>
-                        <div class="stat-value" id="statPending">0</div>
-                        <div class="stat-label">Pedidos pendentes</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon primary">📋</div>
-                        <div class="stat-value" id="statToday">0</div>
-                        <div class="stat-label">Pedidos hoje</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon success">💰</div>
-                        <div class="stat-value" id="statRevenue">R$ 0</div>
-                        <div class="stat-label">Faturamento hoje</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon danger">🍽️</div>
-                        <div class="stat-value" id="statProducts">0</div>
-                        <div class="stat-label">Produtos ativos</div>
-                    </div>
+                    <div class="stat-card"><div class="stat-icon warning">📦</div><div class="stat-value" id="statPending">0</div><div class="stat-label">Pedidos pendentes</div></div>
+                    <div class="stat-card"><div class="stat-icon primary">📋</div><div class="stat-value" id="statToday">0</div><div class="stat-label">Pedidos hoje</div></div>
+                    <div class="stat-card"><div class="stat-icon success">💰</div><div class="stat-value" id="statRevenue">R$ 0</div><div class="stat-label">Faturamento hoje</div></div>
+                    <div class="stat-card"><div class="stat-icon danger">🍽️</div><div class="stat-value" id="statProducts">0</div><div class="stat-label">Produtos ativos</div></div>
                 </div>
-                
                 <div class="card">
-                    <div class="card-header">
-                        <div class="card-title">📦 Pedidos Recentes</div>
-                        <button class="btn btn-secondary btn-sm" onclick="showPage('orders')">Ver todos</button>
-                    </div>
+                    <div class="card-header"><div class="card-title">📦 Pedidos Recentes</div><button class="btn btn-secondary btn-sm" onclick="showPage('orders')">Ver todos</button></div>
                     <div id="recentOrders"></div>
                 </div>
             </div>
             
-            <!-- Orders Page -->
+            <!-- Orders -->
             <div id="ordersPage" class="page">
                 <div class="orders-filters">
                     <div class="filter-chip active" onclick="filterOrders('all')">Todos</div>
@@ -147,51 +105,39 @@
                     <div class="filter-chip" onclick="filterOrders('delivering')">🟢 Entregando</div>
                     <div class="filter-chip" onclick="filterOrders('delivered')">✅ Entregues</div>
                 </div>
-                
                 <div id="ordersList"></div>
             </div>
             
-            <!-- Products Page -->
+            <!-- Products -->
             <div id="productsPage" class="page">
                 <div class="products-header">
                     <input type="text" class="form-input" style="max-width: 300px;" placeholder="🔍 Buscar produto..." id="productSearch" oninput="filterProductsList()">
                     <button class="btn btn-primary" onclick="openProductModal()">+ Novo Produto</button>
                 </div>
-                
                 <div class="products-grid" id="productsList"></div>
             </div>
             
-            <!-- Categories Page -->
+            <!-- Categories -->
             <div id="categoriesPage" class="page">
                 <div class="products-header">
                     <h3>Categorias do Cardápio</h3>
                     <button class="btn btn-primary" onclick="openCategoryModal()">+ Nova Categoria</button>
                 </div>
-                
                 <div id="categoriesList"></div>
             </div>
             
-            <!-- Store Page -->
+            <!-- Store -->
             <div id="storePage" class="page">
                 <div class="card">
                     <div class="card-title" style="margin-bottom: 20px;">🏪 Informações da Loja</div>
-                    
                     <div class="form-group">
                         <label class="form-label">Logo / Imagem da Loja</label>
                         <div class="image-upload" id="storeImageUpload" onclick="document.getElementById('storeImageInput').click()">
-                            <div class="image-upload-placeholder" id="storeImagePlaceholder">
-                                <span>📷</span>
-                                <div>Clique para enviar imagem</div>
-                            </div>
+                            <div class="image-upload-placeholder" id="storeImagePlaceholder"><span>📷</span><div>Clique para enviar imagem</div></div>
                             <input type="file" id="storeImageInput" accept="image/*" onchange="handleStoreImageUpload(event)">
                         </div>
                     </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Nome da Loja</label>
-                        <input type="text" class="form-input" id="storeName" placeholder="Nome do estabelecimento">
-                    </div>
-                    
+                    <div class="form-group"><label class="form-label">Nome da Loja</label><input type="text" class="form-input" id="storeName" placeholder="Nome do estabelecimento"></div>
                     <div class="form-group">
                         <label class="form-label">Categoria</label>
                         <select class="form-input" id="storeCategory">
@@ -206,67 +152,32 @@
                             <option value="Outro">📦 Outro</option>
                         </select>
                     </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Descrição</label>
-                        <textarea class="form-input" id="storeDescription" placeholder="Fale sobre sua loja..."></textarea>
-                    </div>
-                    
+                    <div class="form-group"><label class="form-label">Descrição</label><textarea class="form-input" id="storeDescription" placeholder="Fale sobre sua loja..."></textarea></div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                        <div class="form-group">
-                            <label class="form-label">Tempo de entrega</label>
-                            <input type="text" class="form-input" id="storeDeliveryTime" placeholder="30-45 min">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Taxa de entrega (R$)</label>
-                            <input type="number" class="form-input" id="storeDeliveryFee" placeholder="5.00" step="0.50">
-                        </div>
+                        <div class="form-group"><label class="form-label">Tempo de entrega</label><input type="text" class="form-input" id="storeDeliveryTime" placeholder="30-45 min"></div>
+                        <div class="form-group"><label class="form-label">Taxa de entrega (R$)</label><input type="number" class="form-input" id="storeDeliveryFee" placeholder="5.00" step="0.50"></div>
                     </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Endereço</label>
-                        <input type="text" class="form-input" id="storeAddress" placeholder="Rua, número - Bairro">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Telefone / WhatsApp</label>
-                        <input type="tel" class="form-input" id="storePhone" placeholder="(00) 00000-0000">
-                    </div>
-                    
+                    <div class="form-group"><label class="form-label">Endereço</label><input type="text" class="form-input" id="storeAddress" placeholder="Rua, número - Bairro"></div>
+                    <div class="form-group"><label class="form-label">Telefone / WhatsApp</label><input type="tel" class="form-input" id="storePhone" placeholder="(00) 00000-0000"></div>
                     <button class="btn btn-primary btn-block" onclick="saveStoreInfo()">Salvar Informações</button>
                 </div>
             </div>
             
-            <!-- Settings Page -->
+            <!-- Settings -->
             <div id="settingsPage" class="page">
                 <div class="settings-section">
                     <div class="settings-title">🚚 Entrega</div>
-                    
                     <div class="form-group">
                         <label class="form-label">Tipo de entregador</label>
                         <div class="radio-cards">
-                            <div class="radio-card" id="deliveryApp" onclick="selectDeliveryType('app')">
-                                <div class="radio-card-icon">🛵</div>
-                                <div class="radio-card-title">Entregador do App</div>
-                                <div class="radio-card-desc">Entregadores parceiros da plataforma</div>
-                            </div>
-                            <div class="radio-card" id="deliveryOwn" onclick="selectDeliveryType('own')">
-                                <div class="radio-card-icon">👨‍💼</div>
-                                <div class="radio-card-title">Entregador Próprio</div>
-                                <div class="radio-card-desc">Sua equipe de entrega</div>
-                            </div>
-                            <div class="radio-card" id="deliveryBoth" onclick="selectDeliveryType('both')">
-                                <div class="radio-card-icon">🔄</div>
-                                <div class="radio-card-title">Ambos</div>
-                                <div class="radio-card-desc">Usar conforme disponibilidade</div>
-                            </div>
+                            <div class="radio-card" id="deliveryApp" onclick="selectDeliveryType('app')"><div class="radio-card-icon">🛵</div><div class="radio-card-title">Entregador do App</div><div class="radio-card-desc">Entregadores parceiros</div></div>
+                            <div class="radio-card" id="deliveryOwn" onclick="selectDeliveryType('own')"><div class="radio-card-icon">👨‍💼</div><div class="radio-card-title">Entregador Próprio</div><div class="radio-card-desc">Sua equipe</div></div>
+                            <div class="radio-card" id="deliveryBoth" onclick="selectDeliveryType('both')"><div class="radio-card-icon">🔄</div><div class="radio-card-title">Ambos</div><div class="radio-card-desc">Conforme disponibilidade</div></div>
                         </div>
                     </div>
                 </div>
-                
                 <div class="settings-section">
                     <div class="settings-title">🕐 Horário de Funcionamento</div>
-                    
                     <div class="setting-item">
                         <div class="setting-info">
                             <div class="setting-label">Segunda a Sexta</div>
@@ -277,7 +188,6 @@
                             </div>
                         </div>
                     </div>
-                    
                     <div class="setting-item">
                         <div class="setting-info">
                             <div class="setting-label">Sábado e Domingo</div>
@@ -289,27 +199,17 @@
                         </div>
                     </div>
                 </div>
-                
                 <div class="settings-section">
                     <div class="settings-title">🔔 Notificações</div>
-                    
                     <div class="setting-item">
-                        <div class="setting-info">
-                            <div class="setting-label">Som de novo pedido</div>
-                            <div class="setting-desc">Tocar som quando receber pedido</div>
-                        </div>
+                        <div class="setting-info"><div class="setting-label">Som de novo pedido</div><div class="setting-desc">Tocar som quando receber pedido</div></div>
                         <div class="toggle active" id="soundToggle" onclick="toggleSetting('sound')"></div>
                     </div>
-                    
                     <div class="setting-item">
-                        <div class="setting-info">
-                            <div class="setting-label">Aceitar pedidos automaticamente</div>
-                            <div class="setting-desc">Confirmar pedidos sem aprovação manual</div>
-                        </div>
+                        <div class="setting-info"><div class="setting-label">Aceitar automaticamente</div><div class="setting-desc">Confirmar pedidos sem aprovação</div></div>
                         <div class="toggle" id="autoAcceptToggle" onclick="toggleSetting('autoAccept')"></div>
                     </div>
                 </div>
-                
                 <button class="btn btn-primary" onclick="saveSettings()">Salvar Configurações</button>
             </div>
         </main>
@@ -318,55 +218,25 @@
     <!-- Product Modal -->
     <div class="modal" id="productModal">
         <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title" id="productModalTitle">Novo Produto</div>
-                <button class="modal-close" onclick="closeModal('productModal')">×</button>
-            </div>
+            <div class="modal-header"><div class="modal-title" id="productModalTitle">Novo Produto</div><button class="modal-close" onclick="closeModal('productModal')">×</button></div>
             <div class="modal-body">
                 <input type="hidden" id="productId">
-                
                 <div class="form-group">
                     <label class="form-label">Imagem do Produto</label>
                     <div class="image-upload" id="productImageUpload" onclick="document.getElementById('productImageInput').click()">
-                        <div class="image-upload-placeholder" id="productImagePlaceholder">
-                            <span>📷</span>
-                            <div>Clique para enviar imagem</div>
-                        </div>
+                        <div class="image-upload-placeholder" id="productImagePlaceholder"><span>📷</span><div>Clique para enviar imagem</div></div>
                         <input type="file" id="productImageInput" accept="image/*" onchange="handleProductImageUpload(event)">
                     </div>
                 </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Ou escolha um ícone</label>
-                    <div class="emoji-picker" id="emojiPicker"></div>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Nome do Produto</label>
-                    <input type="text" class="form-input" id="productName" placeholder="Ex: X-Burger Especial">
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Descrição</label>
-                    <textarea class="form-input" id="productDescription" placeholder="Ingredientes, tamanho..." style="min-height: 60px;"></textarea>
-                </div>
-                
+                <div class="form-group"><label class="form-label">Ou escolha um ícone</label><div class="emoji-picker" id="emojiPicker"></div></div>
+                <div class="form-group"><label class="form-label">Nome do Produto</label><input type="text" class="form-input" id="productName" placeholder="Ex: X-Burger Especial"></div>
+                <div class="form-group"><label class="form-label">Descrição</label><textarea class="form-input" id="productDescription" placeholder="Ingredientes, tamanho..." style="min-height: 60px;"></textarea></div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                    <div class="form-group">
-                        <label class="form-label">Preço (R$)</label>
-                        <input type="number" class="form-input" id="productPrice" placeholder="0.00" step="0.10">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Categoria</label>
-                        <select class="form-input" id="productCategory"></select>
-                    </div>
+                    <div class="form-group"><label class="form-label">Preço (R$)</label><input type="number" class="form-input" id="productPrice" placeholder="0.00" step="0.10"></div>
+                    <div class="form-group"><label class="form-label">Categoria</label><select class="form-input" id="productCategory"></select></div>
                 </div>
-                
                 <div class="setting-item" style="margin-top: 8px;">
-                    <div class="setting-info">
-                        <div class="setting-label">Produto ativo</div>
-                        <div class="setting-desc">Visível no cardápio</div>
-                    </div>
+                    <div class="setting-info"><div class="setting-label">Produto ativo</div><div class="setting-desc">Visível no cardápio</div></div>
                     <div class="toggle active" id="productActiveToggle"></div>
                 </div>
             </div>
@@ -380,15 +250,9 @@
     <!-- Category Modal -->
     <div class="modal" id="categoryModal">
         <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">Nova Categoria</div>
-                <button class="modal-close" onclick="closeModal('categoryModal')">×</button>
-            </div>
+            <div class="modal-header"><div class="modal-title">Nova Categoria</div><button class="modal-close" onclick="closeModal('categoryModal')">×</button></div>
             <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label">Nome da Categoria</label>
-                    <input type="text" class="form-input" id="categoryName" placeholder="Ex: Lanches, Bebidas...">
-                </div>
+                <div class="form-group"><label class="form-label">Nome da Categoria</label><input type="text" class="form-input" id="categoryName" placeholder="Ex: Lanches, Bebidas..."></div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="closeModal('categoryModal')">Cancelar</button>
@@ -397,894 +261,24 @@
         </div>
     </div>
 
-    <!-- Firebase SDK -->
+    <!-- Confirm Modal -->
+    <div class="modal" id="confirmModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-body" style="text-align: center; padding: 30px;">
+                <div class="modal-title" id="confirmModalTitle" style="margin-bottom: 12px;">Confirmar</div>
+                <div style="color: var(--text-muted); margin-bottom: 24px;" id="confirmModalText">Deseja continuar?</div>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn btn-secondary" id="confirmModalCancel" onclick="closeModal('confirmModal')" style="flex:1;">Cancelar</button>
+                    <button class="btn btn-danger" id="confirmModalBtn" style="flex:1;">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    
-    <script>
-// considera "url" quebrada se usa ?name=... ou se não tem alt=media
-function looksBrokenStorageUrl(url) {
-  try {
-    const u = new URL(url);
-    const hasNameParam = u.searchParams.has('name');
-    const hasAltMedia = u.searchParams.get('alt') === 'media';
-    const isFirebaseHost = u.hostname === 'firebasestorage.googleapis.com';
-    return isFirebaseHost && (hasNameParam || !hasAltMedia);
-  } catch {
-    return false;
-  }
-}
-
-async function fixToDownloadUrl(url) {
-  if (!url) return url;
-  try {
-    const u = new URL(url);
-    let path;
-    if (u.searchParams.has('name')) {
-      path = decodeURIComponent(u.searchParams.get('name'));
-    } else {
-      // tenta extrair de /o/<path>
-      const afterO = u.pathname.split('/o/')[1];
-      if (afterO) path = decodeURIComponent(afterO);
-    }
-    if (!path) return url;
-    const ref = storage.ref(path);
-    return await ref.getDownloadURL();
-  } catch {
-    return url;
-  }
-}
-
-// rode isso depois do loadAllData()
-async function repairImageFieldsIfNeeded() {
-  let changed = false;
-
-  // Loja
-  if (currentStore?.imageUrl && looksBrokenStorageUrl(currentStore.imageUrl)) {
-    const ok = await fixToDownloadUrl(currentStore.imageUrl);
-    if (ok && ok !== currentStore.imageUrl) {
-      currentStore.imageUrl = ok;
-      await db.collection('stores').doc(currentStore.id).update({ imageUrl: ok });
-      changed = true;
-    }
-  }
-
-  // Produtos
-  const batch = db.batch();
-  for (const p of products) {
-    if (p.imageUrl && looksBrokenStorageUrl(p.imageUrl)) {
-      const ok = await fixToDownloadUrl(p.imageUrl);
-      if (ok && ok !== p.imageUrl) {
-        p.imageUrl = ok;
-        batch.update(db.collection('products').doc(p.id), { imageUrl: ok });
-        changed = true;
-      }
-    }
-  }
-  if (changed) await batch.commit();
-}
-
-// exemplo de onde plugar:
-
-</script>
-
-    <script>
-        // Firebase Config
-        const firebaseConfig = {
-            apiKey: "AIzaSyAnIJRcUxN-0swpVnonPbJjTSK87o4CQ_g",
-            authDomain: "pedrad-814d0.firebaseapp.com",
-            projectId: "pedrad-814d0",
-            storageBucket: "pedrad-814d0.appspot.com",
-            messagingSenderId: "293587190550",
-            appId: "1:293587190550:web:80c9399f82847c80e20637"
-        };
-        
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-        
-        
-        // State
-        let currentUser = null;
-        let currentStore = null;
-        let orders = [];
-        let products = [];
-        let categories = [];
-        let orderFilter = 'all';
-        let selectedEmoji = '🍔';
-        let productImageData = null;
-        let storeImageData = null;
-        
-        const foodEmojis = ['🍔', '🍕', '🍟', '🌭', '🍗', '🥓', '🍖', '🥩', '🍝', '🍜', '🍲', '🥗', '🌮', '🌯', '🥙', '🧆', '🍣', '🍤', '🍱', '🥡', '🍚', '🍛', '🍙', '🥟', '🍰', '🎂', '🍮', '🍩', '🍪', '🍫', '🍬', '🍭', '🍦', '🍨', '🍧', '🥤', '🧃', '🍺', '🍷', '☕', '🧋', '🥛', '💧', '🍇', '🍉', '🍊', '🍋', '🍌', '🍎', '🍒', '🥑', '🥕', '🌽', '🥔', '🧀', '🥚', '🥐', '🥖', '🥨', '🥯', '🥞', '🧇'];
-        
-        // Auth
-        auth.onAuthStateChanged(async (user) => {
-            if (user) {
-                currentUser = user;
-                await loadStoreData();
-                if (currentStore) {
-                    showMainApp();
-                    await loadAllData();
-                    setupRealtimeListeners();
-                } else {
-                    showToast('Loja não encontrada para este usuário');
-                    auth.signOut();
-                }
-            } else {
-                showAuthPage();
-            }
-        });
-        
-        async function handleLogin(e) {
-            e.preventDefault();
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-            
-            try {
-                await auth.signInWithEmailAndPassword(email, password);
-            } catch (err) {
-                showToast('Erro: ' + err.message);
-            }
-        }
-        
-        function handleLogout() {
-            if (confirm('Deseja sair?')) {
-                auth.signOut();
-            }
-        }
-        
-        function showAuthPage() {
-            document.getElementById('authPage').style.display = 'flex';
-            document.getElementById('mainApp').style.display = 'none';
-        }
-        
-        function showMainApp() {
-            document.getElementById('authPage').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'block';
-            initEmojiPicker();
-        }
-        
-        // Data Loading
-        async function loadStoreData() {
-            try {
-                // Busca loja pelo email do usuário ou ID
-                const snapshot = await db.collection('stores')
-                    .where('ownerEmail', '==', currentUser.email)
-                    .limit(1)
-                    .get();
-                
-                if (!snapshot.empty) {
-                    currentStore = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
-                } else {
-                    // Tenta buscar por ownerId
-                    const snapshot2 = await db.collection('stores')
-                        .where('ownerId', '==', currentUser.uid)
-                        .limit(1)
-                        .get();
-                    
-                    if (!snapshot2.empty) {
-                        currentStore = { id: snapshot2.docs[0].id, ...snapshot2.docs[0].data() };
-                    }
-                }
-                
-                if (currentStore) {
-                    updateStoreUI();
-                }
-            } catch (err) {
-                console.error('Error loading store:', err);
-            }
-        }
-        
-        function updateStoreUI() {
-            document.getElementById('sidebarStoreName').textContent = currentStore.name || 'Minha Loja';
-            document.getElementById('sidebarAvatar').innerHTML = currentStore.imageUrl 
-                ? `<img src="${currentStore.imageUrl}" alt="Logo">`
-                : (currentStore.emoji || '🏪');
-            
-            const isOpen = currentStore.open !== false;
-            document.getElementById('sidebarStatus').textContent = isOpen ? '🟢 Aberto' : '🔴 Fechado';
-            document.getElementById('sidebarStatus').className = 'store-status' + (isOpen ? '' : ' closed');
-            document.getElementById('storeToggle').className = 'toggle' + (isOpen ? ' active' : '');
-            
-            // Fill store form
-            document.getElementById('storeName').value = currentStore.name || '';
-            document.getElementById('storeCategory').value = currentStore.category || 'Hambúrgueres';
-            document.getElementById('storeDescription').value = currentStore.description || '';
-            document.getElementById('storeDeliveryTime').value = currentStore.deliveryTime || '';
-            document.getElementById('storeDeliveryFee').value = currentStore.deliveryFee || '';
-            document.getElementById('storeAddress').value = currentStore.address || '';
-            document.getElementById('storePhone').value = currentStore.phone || '';
-            
-            if (currentStore.imageUrl) {
-                document.getElementById('storeImageUpload').classList.add('has-image');
-                document.getElementById('storeImageUpload').innerHTML = `<img src="${currentStore.imageUrl}" alt="Logo"><input type="file" id="storeImageInput" accept="image/*" onchange="handleStoreImageUpload(event)">`;
-            }
-            
-            // Settings
-            const deliveryType = currentStore.deliveryType || 'app';
-            selectDeliveryType(deliveryType, false);
-        }
-        
-        async function loadAllData() {
-            await Promise.all([
-                loadOrders(),
-                loadProducts(),
-                loadCategories()
-            ]);
-            updateDashboard();
-        }
-        
-        async function loadOrders() {
-            try {
-                const snapshot = await db.collection('orders')
-                    .where('storeId', '==', currentStore.id)
-                    .get();
-                
-                orders = snapshot.docs
-                    .map(doc => ({ id: doc.id, ...doc.data() }))
-                    .sort((a, b) => {
-                        const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt);
-                        const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt);
-                        return dateB - dateA;
-                    });
-                
-                renderOrders();
-                updatePendingBadge();
-            } catch (err) {
-                console.error('Error loading orders:', err);
-            }
-        }
-        
-        async function loadProducts() {
-            try {
-                const snapshot = await db.collection('products')
-                    .where('storeId', '==', currentStore.id)
-                    .get();
-                
-                products = snapshot.docs
-                    .map(doc => ({ id: doc.id, ...doc.data() }))
-                    .sort((a, b) => a.name.localeCompare(b.name));
-                
-                renderProducts();
-            } catch (err) {
-                console.error('Error loading products:', err);
-            }
-        }
-        
-        async function loadCategories() {
-            // Extract from products
-            const cats = new Set(products.map(p => p.category).filter(Boolean));
-            categories = [...cats];
-            renderCategories();
-            updateCategorySelect();
-        }
-        
-        // Real-time listeners
-        function setupRealtimeListeners() {
-            db.collection('orders')
-                .where('storeId', '==', currentStore.id)
-                .onSnapshot(snapshot => {
-                    snapshot.docChanges().forEach(change => {
-                        if (change.type === 'added') {
-                            const order = { id: change.doc.id, ...change.doc.data() };
-                            const exists = orders.find(o => o.id === order.id);
-                            if (!exists) {
-                                orders.unshift(order);
-                                if (order.status === 'pending') {
-                                    playNotificationSound();
-                                    showToast('🔔 Novo pedido recebido!');
-                                }
-                            }
-                        } else if (change.type === 'modified') {
-                            const idx = orders.findIndex(o => o.id === change.doc.id);
-                            if (idx !== -1) {
-                                orders[idx] = { id: change.doc.id, ...change.doc.data() };
-                            }
-                        }
-                    });
-                    renderOrders();
-                    updateDashboard();
-                    updatePendingBadge();
-                });
-        }
-        
-        function playNotificationSound() {
-            try {
-                const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdH2JkpqWko+Coverage');
-                audio.play().catch(() => {});
-            } catch (e) {}
-        }
-        
-        // Navigation
-        function showPage(page) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            
-            document.getElementById(`${page}Page`).classList.add('active');
-            
-            const titles = {
-                dashboard: 'Dashboard',
-                orders: 'Pedidos',
-                products: 'Produtos',
-                categories: 'Categorias',
-                store: 'Minha Loja',
-                settings: 'Configurações'
-            };
-            document.getElementById('pageTitle').textContent = titles[page] || page;
-            
-            // Update nav
-            document.querySelectorAll('.nav-item').forEach(item => {
-                if (item.textContent.toLowerCase().includes(page) || 
-                    (page === 'dashboard' && item.textContent.includes('Dashboard'))) {
-                    item.classList.add('active');
-                }
-            });
-            
-            closeSidebar();
-        }
-        
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('open');
-            document.getElementById('overlay').classList.toggle('show');
-        }
-        
-        function closeSidebar() {
-            document.getElementById('sidebar').classList.remove('open');
-            document.getElementById('overlay').classList.remove('show');
-        }
-        
-        // Dashboard
-        function updateDashboard() {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            
-            const todayOrders = orders.filter(o => {
-                const date = o.createdAt?.toDate?.() || new Date(o.createdAt);
-                return date >= today;
-            });
-            
-            const pending = orders.filter(o => o.status === 'pending').length;
-            const revenue = todayOrders
-                .filter(o => o.status !== 'cancelled')
-                .reduce((sum, o) => sum + (o.total || 0), 0);
-            const activeProducts = products.filter(p => p.active !== false).length;
-            
-            document.getElementById('statPending').textContent = pending;
-            document.getElementById('statToday').textContent = todayOrders.length;
-            document.getElementById('statRevenue').textContent = formatCurrency(revenue);
-            document.getElementById('statProducts').textContent = activeProducts;
-            
-            // Recent orders
-            const recent = orders.slice(0, 5);
-            const container = document.getElementById('recentOrders');
-            
-            if (recent.length === 0) {
-                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📦</div><div class="empty-state-text">Nenhum pedido ainda</div></div>';
-            } else {
-                container.innerHTML = recent.map(order => renderOrderCard(order, true)).join('');
-            }
-        }
-        
-        function updatePendingBadge() {
-            const pending = orders.filter(o => o.status === 'pending').length;
-            const badge = document.getElementById('pendingBadge');
-            if (pending > 0) {
-                badge.textContent = pending;
-                badge.style.display = 'block';
-            } else {
-                badge.style.display = 'none';
-            }
-        }
-        
-        // Orders
-        function filterOrders(filter) {
-            orderFilter = filter;
-            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-            event.target.classList.add('active');
-            renderOrders();
-        }
-        
-        function renderOrders() {
-            let filtered = orders;
-            
-            if (orderFilter !== 'all') {
-                filtered = orders.filter(o => o.status === orderFilter);
-            }
-            
-            const container = document.getElementById('ordersList');
-            
-            if (filtered.length === 0) {
-                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📦</div><div class="empty-state-title">Nenhum pedido</div></div>';
-                return;
-            }
-            
-            container.innerHTML = filtered.map(order => renderOrderCard(order)).join('');
-        }
-        
-        function renderOrderCard(order, compact = false) {
-            const date = order.createdAt?.toDate?.() || new Date(order.createdAt);
-            const timeStr = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-            
-            return `
-                <div class="order-card">
-                    <div class="order-header" onclick="toggleOrder('${order.id}')">
-                        <div>
-                            <div class="order-id">#${order.id.slice(-6).toUpperCase()}</div>
-                            <div class="order-time">${timeStr} - ${order.userName || 'Cliente'}</div>
-                        </div>
-                        <span class="order-status status-${order.status}">${getStatusLabel(order.status)}</span>
-                    </div>
-                    <div class="order-body" id="order-${order.id}">
-                        <div class="order-items">
-                            ${order.items.map(item => `
-                                <div class="order-item">
-                                    <span>${item.qty}x ${item.name}</span>
-                                    <span>${formatCurrency(item.price * item.qty)}</span>
-                                </div>
-                            `).join('')}
-                            <div class="order-item" style="font-weight: 600;">
-                                <span>Total</span>
-                                <span>${formatCurrency(order.total)}</span>
-                            </div>
-                        </div>
-                        
-                        <div class="order-customer">
-                            <div class="order-customer-name">📍 ${order.address?.label || 'Endereço'}</div>
-                            <div class="order-customer-address">${order.address?.street}, ${order.address?.number} - ${order.address?.neighborhood}</div>
-                        </div>
-                        
-                        <div class="order-actions">
-                            ${getOrderActions(order)}
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-        
-        function getOrderActions(order) {
-            switch (order.status) {
-                case 'pending':
-                    return `
-                        <button class="btn btn-success btn-sm" onclick="updateOrderStatus('${order.id}', 'confirmed')">✓ Aceitar</button>
-                        <button class="btn btn-danger btn-sm" onclick="updateOrderStatus('${order.id}', 'cancelled')">✗ Recusar</button>
-                    `;
-                case 'confirmed':
-                    return `<button class="btn btn-primary btn-sm" onclick="updateOrderStatus('${order.id}', 'preparing')">🍳 Iniciar Preparo</button>`;
-                case 'preparing':
-                    return `<button class="btn btn-warning btn-sm" onclick="updateOrderStatus('${order.id}', 'ready')">✓ Pronto para Entrega</button>`;
-                case 'ready':
-                    return `<button class="btn btn-success btn-sm" onclick="updateOrderStatus('${order.id}', 'delivering')">🛵 Saiu para Entrega</button>`;
-                case 'delivering':
-                    return `<button class="btn btn-success btn-sm" onclick="updateOrderStatus('${order.id}', 'delivered')">✓ Entregue</button>`;
-                default:
-                    return '';
-            }
-        }
-        
-        function toggleOrder(orderId) {
-            const body = document.getElementById(`order-${orderId}`);
-            body.classList.toggle('expanded');
-        }
-        
-        async function updateOrderStatus(orderId, status) {
-            try {
-                const timeline = orders.find(o => o.id === orderId)?.timeline || [];
-                timeline.push({
-                    status,
-                    timestamp: new Date().toISOString(),
-                    message: getStatusLabel(status)
-                });
-                
-                await db.collection('orders').doc(orderId).update({
-                    status,
-                    timeline,
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                
-                showToast(`Pedido atualizado: ${getStatusLabel(status)}`);
-            } catch (err) {
-                showToast('Erro ao atualizar pedido');
-            }
-        }
-        
-        // Products
-        function renderProducts() {
-            const search = document.getElementById('productSearch')?.value?.toLowerCase() || '';
-            let filtered = products;
-            
-            if (search) {
-                filtered = products.filter(p => p.name.toLowerCase().includes(search));
-            }
-            
-            const container = document.getElementById('productsList');
-            
-            if (filtered.length === 0) {
-                container.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;"><div class="empty-state-icon">🍽️</div><div class="empty-state-title">Nenhum produto</div><button class="btn btn-primary" onclick="openProductModal()">+ Adicionar Produto</button></div>';
-                return;
-            }
-            
-            container.innerHTML = filtered.map(product => `
-                <div class="product-card">
-                    <div class="product-image">
-                        ${product.imageUrl 
-                            ? `<img src="${product.imageUrl}" alt="${product.name}">`
-                            : (product.emoji || '🍽️')}
-                        <span class="product-badge ${product.active !== false ? 'active' : 'inactive'}">
-                            ${product.active !== false ? 'Ativo' : 'Inativo'}
-                        </span>
-                    </div>
-                    <div class="product-info">
-                        <div class="product-name">${product.name}</div>
-                        <div class="product-category">${product.category || 'Sem categoria'}</div>
-                        <div class="product-price">${formatCurrency(product.price)}</div>
-                        <div class="product-actions">
-                            <button class="btn btn-secondary btn-sm" onclick="editProduct('${product.id}')">✏️ Editar</button>
-                            <button class="btn btn-danger btn-sm" onclick="deleteProduct('${product.id}')">🗑️</button>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-        
-        function filterProductsList() {
-            renderProducts();
-        }
-        
-        function initEmojiPicker() {
-            const picker = document.getElementById('emojiPicker');
-            picker.innerHTML = foodEmojis.map(emoji => `
-                <div class="emoji-item ${emoji === selectedEmoji ? 'selected' : ''}" onclick="selectEmoji('${emoji}')">${emoji}</div>
-            `).join('');
-        }
-        
-        function selectEmoji(emoji) {
-            selectedEmoji = emoji;
-            document.querySelectorAll('.emoji-item').forEach(el => {
-                el.classList.toggle('selected', el.textContent === emoji);
-            });
-            // Clear image if emoji selected
-            productImageData = null;
-            document.getElementById('productImageUpload').classList.remove('has-image');
-            document.getElementById('productImagePlaceholder').innerHTML = `<span>📷</span><div>Clique para enviar imagem</div>`;
-        }
-        
-        function openProductModal(productId = null) {
-            document.getElementById('productId').value = '';
-            document.getElementById('productName').value = '';
-            document.getElementById('productDescription').value = '';
-            document.getElementById('productPrice').value = '';
-            document.getElementById('productCategory').value = categories[0] || '';
-            document.getElementById('productActiveToggle').classList.add('active');
-            document.getElementById('productModalTitle').textContent = 'Novo Produto';
-            
-            productImageData = null;
-            document.getElementById('productImageUpload').classList.remove('has-image');
-            document.getElementById('productImagePlaceholder').innerHTML = `<span>📷</span><div>Clique para enviar imagem</div>`;
-            
-            selectedEmoji = '🍔';
-            initEmojiPicker();
-            
-            openModal('productModal');
-        }
-        
-        function editProduct(productId) {
-            const product = products.find(p => p.id === productId);
-            if (!product) return;
-            
-            document.getElementById('productId').value = product.id;
-            document.getElementById('productName').value = product.name;
-            document.getElementById('productDescription').value = product.description || '';
-            document.getElementById('productPrice').value = product.price;
-            document.getElementById('productCategory').value = product.category || '';
-            document.getElementById('productModalTitle').textContent = 'Editar Produto';
-            
-            const toggle = document.getElementById('productActiveToggle');
-            toggle.classList.toggle('active', product.active !== false);
-            
-            if (product.imageUrl) {
-                document.getElementById('productImageUpload').classList.add('has-image');
-                document.getElementById('productImageUpload').innerHTML = `<img src="${product.imageUrl}"><input type="file" id="productImageInput" accept="image/*" onchange="handleProductImageUpload(event)">`;
-            }
-            
-            selectedEmoji = product.emoji || '🍔';
-            initEmojiPicker();
-            
-            openModal('productModal');
-        }
-        
-        async function handleProductImageUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                productImageData = e.target.result;
-                document.getElementById('productImageUpload').classList.add('has-image');
-                document.getElementById('productImageUpload').innerHTML = `<img src="${productImageData}"><input type="file" id="productImageInput" accept="image/*" onchange="handleProductImageUpload(event)">`;
-            };
-            reader.readAsDataURL(file);
-        }
-        
-       async function saveProduct() {
-  const id = document.getElementById('productId').value;
-  const name = document.getElementById('productName').value.trim();
-  const description = document.getElementById('productDescription').value.trim();
-  const price = parseFloat(document.getElementById('productPrice').value);
-  const category = document.getElementById('productCategory').value;
-  const active = document.getElementById('productActiveToggle').classList.contains('active');
-
-  if (!name || !price) {
-    showToast('Preencha nome e preço');
-    return;
-  }
-
-  try {
-    const data = {
-      name,
-      description,
-      price,
-      category,
-      active,
-      emoji: selectedEmoji,
-      storeId: currentStore.id,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    };
-
-    // ✅ imagem em base64 direto no Firestore
-    if (productImageData?.startsWith('data:')) {
-      data.imageUrl = productImageData;
-    }
-
-    if (id) {
-      await db.collection('products').doc(id).update(data);
-    } else {
-      data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-      await db.collection('products').add(data);
-    }
-
-    closeModal('productModal');
-    await loadProducts();
-    loadCategories();
-    showToast('Produto salvo!');
-  } catch (err) {
-    console.error(err);
-    showToast('Erro ao salvar produto');
-  }
-}
-
-        
-        async function deleteProduct(productId) {
-            if (!confirm('Excluir este produto?')) return;
-            
-            try {
-                await db.collection('products').doc(productId).delete();
-                await loadProducts();
-                showToast('Produto excluído');
-            } catch (err) {
-                showToast('Erro ao excluir');
-            }
-        }
-        
-        function updateCategorySelect() {
-            const select = document.getElementById('productCategory');
-            select.innerHTML = categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
-            
-            if (categories.length === 0) {
-                select.innerHTML = '<option value="">Adicione uma categoria primeiro</option>';
-            }
-        }
-        
-        // Categories
-        function renderCategories() {
-            const container = document.getElementById('categoriesList');
-            
-            if (categories.length === 0) {
-                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📁</div><div class="empty-state-title">Nenhuma categoria</div></div>';
-                return;
-            }
-            
-            container.innerHTML = categories.map(cat => {
-                const count = products.filter(p => p.category === cat).length;
-                return `
-                    <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <strong>${cat}</strong>
-                            <div style="color: var(--text-muted); font-size: 0.9rem;">${count} produtos</div>
-                        </div>
-                        <button class="btn btn-danger btn-sm" onclick="deleteCategory('${cat}')">🗑️</button>
-                    </div>
-                `;
-            }).join('');
-        }
-        
-        function openCategoryModal() {
-            document.getElementById('categoryName').value = '';
-            openModal('categoryModal');
-        }
-        
-        async function saveCategory() {
-            const name = document.getElementById('categoryName').value.trim();
-            if (!name) {
-                showToast('Digite o nome da categoria');
-                return;
-            }
-            
-            if (categories.includes(name)) {
-                showToast('Categoria já existe');
-                return;
-            }
-            
-            categories.push(name);
-            renderCategories();
-            updateCategorySelect();
-            closeModal('categoryModal');
-            showToast('Categoria criada');
-        }
-        
-        async function deleteCategory(cat) {
-            const count = products.filter(p => p.category === cat).length;
-            if (count > 0) {
-                showToast(`Remova os ${count} produtos desta categoria primeiro`);
-                return;
-            }
-            
-            categories = categories.filter(c => c !== cat);
-            renderCategories();
-            updateCategorySelect();
-            showToast('Categoria removida');
-        }
-        
-        // Store
-        async function handleStoreImageUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                storeImageData = e.target.result;
-                document.getElementById('storeImageUpload').classList.add('has-image');
-                document.getElementById('storeImageUpload').innerHTML = `<img src="${storeImageData}"><input type="file" id="storeImageInput" accept="image/*" onchange="handleStoreImageUpload(event)">`;
-            };
-            reader.readAsDataURL(file);
-        }
-        
-        async function saveStoreInfo() {
-            try {
-                let imageUrl = currentStore.imageUrl;
-                
-                if (storeImageData && storeImageData.startsWith('data:')) {
-                    const filename = `stores/${currentStore.id}/logo.jpg`;
-                    const ref = storage.ref(filename);
-                    await ref.putString(storeImageData, 'data_url');
-                    imageUrl = await ref.getDownloadURL();
-                }
-                
-                const data = {
-                    name: document.getElementById('storeName').value,
-                    category: document.getElementById('storeCategory').value,
-                    description: document.getElementById('storeDescription').value,
-                    deliveryTime: document.getElementById('storeDeliveryTime').value,
-                    deliveryFee: parseFloat(document.getElementById('storeDeliveryFee').value) || 0,
-                    address: document.getElementById('storeAddress').value,
-                    phone: document.getElementById('storePhone').value,
-                    imageUrl,
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                };
-                
-                await db.collection('stores').doc(currentStore.id).update(data);
-                currentStore = { ...currentStore, ...data };
-                updateStoreUI();
-                showToast('Informações salvas!');
-                
-            } catch (err) {
-                console.error(err);
-                showToast('Erro ao salvar');
-            }
-        }
-        
-        async function toggleStoreStatus() {
-            const newStatus = currentStore.open === false;
-            
-            try {
-                await db.collection('stores').doc(currentStore.id).update({
-                    open: newStatus
-                });
-                
-                currentStore.open = newStatus;
-                updateStoreUI();
-                showToast(newStatus ? 'Loja aberta!' : 'Loja fechada!');
-                
-            } catch (err) {
-                showToast('Erro ao alterar status');
-            }
-        }
-        
-        // Settings
-        function selectDeliveryType(type, save = true) {
-            document.getElementById('deliveryApp').classList.toggle('selected', type === 'app');
-            document.getElementById('deliveryOwn').classList.toggle('selected', type === 'own');
-            document.getElementById('deliveryBoth').classList.toggle('selected', type === 'both');
-            
-            if (save) {
-                currentStore.deliveryType = type;
-            }
-        }
-        
-        function toggleSetting(setting) {
-            const toggle = document.getElementById(`${setting}Toggle`);
-            toggle.classList.toggle('active');
-        }
-        
-        async function saveSettings() {
-            try {
-                const deliveryType = document.getElementById('deliveryApp').classList.contains('selected') ? 'app' :
-                                     document.getElementById('deliveryOwn').classList.contains('selected') ? 'own' : 'both';
-                
-                const data = {
-                    deliveryType,
-                    settings: {
-                        soundEnabled: document.getElementById('soundToggle').classList.contains('active'),
-                        autoAccept: document.getElementById('autoAcceptToggle').classList.contains('active'),
-                        weekdayOpen: document.getElementById('weekdayOpen').value,
-                        weekdayClose: document.getElementById('weekdayClose').value,
-                        weekendOpen: document.getElementById('weekendOpen').value,
-                        weekendClose: document.getElementById('weekendClose').value
-                    }
-                };
-                
-                await db.collection('stores').doc(currentStore.id).update(data);
-                showToast('Configurações salvas!');
-                
-            } catch (err) {
-                showToast('Erro ao salvar configurações');
-            }
-        }
-        
-        // Utilities
-        function openModal(id) {
-            document.getElementById(id).classList.add('active');
-        }
-        
-        function closeModal(id) {
-            document.getElementById(id).classList.remove('active');
-        }
-        
-        function formatCurrency(value) {
-            return new Intl.NumberFormat('pt-BR', {
-                style: 'currency',
-                currency: 'BRL'
-            }).format(value || 0);
-        }
-        
-        function getStatusLabel(status) {
-            const labels = {
-                pending: 'Pendente',
-                confirmed: 'Confirmado',
-                preparing: 'Preparando',
-                ready: 'Pronto',
-                delivering: 'Em entrega',
-                delivered: 'Entregue',
-                cancelled: 'Cancelado'
-            };
-            return labels[status] || status;
-        }
-        
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3000);
-        }
-        
-        // Click outside modal
-        document.querySelectorAll('.modal').forEach(modal => {
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    modal.classList.remove('active');
-                }
-            });
-        });
-    </script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+    <script src="index.js"></script>
 </body>
 </html>
