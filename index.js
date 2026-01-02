@@ -58,7 +58,19 @@ async function handleLogin(e) {
 }
 
 function handleLogout() {
-    if (confirm('Deseja sair?')) auth.signOut();
+    showConfirmModal('Deseja sair?', 'Você será desconectado do painel.', () => auth.signOut());
+}
+
+function showConfirmModal(title, text, onConfirm, confirmText = 'Confirmar', cancelText = 'Cancelar') {
+    document.getElementById('confirmModalTitle').textContent = title;
+    document.getElementById('confirmModalText').textContent = text;
+    document.getElementById('confirmModalBtn').textContent = confirmText;
+    document.getElementById('confirmModalCancel').textContent = cancelText;
+    document.getElementById('confirmModalBtn').onclick = () => {
+        closeModal('confirmModal');
+        if (onConfirm) onConfirm();
+    };
+    openModal('confirmModal');
 }
 
 function showAuthPage() {
@@ -312,7 +324,7 @@ function renderProducts() {
             <div class="product-name">${p.name}</div>
             <div class="product-category">${p.category || 'Sem categoria'}</div>
             <div class="product-price">${formatCurrency(p.price)}</div>
-            <div class="product-actions"><button class="btn btn-secondary btn-sm" onclick="editProduct('${p.id}')">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteProduct('${p.id}')">🗑️</button></div>
+            <div class="product-actions"><button class="btn btn-secondary btn-sm" onclick="editProduct('${p.id}')">✏️</button><button class="btn btn-danger btn-sm" onclick="confirmDeleteProduct('${p.id}')">🗑️</button></div>
         </div>
     </div>`).join('');
 }
@@ -376,7 +388,6 @@ async function handleProductImageUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
     
-    // Comprime para 480x480 quadrado
     productImageData = await compressImageSquare(file, 480, 0.75);
     document.getElementById('productImageUpload').classList.add('has-image');
     document.getElementById('productImageUpload').innerHTML = `<img src="${productImageData}"><input type="file" id="productImageInput" accept="image/*" onchange="handleProductImageUpload(event)">`;
@@ -401,7 +412,6 @@ async function saveProduct() {
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
         
-        // Salva imagem como base64 diretamente no Firestore
         if (productImageData?.startsWith('data:')) {
             data.imageUrl = productImageData;
         }
@@ -420,9 +430,19 @@ async function saveProduct() {
     } catch (err) { console.error(err); showToast('Erro ao salvar'); }
 }
 
+function confirmDeleteProduct(productId) {
+    const p = products.find(x => x.id === productId);
+    showConfirmModal('Excluir produto?', `"${p?.name || 'Produto'}" será removido permanentemente.`, () => deleteProduct(productId), 'Excluir');
+}
+
 async function deleteProduct(productId) {
-    if (!confirm('Excluir?')) return;
-    try { await db.collection('products').doc(productId).delete(); await loadProducts(); showToast('Excluído'); } catch (err) { showToast('Erro'); }
+    try { 
+        await db.collection('products').doc(productId).delete(); 
+        await loadProducts(); 
+        showToast('Excluído'); 
+    } catch (err) { 
+        showToast('Erro'); 
+    }
 }
 
 function updateCategorySelect() {
@@ -437,7 +457,7 @@ function renderCategories() {
     const container = document.getElementById('categoriesList');
     container.innerHTML = categories.length === 0 
         ? '<div class="empty-state"><div class="empty-state-icon">📁</div><div class="empty-state-title">Nenhuma categoria</div></div>'
-        : categories.map(c => `<div class="card" style="display: flex; justify-content: space-between; align-items: center;"><div><strong>${c}</strong><div style="color: var(--text-muted); font-size: 0.9rem;">${products.filter(p => p.category === c).length} produtos</div></div><button class="btn btn-danger btn-sm" onclick="deleteCategory('${c}')">🗑️</button></div>`).join('');
+        : categories.map(c => `<div class="card" style="display: flex; justify-content: space-between; align-items: center;"><div><strong>${c}</strong><div style="color: var(--text-muted); font-size: 0.9rem;">${products.filter(p => p.category === c).length} produtos</div></div><button class="btn btn-danger btn-sm" onclick="confirmDeleteCategory('${c}')">🗑️</button></div>`).join('');
 }
 
 function openCategoryModal() { document.getElementById('categoryName').value = ''; openModal('categoryModal'); }
@@ -453,9 +473,16 @@ async function saveCategory() {
     showToast('Criada');
 }
 
-async function deleteCategory(cat) {
+function confirmDeleteCategory(cat) {
     const count = products.filter(p => p.category === cat).length;
-    if (count > 0) { showToast(`Remova ${count} produtos primeiro`); return; }
+    if (count > 0) { 
+        showToast(`Remova ${count} produtos primeiro`); 
+        return; 
+    }
+    showConfirmModal('Excluir categoria?', `"${cat}" será removida.`, () => deleteCategory(cat), 'Excluir');
+}
+
+async function deleteCategory(cat) {
     categories = categories.filter(c => c !== cat);
     renderCategories();
     updateCategorySelect();
@@ -536,7 +563,6 @@ async function saveSettings() {
 
 // ==================== UTILITIES ====================
 
-// Comprime imagem para quadrado (crop central)
 function compressImageSquare(file, maxSize, quality) {
     return new Promise((resolve) => {
         const reader = new FileReader();
@@ -544,24 +570,14 @@ function compressImageSquare(file, maxSize, quality) {
             const img = new Image();
             img.onload = () => {
                 const canvas = document.createElement('canvas');
-                
-                // Pega o menor lado para fazer crop quadrado centralizado
                 const srcSize = Math.min(img.width, img.height);
                 const cropX = (img.width - srcSize) / 2;
                 const cropY = (img.height - srcSize) / 2;
-                
-                // Tamanho final (max 480)
                 const finalSize = Math.min(srcSize, maxSize);
                 canvas.width = finalSize;
                 canvas.height = finalSize;
-                
                 const ctx = canvas.getContext('2d');
-                ctx.drawImage(
-                    img,
-                    cropX, cropY, srcSize, srcSize,  // source (crop quadrado)
-                    0, 0, finalSize, finalSize       // destination
-                );
-                
+                ctx.drawImage(img, cropX, cropY, srcSize, srcSize, 0, 0, finalSize, finalSize);
                 resolve(canvas.toDataURL('image/jpeg', quality));
             };
             img.src = e.target.result;
