@@ -637,3 +637,9 @@ textarea.form-input { min-height: 100px; resize: vertical; }
 .empty-state-icon { font-size: 3rem; margin-bottom: 12px; }
 .empty-state-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; }
 .empty-state-text { color: var(--text-muted); }
+
+/* Confirm Modal Text */
+#confirmModalText {
+    white-space: pre-line;
+    line-height: 1.5;
+}
