@@ -2,269 +2,778 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Pedrad - Painel da Loja</title>
-    <meta name="theme-color" content="#6366f1">
-    <link rel="stylesheet" href="index.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel da Loja - Pedrad</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #0a0a0a;
+            --bg-card: #111;
+            --bg-secondary: #1a1a1a;
+            --text: #fff;
+            --text-muted: #888;
+            --border: #222;
+            --primary: #6366f1;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+        .header {
+            background: var(--bg-card);
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header-title { font-size: 1.2rem; font-weight: 600; }
+        .header-status { display: flex; align-items: center; gap: 12px; }
+        .status-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .status-toggle.open { background: rgba(34,197,94,0.2); color: var(--success); }
+        .status-toggle.closed { background: rgba(239,68,68,0.2); color: var(--danger); }
+        
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+        .stat-value { font-size: 2rem; font-weight: 600; }
+        .stat-label { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
+        
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+        .tab {
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            white-space: nowrap;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            transition: all 0.2s;
+        }
+        .tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .tab .badge {
+            background: var(--danger);
+            color: #fff;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 6px;
+        }
+        
+        .orders-list { display: flex; flex-direction: column; gap: 12px; }
+        
+        .order-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+        .order-card.new { border-color: var(--warning); animation: pulse 2s infinite; }
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.4); }
+            50% { box-shadow: 0 0 0 8px rgba(245,158,11,0); }
+        }
+        
+        .order-header {
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 1px solid var(--border);
+        }
+        .order-id { font-weight: 600; margin-bottom: 4px; }
+        .order-time { font-size: 0.8rem; color: var(--text-muted); }
+        .order-customer { font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; }
+        
+        .order-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        .status-pending { background: rgba(245,158,11,0.2); color: var(--warning); }
+        .status-confirmed { background: rgba(99,102,241,0.2); color: var(--primary); }
+        .status-preparing { background: rgba(168,85,247,0.2); color: #a855f7; }
+        .status-ready { background: rgba(34,197,94,0.2); color: var(--success); }
+        .status-delivering { background: rgba(59,130,246,0.2); color: #3b82f6; }
+        .status-delivered { background: rgba(34,197,94,0.3); color: var(--success); }
+        .status-cancelled { background: rgba(239,68,68,0.2); color: var(--danger); }
+        
+        .order-body { padding: 16px; }
+        .order-items { margin-bottom: 12px; }
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .order-item:last-child { border-bottom: none; }
+        .item-addons { font-size: 0.8rem; color: var(--text-muted); }
+        
+        .order-info {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 12px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            font-size: 0.85rem;
+        }
+        .order-info-row { display: flex; gap: 8px; }
+        .order-info-label { color: var(--text-muted); min-width: 80px; }
+        
+        .order-total {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: var(--bg-secondary);
+            font-weight: 600;
+        }
+        
+        .order-actions {
+            padding: 16px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            border-top: 1px solid var(--border);
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-success { background: var(--success); color: #fff; }
+        .btn-warning { background: var(--warning); color: #000; }
+        .btn-danger { background: var(--danger); color: #fff; }
+        .btn-secondary { background: var(--bg-secondary); color: var(--text); border: 1px solid var(--border); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+        .empty-state-icon { font-size: 4rem; margin-bottom: 16px; }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--bg-card);
+            color: var(--text);
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            z-index: 1000;
+            transition: transform 0.3s;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        
+        .notification-sound { display: none; }
+        
+        /* Auth */
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .auth-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 32px;
+            width: 100%;
+            max-width: 400px;
+        }
+        .auth-title { text-align: center; margin-bottom: 24px; }
+        .input-group { margin-bottom: 16px; }
+        .input-group label { display: block; margin-bottom: 6px; font-size: 0.85rem; color: var(--text-muted); }
+        .input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--bg-secondary);
+            color: var(--text);
+            font-size: 1rem;
+        }
+        .input:focus { outline: none; border-color: var(--primary); }
+        
+        /* Menu lateral */
+        .sidebar-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        @media (max-width: 768px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
 </head>
 <body>
-    <div class="toast" id="toast"></div>
-    
-    <!-- Auth -->
     <div id="authPage" class="auth-container">
         <div class="auth-box">
-            <div class="auth-logo">
-                <h1>🏪 Pedrad Loja</h1>
-                <p style="color: var(--text-muted); margin-top: 8px;">Painel do estabelecimento</p>
-            </div>
-            <div class="card">
-                <form onsubmit="handleLogin(event)">
-                    <div class="form-group">
-                        <label class="form-label">E-mail</label>
-                        <input type="email" class="form-input" id="loginEmail" placeholder="loja@email.com" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Senha</label>
-                        <input type="password" class="form-input" id="loginPassword" placeholder="••••••••" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-block">Entrar</button>
-                </form>
-            </div>
+            <h1 class="auth-title">🏪 Painel da Loja</h1>
+            <form onsubmit="handleLogin(event)">
+                <div class="input-group">
+                    <label>E-mail</label>
+                    <input type="email" class="input" id="loginEmail" required>
+                </div>
+                <div class="input-group">
+                    <label>Senha</label>
+                    <input type="password" class="input" id="loginPassword" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Entrar</button>
+            </form>
         </div>
     </div>
     
-    <!-- Main App -->
     <div id="mainApp" style="display: none;">
-        <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+        <header class="header">
+            <div class="header-title">🏪 <span id="storeName">Minha Loja</span></div>
+            <div class="header-status">
+                <div class="status-toggle open" id="statusToggle" onclick="toggleStoreStatus()">
+                    <span id="statusIcon">🟢</span>
+                    <span id="statusText">Aberto</span>
+                </div>
+                <button class="btn btn-secondary" onclick="handleLogout()">Sair</button>
+            </div>
+        </header>
         
-        <!-- Sidebar -->
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <div class="sidebar-logo">🏪 Pedrad</div>
-                <div class="store-info">
-                    <div class="store-avatar" id="sidebarAvatar">🍔</div>
-                    <div>
-                        <div class="store-name" id="sidebarStoreName">Minha Loja</div>
-                        <div class="store-status" id="sidebarStatus">🟢 Aberto</div>
-                    </div>
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="statPending">0</div>
+                    <div class="stat-label">Pendentes</div>
                 </div>
-            </div>
-            <nav class="sidebar-nav">
-                <div class="nav-section">
-                    <div class="nav-section-title">Principal</div>
-                    <div class="nav-item active" onclick="showPage('dashboard')"><span>📊</span> Dashboard</div>
-                    <div class="nav-item" onclick="showPage('orders')"><span>📦</span> Pedidos <span class="nav-badge" id="pendingBadge" style="display:none;">0</span></div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statPreparing">0</div>
+                    <div class="stat-label">Preparando</div>
                 </div>
-                <div class="nav-section">
-                    <div class="nav-section-title">Cardápio</div>
-                    <div class="nav-item" onclick="showPage('products')"><span>🍽️</span> Produtos</div>
-                    <div class="nav-item" onclick="showPage('categories')"><span>📁</span> Categorias</div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statReady">0</div>
+                    <div class="stat-label">Prontos</div>
                 </div>
-                <div class="nav-section">
-                    <div class="nav-section-title">Configurações</div>
-                    <div class="nav-item" onclick="showPage('store')"><span>🏪</span> Minha Loja</div>
-                    <div class="nav-item" onclick="showPage('settings')"><span>⚙️</span> Configurações</div>
-                    <div class="nav-item" onclick="handleLogout()"><span>🚪</span> Sair</div>
-                </div>
-            </nav>
-        </aside>
-        
-        <!-- Main -->
-        <main class="main-content">
-            <header class="topbar">
-                <div style="display: flex; align-items: center; gap: 16px;">
-                    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
-                    <h1 class="topbar-title" id="pageTitle">Dashboard</h1>
-                </div>
-                <div class="topbar-actions">
-                    <div class="toggle" id="storeToggle" onclick="toggleStoreStatus()"></div>
-                </div>
-            </header>
-            
-            <!-- Dashboard -->
-            <div id="dashboardPage" class="page active">
-                <div class="stats-grid">
-                    <div class="stat-card"><div class="stat-icon warning">📦</div><div class="stat-value" id="statPending">0</div><div class="stat-label">Pedidos pendentes</div></div>
-                    <div class="stat-card"><div class="stat-icon primary">📋</div><div class="stat-value" id="statToday">0</div><div class="stat-label">Pedidos hoje</div></div>
-                    <div class="stat-card"><div class="stat-icon success">💰</div><div class="stat-value" id="statRevenue">R$ 0</div><div class="stat-label">Faturamento hoje</div></div>
-                    <div class="stat-card"><div class="stat-icon danger">🍽️</div><div class="stat-value" id="statProducts">0</div><div class="stat-label">Produtos ativos</div></div>
-                </div>
-                <div class="card">
-                    <div class="card-header"><div class="card-title">📦 Pedidos Recentes</div><button class="btn btn-secondary btn-sm" onclick="showPage('orders')">Ver todos</button></div>
-                    <div id="recentOrders"></div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statToday">0</div>
+                    <div class="stat-label">Hoje</div>
                 </div>
             </div>
             
-            <!-- Orders -->
-            <div id="ordersPage" class="page">
-                <div class="orders-filters">
-                    <div class="filter-chip active" onclick="filterOrders('all')">Todos</div>
-                    <div class="filter-chip" onclick="filterOrders('pending')">🟡 Pendentes</div>
-                    <div class="filter-chip" onclick="filterOrders('preparing')">🔵 Preparando</div>
-                    <div class="filter-chip" onclick="filterOrders('ready')">🟣 Pronto</div>
-                    <div class="filter-chip" onclick="filterOrders('delivering')">🟢 Entregando</div>
-                    <div class="filter-chip" onclick="filterOrders('delivered')">✅ Entregues</div>
+            <div class="tabs" id="tabs">
+                <div class="tab active" data-status="pending" onclick="filterOrders('pending')">
+                    🔔 Novos <span class="badge" id="badgePending" style="display:none;">0</span>
                 </div>
-                <div id="ordersList"></div>
+                <div class="tab" data-status="confirmed" onclick="filterOrders('confirmed')">✓ Confirmados</div>
+                <div class="tab" data-status="preparing" onclick="filterOrders('preparing')">👨‍🍳 Preparando</div>
+                <div class="tab" data-status="ready" onclick="filterOrders('ready')">📦 Prontos</div>
+                <div class="tab" data-status="delivering" onclick="filterOrders('delivering')">🛵 Entregando</div>
+                <div class="tab" data-status="all" onclick="filterOrders('all')">📋 Todos</div>
             </div>
             
-            <!-- Products -->
-            <div id="productsPage" class="page">
-                <div class="products-header">
-                    <input type="text" class="form-input" style="max-width: 300px;" placeholder="🔍 Buscar produto..." id="productSearch" oninput="filterProductsList()">
-                    <button class="btn btn-primary" onclick="openProductModal()">+ Novo Produto</button>
-                </div>
-                <div class="products-grid" id="productsList"></div>
-            </div>
-            
-            <!-- Categories -->
-            <div id="categoriesPage" class="page">
-                <div class="products-header">
-                    <h3>Categorias do Cardápio</h3>
-                    <button class="btn btn-primary" onclick="openCategoryModal()">+ Nova Categoria</button>
-                </div>
-                <div id="categoriesList"></div>
-            </div>
-            
-            <!-- Store -->
-            <div id="storePage" class="page">
-                <div class="card">
-                    <div class="card-title" style="margin-bottom: 20px;">🏪 Informações da Loja</div>
-                    <div class="form-group">
-                        <label class="form-label">Logo / Imagem da Loja</label>
-                        <div class="image-upload" id="storeImageUpload" onclick="document.getElementById('storeImageInput').click()">
-                            <div class="image-upload-placeholder" id="storeImagePlaceholder"><span>📷</span><div>Clique para enviar imagem</div></div>
-                            <input type="file" id="storeImageInput" accept="image/*" onchange="handleStoreImageUpload(event)">
-                        </div>
-                    </div>
-                    <div class="form-group"><label class="form-label">Nome da Loja</label><input type="text" class="form-input" id="storeName" placeholder="Nome do estabelecimento"></div>
-                    <div class="form-group">
-                        <label class="form-label">Categoria</label>
-                        <select class="form-input" id="storeCategory">
-                            <option value="Hambúrgueres">🍔 Hambúrgueres</option>
-                            <option value="Pizzaria">🍕 Pizzaria</option>
-                            <option value="Japonesa">🍣 Japonesa</option>
-                            <option value="Açaí e Sorvetes">🍇 Açaí e Sorvetes</option>
-                            <option value="Brasileira">🍛 Brasileira</option>
-                            <option value="Lanches">🌭 Lanches</option>
-                            <option value="Doces">🍰 Doces</option>
-                            <option value="Bebidas">🍹 Bebidas</option>
-                            <option value="Outro">📦 Outro</option>
-                        </select>
-                    </div>
-                    <div class="form-group"><label class="form-label">Descrição</label><textarea class="form-input" id="storeDescription" placeholder="Fale sobre sua loja..."></textarea></div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                        <div class="form-group"><label class="form-label">Tempo de entrega</label><input type="text" class="form-input" id="storeDeliveryTime" placeholder="30-45 min"></div>
-                        <div class="form-group"><label class="form-label">Taxa de entrega (R$)</label><input type="number" class="form-input" id="storeDeliveryFee" placeholder="5.00" step="0.50"></div>
-                    </div>
-                    <div class="form-group"><label class="form-label">Endereço</label><input type="text" class="form-input" id="storeAddress" placeholder="Rua, número - Bairro"></div>
-                    <div class="form-group"><label class="form-label">Telefone / WhatsApp</label><input type="tel" class="form-input" id="storePhone" placeholder="(00) 00000-0000"></div>
-                    <button class="btn btn-primary btn-block" onclick="saveStoreInfo()">Salvar Informações</button>
-                </div>
-            </div>
-            
-            <!-- Settings -->
-            <div id="settingsPage" class="page">
-                <div class="settings-section">
-                    <div class="settings-title">🚚 Entrega</div>
-                    <div class="form-group">
-                        <label class="form-label">Tipo de entregador</label>
-                        <div class="radio-cards">
-                            <div class="radio-card" id="deliveryApp" onclick="selectDeliveryType('app')"><div class="radio-card-icon">🛵</div><div class="radio-card-title">Entregador do App</div><div class="radio-card-desc">Entregadores parceiros</div></div>
-                            <div class="radio-card" id="deliveryOwn" onclick="selectDeliveryType('own')"><div class="radio-card-icon">👨‍💼</div><div class="radio-card-title">Entregador Próprio</div><div class="radio-card-desc">Sua equipe</div></div>
-                            <div class="radio-card" id="deliveryBoth" onclick="selectDeliveryType('both')"><div class="radio-card-icon">🔄</div><div class="radio-card-title">Ambos</div><div class="radio-card-desc">Conforme disponibilidade</div></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="settings-section">
-                    <div class="settings-title">🕐 Horário de Funcionamento</div>
-                    <div class="setting-item">
-                        <div class="setting-info">
-                            <div class="setting-label">Segunda a Sexta</div>
-                            <div style="display: flex; gap: 8px; margin-top: 8px;">
-                                <input type="time" class="form-input" id="weekdayOpen" value="18:00" style="width: auto;">
-                                <span style="align-self: center;">às</span>
-                                <input type="time" class="form-input" id="weekdayClose" value="23:00" style="width: auto;">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="setting-item">
-                        <div class="setting-info">
-                            <div class="setting-label">Sábado e Domingo</div>
-                            <div style="display: flex; gap: 8px; margin-top: 8px;">
-                                <input type="time" class="form-input" id="weekendOpen" value="11:00" style="width: auto;">
-                                <span style="align-self: center;">às</span>
-                                <input type="time" class="form-input" id="weekendClose" value="23:00" style="width: auto;">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="settings-section">
-                    <div class="settings-title">🔔 Notificações</div>
-                    <div class="setting-item">
-                        <div class="setting-info"><div class="setting-label">Som de novo pedido</div><div class="setting-desc">Tocar som quando receber pedido</div></div>
-                        <div class="toggle active" id="soundToggle" onclick="toggleSetting('sound')"></div>
-                    </div>
-                    <div class="setting-item">
-                        <div class="setting-info"><div class="setting-label">Aceitar automaticamente</div><div class="setting-desc">Confirmar pedidos sem aprovação</div></div>
-                        <div class="toggle" id="autoAcceptToggle" onclick="toggleSetting('autoAccept')"></div>
-                    </div>
-                </div>
-                <button class="btn btn-primary" onclick="saveSettings()">Salvar Configurações</button>
-            </div>
-        </main>
-    </div>
-    
-    <!-- Product Modal -->
-    <div class="modal" id="productModal">
-        <div class="modal-content">
-            <div class="modal-header"><div class="modal-title" id="productModalTitle">Novo Produto</div><button class="modal-close" onclick="closeModal('productModal')">×</button></div>
-            <div class="modal-body">
-                <input type="hidden" id="productId">
-                <div class="form-group">
-                    <label class="form-label">Imagem do Produto</label>
-                    <div class="image-upload" id="productImageUpload" onclick="document.getElementById('productImageInput').click()">
-                        <div class="image-upload-placeholder" id="productImagePlaceholder"><span>📷</span><div>Clique para enviar imagem</div></div>
-                        <input type="file" id="productImageInput" accept="image/*" onchange="handleProductImageUpload(event)">
-                    </div>
-                </div>
-                <div class="form-group"><label class="form-label">Ou escolha um ícone</label><div class="emoji-picker" id="emojiPicker"></div></div>
-                <div class="form-group"><label class="form-label">Nome do Produto</label><input type="text" class="form-input" id="productName" placeholder="Ex: X-Burger Especial"></div>
-                <div class="form-group"><label class="form-label">Descrição</label><textarea class="form-input" id="productDescription" placeholder="Ingredientes, tamanho..." style="min-height: 60px;"></textarea></div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                    <div class="form-group"><label class="form-label">Preço (R$)</label><input type="number" class="form-input" id="productPrice" placeholder="0.00" step="0.10"></div>
-                    <div class="form-group"><label class="form-label">Categoria</label><select class="form-input" id="productCategory"></select></div>
-                </div>
-                <div class="setting-item" style="margin-top: 8px;">
-                    <div class="setting-info"><div class="setting-label">Produto ativo</div><div class="setting-desc">Visível no cardápio</div></div>
-                    <div class="toggle active" id="productActiveToggle"></div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeModal('productModal')">Cancelar</button>
-                <button class="btn btn-primary" onclick="saveProduct()">Salvar</button>
-            </div>
+            <div class="orders-list" id="ordersList"></div>
         </div>
     </div>
     
-    <!-- Category Modal -->
-    <div class="modal" id="categoryModal">
-        <div class="modal-content">
-            <div class="modal-header"><div class="modal-title">Nova Categoria</div><button class="modal-close" onclick="closeModal('categoryModal')">×</button></div>
-            <div class="modal-body">
-                <div class="form-group"><label class="form-label">Nome da Categoria</label><input type="text" class="form-input" id="categoryName" placeholder="Ex: Lanches, Bebidas..."></div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeModal('categoryModal')">Cancelar</button>
-                <button class="btn btn-primary" onclick="saveCategory()">Salvar</button>
-            </div>
-        </div>
-    </div>
+    <div class="toast" id="toast"></div>
+    
+    <!-- Som de notificação -->
+    <audio id="notificationSound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleVVcjrqxlYRwZoOdscCwln10dY2ntbG0sKKYiIJ6dnJ0dnh8gIWJj5SVmJqcoaGhpKSkoqKfn5yZl5KQjYuKiYmJiYmJiYmJiYmJ" type="audio/wav">
+    </audio>
 
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
-    <script src="index.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAnIJRcUxN-0swpVnonPbJjTSK87o4CQ_g",
+            authDomain: "pedrad-814d0.firebaseapp.com",
+            projectId: "pedrad-814d0",
+            storageBucket: "pedrad-814d0.firebasestorage.app",
+            messagingSenderId: "293587190550",
+            appId: "1:293587190550:web:80c9399f82847c80e20637"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        let currentUser = null;
+        let currentStore = null;
+        let orders = [];
+        let currentFilter = 'pending';
+        let ordersUnsubscribe = null;
+        let notificationPermission = false;
+        let knownOrderIds = new Set();
+
+        // ==================== AUTH ====================
+        
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUser = user;
+                await loadStore();
+                if (currentStore) {
+                    showMainApp();
+                    setupRealtimeOrders();
+                    requestNotificationPermission();
+                } else {
+                    showToast('Loja não encontrada para este usuário');
+                    auth.signOut();
+                }
+            } else {
+                showAuthPage();
+            }
+        });
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+            } catch (err) {
+                showToast('Erro: ' + err.message);
+            }
+        }
+
+        function handleLogout() {
+            if (confirm('Deseja sair?')) {
+                if (ordersUnsubscribe) ordersUnsubscribe();
+                auth.signOut();
+            }
+        }
+
+        function showAuthPage() {
+            document.getElementById('authPage').style.display = 'flex';
+            document.getElementById('mainApp').style.display = 'none';
+        }
+
+        function showMainApp() {
+            document.getElementById('authPage').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+        }
+
+        // ==================== STORE ====================
+
+        async function loadStore() {
+            try {
+                const snapshot = await db.collection('stores')
+                    .where('ownerId', '==', currentUser.uid)
+                    .limit(1)
+                    .get();
+                
+                if (!snapshot.empty) {
+                    currentStore = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+                    document.getElementById('storeName').textContent = currentStore.name;
+                    updateStatusUI();
+                }
+            } catch (err) {
+                console.error('Erro ao carregar loja:', err);
+            }
+        }
+
+        async function toggleStoreStatus() {
+            if (!currentStore) return;
+            
+            const newStatus = currentStore.open === false ? true : false;
+            
+            try {
+                await db.collection('stores').doc(currentStore.id).update({
+                    open: !newStatus ? false : true
+                });
+                currentStore.open = !newStatus ? false : true;
+                updateStatusUI();
+                showToast(currentStore.open ? 'Loja aberta!' : 'Loja fechada!');
+            } catch (err) {
+                showToast('Erro ao alterar status');
+            }
+        }
+
+        function updateStatusUI() {
+            const toggle = document.getElementById('statusToggle');
+            const icon = document.getElementById('statusIcon');
+            const text = document.getElementById('statusText');
+            
+            if (currentStore.open !== false) {
+                toggle.className = 'status-toggle open';
+                icon.textContent = '🟢';
+                text.textContent = 'Aberto';
+            } else {
+                toggle.className = 'status-toggle closed';
+                icon.textContent = '🔴';
+                text.textContent = 'Fechado';
+            }
+        }
+
+        // ==================== NOTIFICATIONS ====================
+
+        async function requestNotificationPermission() {
+            if (!('Notification' in window)) return;
+            
+            if (Notification.permission === 'granted') {
+                notificationPermission = true;
+            } else if (Notification.permission !== 'denied') {
+                const permission = await Notification.requestPermission();
+                notificationPermission = permission === 'granted';
+            }
+        }
+
+        function sendNotification(title, body) {
+            // Som
+            try {
+                const audio = document.getElementById('notificationSound');
+                audio.currentTime = 0;
+                audio.play().catch(() => {});
+            } catch (e) {}
+            
+            // Vibração
+            if (navigator.vibrate) {
+                navigator.vibrate([300, 100, 300, 100, 300]);
+            }
+            
+            // Notificação do sistema
+            if (notificationPermission) {
+                try {
+                    new Notification(title, { body, icon: '🛵', tag: 'pedrad-' + Date.now() });
+                } catch (e) {}
+            }
+        }
+
+        // ==================== REALTIME ORDERS ====================
+
+        function setupRealtimeOrders() {
+            if (!currentStore) return;
+            if (ordersUnsubscribe) ordersUnsubscribe();
+            
+            // Marca pedidos existentes como conhecidos
+            knownOrderIds.clear();
+            
+            ordersUnsubscribe = db.collection('orders')
+                .where('storeId', '==', currentStore.id)
+                .orderBy('createdAt', 'desc')
+                .limit(100)
+                .onSnapshot(snapshot => {
+                    snapshot.docChanges().forEach(change => {
+                        const order = { id: change.doc.id, ...change.doc.data() };
+                        
+                        if (change.type === 'added') {
+                            // Verifica se é pedido novo (não conhecido)
+                            if (!knownOrderIds.has(order.id)) {
+                                knownOrderIds.add(order.id);
+                                
+                                // Se status é pending e já temos pedidos (não é carga inicial)
+                                if (order.status === 'pending' && orders.length > 0) {
+                                    sendNotification(
+                                        '🔔 Novo Pedido!',
+                                        `${order.userName} - ${formatCurrency(order.total)}`
+                                    );
+                                    showToast('🔔 Novo pedido recebido!');
+                                }
+                            }
+                            
+                            const exists = orders.find(o => o.id === order.id);
+                            if (!exists) {
+                                orders.unshift(order);
+                            }
+                        }
+                        
+                        if (change.type === 'modified') {
+                            const idx = orders.findIndex(o => o.id === order.id);
+                            if (idx !== -1) {
+                                orders[idx] = order;
+                            }
+                        }
+                        
+                        if (change.type === 'removed') {
+                            orders = orders.filter(o => o.id !== order.id);
+                            knownOrderIds.delete(order.id);
+                        }
+                    });
+                    
+                    // Ordena por data
+                    orders.sort((a, b) => {
+                        const dateA = a.createdAt?.toDate?.() || new Date(0);
+                        const dateB = b.createdAt?.toDate?.() || new Date(0);
+                        return dateB - dateA;
+                    });
+                    
+                    updateStats();
+                    renderOrders();
+                }, err => {
+                    console.error('Erro no listener:', err);
+                    showToast('Erro ao carregar pedidos');
+                });
+            
+            console.log('✅ Realtime ativo para loja:', currentStore.id);
+        }
+
+        // ==================== RENDER ====================
+
+        function updateStats() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const pending = orders.filter(o => o.status === 'pending').length;
+            const preparing = orders.filter(o => o.status === 'preparing' || o.status === 'confirmed').length;
+            const ready = orders.filter(o => o.status === 'ready').length;
+            const todayOrders = orders.filter(o => {
+                const date = o.createdAt?.toDate?.() || new Date(0);
+                return date >= today;
+            }).length;
+            
+            document.getElementById('statPending').textContent = pending;
+            document.getElementById('statPreparing').textContent = preparing;
+            document.getElementById('statReady').textContent = ready;
+            document.getElementById('statToday').textContent = todayOrders;
+            
+            // Badge de pendentes
+            const badge = document.getElementById('badgePending');
+            if (pending > 0) {
+                badge.textContent = pending;
+                badge.style.display = 'inline';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        function filterOrders(status) {
+            currentFilter = status;
+            
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.status === status);
+            });
+            
+            renderOrders();
+        }
+
+        function renderOrders() {
+            const container = document.getElementById('ordersList');
+            
+            let filtered = orders;
+            if (currentFilter !== 'all') {
+                filtered = orders.filter(o => o.status === currentFilter);
+            }
+            
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <p>Nenhum pedido ${currentFilter === 'all' ? '' : 'nesta categoria'}</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = filtered.map(order => renderOrderCard(order)).join('');
+        }
+
+        function renderOrderCard(order) {
+            const isNew = order.status === 'pending';
+            const paymentLabels = {
+                pix: 'PIX', credit: 'Crédito', debit: 'Débito',
+                cash: 'Dinheiro', picpay: 'PicPay', alimentacao: 'Vale Alimentação'
+            };
+            
+            return `
+                <div class="order-card ${isNew ? 'new' : ''}">
+                    <div class="order-header">
+                        <div>
+                            <div class="order-id">#${order.id.slice(-6).toUpperCase()}</div>
+                            <div class="order-time">${formatDate(order.createdAt)}</div>
+                            <div class="order-customer">👤 ${order.userName}</div>
+                        </div>
+                        <span class="order-status status-${order.status}">${getStatusLabel(order.status)}</span>
+                    </div>
+                    
+                    <div class="order-body">
+                        <div class="order-items">
+                            ${order.items.map(item => `
+                                <div class="order-item">
+                                    <div>
+                                        <span>${item.qty}x ${item.name}</span>
+                                        ${item.addons?.length ? `<div class="item-addons">${item.addons.map(a => `+ ${a.name}`).join(', ')}</div>` : ''}
+                                    </div>
+                                    <span>${formatCurrency(item.price * item.qty)}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <div class="order-info">
+                            <div class="order-info-row">
+                                <span class="order-info-label">📍 Tipo:</span>
+                                <span>${order.deliveryMode === 'pickup' ? 'Retirada na loja' : 'Entrega'}</span>
+                            </div>
+                            ${order.address ? `
+                                <div class="order-info-row">
+                                    <span class="order-info-label">🏠 Endereço:</span>
+                                    <span>${order.address.street}, ${order.address.number} - ${order.address.neighborhood}</span>
+                                </div>
+                                ${order.address.reference ? `
+                                    <div class="order-info-row">
+                                        <span class="order-info-label">📝 Ref:</span>
+                                        <span>${order.address.reference}</span>
+                                    </div>
+                                ` : ''}
+                            ` : ''}
+                            <div class="order-info-row">
+                                <span class="order-info-label">💳 Pagamento:</span>
+                                <span>${paymentLabels[order.paymentMethod] || order.paymentMethod || 'Não informado'}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="order-total">
+                        <span>Total</span>
+                        <span>${formatCurrency(order.total)}</span>
+                    </div>
+                    
+                    <div class="order-actions">
+                        ${getOrderActions(order)}
+                    </div>
+                </div>
+            `;
+        }
+
+        function getOrderActions(order) {
+            switch (order.status) {
+                case 'pending':
+                    return `
+                        <button class="btn btn-success" onclick="updateOrderStatus('${order.id}', 'confirmed')">✓ Confirmar</button>
+                        <button class="btn btn-danger" onclick="updateOrderStatus('${order.id}', 'cancelled')">✕ Cancelar</button>
+                    `;
+                case 'confirmed':
+                    return `
+                        <button class="btn btn-warning" onclick="updateOrderStatus('${order.id}', 'preparing')">👨‍🍳 Preparar</button>
+                    `;
+                case 'preparing':
+                    return `
+                        <button class="btn btn-success" onclick="updateOrderStatus('${order.id}', 'ready')">📦 Pronto</button>
+                    `;
+                case 'ready':
+                    if (order.deliveryMode === 'pickup') {
+                        return `
+                            <button class="btn btn-success" onclick="updateOrderStatus('${order.id}', 'delivered')">✓ Entregue</button>
+                        `;
+                    }
+                    return `
+                        <button class="btn btn-primary" onclick="updateOrderStatus('${order.id}', 'delivering')">🛵 Saiu p/ entrega</button>
+                    `;
+                case 'delivering':
+                    return `
+                        <button class="btn btn-success" onclick="updateOrderStatus('${order.id}', 'delivered')">✓ Entregue</button>
+                    `;
+                default:
+                    return '';
+            }
+        }
+
+        async function updateOrderStatus(orderId, newStatus) {
+            try {
+                const timeline = orders.find(o => o.id === orderId)?.timeline || [];
+                timeline.push({
+                    status: newStatus,
+                    timestamp: new Date().toISOString(),
+                    message: getStatusLabel(newStatus)
+                });
+                
+                await db.collection('orders').doc(orderId).update({
+                    status: newStatus,
+                    timeline
+                });
+                
+                showToast(`Pedido: ${getStatusLabel(newStatus)}`);
+            } catch (err) {
+                console.error('Erro:', err);
+                showToast('Erro ao atualizar pedido');
+            }
+        }
+
+        // ==================== UTILS ====================
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
+        }
+
+        function formatDate(timestamp) {
+            if (!timestamp) return '-';
+            const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+            return date.toLocaleString('pt-BR', {
+                day: '2-digit', month: '2-digit',
+                hour: '2-digit', minute: '2-digit'
+            });
+        }
+
+        function getStatusLabel(status) {
+            const labels = {
+                pending: 'Pendente',
+                confirmed: 'Confirmado',
+                preparing: 'Preparando',
+                ready: 'Pronto',
+                delivering: 'Em entrega',
+                delivered: 'Entregue',
+                cancelled: 'Cancelado'
+            };
+            return labels[status] || status;
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+    </script>
 </body>
 </html>
