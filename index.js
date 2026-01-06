@@ -4,7 +4,6 @@ const firebaseConfig = {
     authDomain: "pedrad-814d0.firebaseapp.com",
     projectId: "pedrad-814d0",
     storageBucket: "pedrad-814d0.appspot.com",
-
     messagingSenderId: "293587190550",
     appId: "1:293587190550:web:80c9399f82847c80e20637"
 };
@@ -23,6 +22,7 @@ let orderFilter = 'all';
 let selectedEmoji = '🍔';
 let productImageData = null;
 let storeImageData = null;
+let productAddons = []; // Lista de adicionais do produto atual
 
 const foodEmojis = ['🍔', '🍕', '🍟', '🌭', '🍗', '🥓', '🍖', '🥩', '🍝', '🍜', '🍲', '🥗', '🌮', '🌯', '🥙', '🧆', '🍣', '🍤', '🍱', '🥡', '🍚', '🍛', '🍙', '🥟', '🍰', '🎂', '🍮', '🍩', '🍪', '🍫', '🍬', '🍭', '🍦', '🍨', '🍧', '🥤', '🧃', '🍺', '🍷', '☕', '🧋', '🥛', '💧', '🍇', '🍉', '🍊', '🍋', '🍌', '🍎', '🍒', '🥑', '🥕', '🌽', '🥔', '🧀', '🥚', '🥐', '🥖', '🥨', '🥯', '🥞', '🧇'];
 
@@ -275,7 +275,12 @@ function renderOrderCard(order) {
         </div>
         <div class="order-body" id="order-${order.id}">
             <div class="order-items">
-                ${order.items.map(i => `<div class="order-item"><span>${i.qty}x ${i.name}</span><span>${formatCurrency(i.price * i.qty)}</span></div>`).join('')}
+                ${order.items.map(i => `
+                    <div class="order-item">
+                        <span>${i.qty}x ${i.name}${i.addons?.length ? ` <small style="color:var(--text-muted);">(${i.addons.map(a => a.name).join(', ')})</small>` : ''}</span>
+                        <span>${formatCurrency((i.price + (i.addons?.reduce((s,a) => s + a.price, 0) || 0)) * i.qty)}</span>
+                    </div>
+                `).join('')}
                 <div class="order-item" style="font-weight: 600;"><span>Total</span><span>${formatCurrency(order.total)}</span></div>
             </div>
             <div class="order-customer"><div class="order-customer-name">📍 ${order.address?.label || 'Endereço'}</div><div class="order-customer-address">${order.address?.street}, ${order.address?.number} - ${order.address?.neighborhood}</div></div>
@@ -322,7 +327,7 @@ function renderProducts() {
         <div class="product-image">${p.imageUrl ? `<img src="${p.imageUrl}">` : (p.emoji || '🍽️')}<span class="product-badge ${p.active !== false ? 'active' : 'inactive'}">${p.active !== false ? 'Ativo' : 'Inativo'}</span></div>
         <div class="product-info">
             <div class="product-name">${p.name}</div>
-            <div class="product-category">${p.category || 'Sem categoria'}</div>
+            <div class="product-category">${p.category || 'Sem categoria'}${p.addons?.length ? ` • ${p.addons.length} adicionais` : ''}</div>
             <div class="product-price">${formatCurrency(p.price)}</div>
             <div class="product-actions"><button class="btn btn-secondary btn-sm" onclick="editProduct('${p.id}')">✏️</button><button class="btn btn-danger btn-sm" onclick="confirmDeleteProduct('${p.id}')">🗑️</button></div>
         </div>
@@ -343,6 +348,62 @@ function selectEmoji(emoji) {
     document.getElementById('productImagePlaceholder').innerHTML = `<span>📷</span><div>Clique para enviar (quadrada)</div>`;
 }
 
+// ==================== ADDONS ====================
+
+function renderAddons() {
+    const container = document.getElementById('addonsList');
+    if (productAddons.length === 0) {
+        container.innerHTML = '<div class="addon-empty">Nenhum adicional cadastrado</div>';
+        return;
+    }
+    container.innerHTML = productAddons.map((addon, idx) => `
+        <div class="addon-item" draggable="true" ondragstart="dragAddon(event, ${idx})" ondragover="event.preventDefault()" ondrop="dropAddon(event, ${idx})">
+            <span class="addon-drag">⋮⋮</span>
+            <input type="text" class="form-input addon-name" value="${addon.name}" onchange="updateAddon(${idx}, 'name', this.value)">
+            <input type="number" class="form-input addon-price" value="${addon.price}" step="0.50" onchange="updateAddon(${idx}, 'price', parseFloat(this.value) || 0)">
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeAddon(${idx})">×</button>
+        </div>
+    `).join('');
+}
+
+function addAddon() {
+    const nameInput = document.getElementById('newAddonName');
+    const priceInput = document.getElementById('newAddonPrice');
+    const name = nameInput.value.trim();
+    const price = parseFloat(priceInput.value) || 0;
+    
+    if (!name) { showToast('Digite o nome do adicional'); return; }
+    
+    productAddons.push({ name, price, order: productAddons.length });
+    nameInput.value = '';
+    priceInput.value = '';
+    renderAddons();
+}
+
+function updateAddon(idx, field, value) {
+    productAddons[idx][field] = value;
+}
+
+function removeAddon(idx) {
+    productAddons.splice(idx, 1);
+    productAddons.forEach((a, i) => a.order = i);
+    renderAddons();
+}
+
+let draggedAddonIdx = null;
+function dragAddon(e, idx) { draggedAddonIdx = idx; }
+function dropAddon(e, targetIdx) {
+    e.preventDefault();
+    if (draggedAddonIdx === null || draggedAddonIdx === targetIdx) return;
+    const [item] = productAddons.splice(draggedAddonIdx, 1);
+    productAddons.splice(targetIdx, 0, item);
+    productAddons.forEach((a, i) => a.order = i);
+    renderAddons();
+    draggedAddonIdx = null;
+}
+
+// ==================== PRODUCT MODAL ====================
+
 function openProductModal() {
     document.getElementById('productId').value = '';
     document.getElementById('productName').value = '';
@@ -355,7 +416,9 @@ function openProductModal() {
     document.getElementById('productImageUpload').classList.remove('has-image');
     document.getElementById('productImagePlaceholder').innerHTML = `<span>📷</span><div>Clique para enviar (quadrada)</div>`;
     selectedEmoji = '🍔';
+    productAddons = [];
     initEmojiPicker();
+    renderAddons();
     openModal('productModal');
 }
 
@@ -380,7 +443,10 @@ function editProduct(productId) {
     }
     
     selectedEmoji = p.emoji || '🍔';
+    productAddons = (p.addons || []).map((a, i) => ({ ...a, order: a.order ?? i }));
+    productAddons.sort((a, b) => a.order - b.order);
     initEmojiPicker();
+    renderAddons();
     openModal('productModal');
 }
 
@@ -408,6 +474,7 @@ async function saveProduct() {
             category: document.getElementById('productCategory').value,
             active: document.getElementById('productActiveToggle').classList.contains('active'),
             emoji: selectedEmoji,
+            addons: productAddons.map((a, i) => ({ name: a.name, price: a.price, order: i })),
             storeId: currentStore.id,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
