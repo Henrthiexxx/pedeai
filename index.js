@@ -24,43 +24,42 @@ let productImageData = null;
 let storeImageData = null;
 let productAddons = [];
 let knownOrderIds = new Set(); // Para não notificar pedidos já carregados
-let notificationAudio = null;
 
 const foodEmojis = ['🍔', '🍕', '🍟', '🌭', '🍗', '🥓', '🍖', '🥩', '🍝', '🍜', '🍲', '🥗', '🌮', '🌯', '🥙', '🧆', '🍣', '🍤', '🍱', '🥡', '🍚', '🍛', '🍙', '🥟', '🍰', '🎂', '🍮', '🍩', '🍪', '🍫', '🍬', '🍭', '🍦', '🍨', '🍧', '🥤', '🧃', '🍺', '🍷', '☕', '🧋', '🥛', '💧', '🍇', '🍉', '🍊', '🍋', '🍌', '🍎', '🍒', '🥑', '🥕', '🌽', '🥔', '🧀', '🥚', '🥐', '🥖', '🥨', '🥯', '🥞', '🧇'];
 
 // ==================== NOTIFICATION SYSTEM ====================
 
-function initNotificationAudio() {
-    // Cria áudio de notificação (som embutido base64)
-    notificationAudio = new Audio('data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAADhAC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAA4T/////AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//tQZAAP8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//tQZB8P8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAEVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV');
-    notificationAudio.volume = 0.7;
-}
-
 function playNotificationSound() {
-    // Som de notificação válido (beep duplo)
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    
-    function beep(frequency, duration, startTime) {
-        const oscillator = audioCtx.createOscillator();
-        const gainNode = audioCtx.createGain();
+    try {
+        // Web Audio API - funciona sem arquivo externo
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         
-        oscillator.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
+        function beep(frequency, duration, startTime) {
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            oscillator.frequency.value = frequency;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.4, startTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+            
+            oscillator.start(startTime);
+            oscillator.stop(startTime + duration);
+        }
         
-        oscillator.frequency.value = frequency;
-        oscillator.type = 'sine';
+        const now = audioCtx.currentTime;
+        // Som de notificação: 3 beeps ascendentes
+        beep(600, 0.12, now);
+        beep(800, 0.12, now + 0.15);
+        beep(1000, 0.2, now + 0.3);
         
-        gainNode.gain.setValueAtTime(0.3, startTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
-        
-        oscillator.start(startTime);
-        oscillator.stop(startTime + duration);
+    } catch (e) {
+        console.log('Erro ao tocar som:', e);
     }
-    
-    const now = audioCtx.currentTime;
-    beep(800, 0.15, now);        // Primeiro beep
-    beep(1000, 0.15, now + 0.2); // Segundo beep (mais agudo)
-    beep(800, 0.15, now + 0.4);  // Terceiro beep
     
     // Vibração
     if (navigator.vibrate) {
@@ -180,7 +179,6 @@ auth.onAuthStateChanged(async (user) => {
             showMainApp();
             await loadAllData();
             setupRealtimeListeners();
-            initNotificationAudio();
             updateNotificationButton();
         } else {
             showToast('Loja não encontrada para este usuário');
