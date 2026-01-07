@@ -22,9 +22,147 @@ let orderFilter = 'all';
 let selectedEmoji = '🍔';
 let productImageData = null;
 let storeImageData = null;
-let productAddons = []; // Lista de adicionais do produto atual
+let productAddons = [];
+let knownOrderIds = new Set(); // Para não notificar pedidos já carregados
+let notificationAudio = null;
 
 const foodEmojis = ['🍔', '🍕', '🍟', '🌭', '🍗', '🥓', '🍖', '🥩', '🍝', '🍜', '🍲', '🥗', '🌮', '🌯', '🥙', '🧆', '🍣', '🍤', '🍱', '🥡', '🍚', '🍛', '🍙', '🥟', '🍰', '🎂', '🍮', '🍩', '🍪', '🍫', '🍬', '🍭', '🍦', '🍨', '🍧', '🥤', '🧃', '🍺', '🍷', '☕', '🧋', '🥛', '💧', '🍇', '🍉', '🍊', '🍋', '🍌', '🍎', '🍒', '🥑', '🥕', '🌽', '🥔', '🧀', '🥚', '🥐', '🥖', '🥨', '🥯', '🥞', '🧇'];
+
+// ==================== NOTIFICATION SYSTEM ====================
+
+function initNotificationAudio() {
+    // Cria áudio de notificação (som embutido base64)
+    notificationAudio = new Audio('data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAADhAC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAA4T/////AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//tQZAAP8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//tQZB8P8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAEVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV');
+    notificationAudio.volume = 0.7;
+}
+
+function playNotificationSound() {
+    try {
+        // Tenta tocar arquivo externo primeiro
+        const audio = new Audio('notification.mp3');
+        audio.volume = 0.8;
+        audio.play().catch(() => {
+            // Fallback para som embutido
+            if (notificationAudio) {
+                notificationAudio.currentTime = 0;
+                notificationAudio.play().catch(() => {});
+            }
+        });
+    } catch (e) {
+        // Fallback
+        if (notificationAudio) {
+            notificationAudio.currentTime = 0;
+            notificationAudio.play().catch(() => {});
+        }
+    }
+    
+    // Vibração
+    if (navigator.vibrate) {
+        navigator.vibrate([300, 100, 300, 100, 300]);
+    }
+}
+
+function showNotificationPopup(orderId, customerName, total) {
+    const popup = document.getElementById('notificationPopup');
+    const body = document.getElementById('notificationPopupBody');
+    
+    body.textContent = `#${orderId.slice(-6).toUpperCase()} - ${customerName} - ${formatCurrency(total)}`;
+    
+    popup.classList.add('show');
+    popup.dataset.orderId = orderId;
+    
+    // Auto-hide após 15 segundos
+    setTimeout(() => {
+        closeNotificationPopup();
+    }, 15000);
+}
+
+function closeNotificationPopup() {
+    const popup = document.getElementById('notificationPopup');
+    popup.classList.remove('show');
+}
+
+// Clique no popup leva ao pedido
+document.addEventListener('DOMContentLoaded', () => {
+    const popup = document.getElementById('notificationPopup');
+    if (popup) {
+        popup.addEventListener('click', (e) => {
+            if (e.target.classList.contains('notification-popup-close')) return;
+            
+            const orderId = popup.dataset.orderId;
+            if (orderId) {
+                showPage('orders');
+                setTimeout(() => {
+                    const orderEl = document.getElementById(`order-${orderId}`);
+                    if (orderEl) {
+                        orderEl.classList.add('expanded');
+                        orderEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }, 300);
+            }
+            closeNotificationPopup();
+        });
+    }
+});
+
+// Função chamada pelo FCM quando chega notificação
+function handleNewOrderNotification(data, message) {
+    playNotificationSound();
+    showToast('🔔 ' + (message || 'Novo pedido recebido!'));
+    
+    if (data.orderId) {
+        showNotificationPopup(data.orderId, data.customerName || 'Cliente', parseFloat(data.total) || 0);
+    }
+}
+
+// Solicitar permissão de notificação (chamado por botão)
+async function requestNotificationPermission() {
+    if (!currentStore) {
+        showToast('Faça login primeiro');
+        return;
+    }
+    
+    if (Notification.permission === 'granted') {
+        showToast('Notificações já ativas!');
+        // Tenta registrar token mesmo assim
+        await setupStorePushNotifications(currentStore.id);
+        updateNotificationButton();
+        return;
+    }
+    
+    if (Notification.permission === 'denied') {
+        showToast('Notificações bloqueadas. Libere nas configurações do navegador.');
+        return;
+    }
+    
+    // Solicita permissão
+    const result = await setupStorePushNotifications(currentStore.id);
+    
+    if (Notification.permission === 'granted') {
+        showToast('🔔 Notificações ativadas!');
+    } else {
+        showToast('Permissão negada');
+    }
+    
+    updateNotificationButton();
+}
+
+function updateNotificationButton() {
+    const btn = document.getElementById('notifBtn');
+    if (!btn) return;
+    
+    if (Notification.permission === 'granted') {
+        btn.textContent = '🔔';
+        btn.title = 'Notificações ativas';
+        btn.classList.add('active');
+    } else if (Notification.permission === 'denied') {
+        btn.textContent = '🔕';
+        btn.title = 'Notificações bloqueadas';
+    } else {
+        btn.textContent = '🔔';
+        btn.title = 'Clique para ativar notificações';
+    }
+}
 
 // ==================== AUTH ====================
 
@@ -36,6 +174,8 @@ auth.onAuthStateChanged(async (user) => {
             showMainApp();
             await loadAllData();
             setupRealtimeListeners();
+            initNotificationAudio();
+            updateNotificationButton();
         } else {
             showToast('Loja não encontrada para este usuário');
             auth.signOut();
@@ -52,6 +192,13 @@ async function handleLogin(e) {
     
     try {
         await auth.signInWithEmailAndPassword(email, password);
+        // Após login bem-sucedido, solicita permissão de notificação
+        // Isso é feito APÓS interação do usuário (submit do form)
+        setTimeout(() => {
+            if (currentStore && Notification.permission === 'default') {
+                requestNotificationPermission();
+            }
+        }, 1000);
     } catch (err) {
         showToast('Erro: ' + err.message);
     }
@@ -145,6 +292,9 @@ async function loadOrders() {
             return dateB - dateA;
         });
         
+        // Marca pedidos existentes como conhecidos (não notificar na carga inicial)
+        orders.forEach(o => knownOrderIds.add(o.id));
+        
         renderOrders();
         updatePendingBadge();
     } catch (err) {
@@ -174,27 +324,59 @@ function setupRealtimeListeners() {
     db.collection('orders').where('storeId', '==', currentStore.id).onSnapshot(snapshot => {
         snapshot.docChanges().forEach(change => {
             const order = { id: change.doc.id, ...change.doc.data() };
+            
             if (change.type === 'added') {
-                if (!orders.find(o => o.id === order.id)) {
+                // Verifica se é pedido novo (não estava na lista)
+                const isNew = !knownOrderIds.has(order.id);
+                
+                if (isNew) {
+                    knownOrderIds.add(order.id);
                     orders.unshift(order);
+                    
+                    // Notifica apenas pedidos pendentes (novos)
                     if (order.status === 'pending') {
+                        // Notificação local
                         playNotificationSound();
+                        showNotificationPopup(order.id, order.userName || 'Cliente', order.total || 0);
                         showToast('🔔 Novo pedido recebido!');
+                        
+                        // Notificação do sistema (se permitido)
+                        if (Notification.permission === 'granted') {
+                            const notif = new Notification('🔔 Novo Pedido!', {
+                                body: `#${order.id.slice(-6).toUpperCase()} - ${order.userName || 'Cliente'} - ${formatCurrency(order.total)}`,
+                                icon: '/icon-192.png',
+                                tag: order.id,
+                                requireInteraction: true
+                            });
+                            
+                            notif.onclick = () => {
+                                window.focus();
+                                showPage('orders');
+                                setTimeout(() => {
+                                    const el = document.getElementById(`order-${order.id}`);
+                                    if (el) {
+                                        el.classList.add('expanded');
+                                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    }
+                                }, 300);
+                                notif.close();
+                            };
+                        }
                     }
                 }
             } else if (change.type === 'modified') {
                 const idx = orders.findIndex(o => o.id === order.id);
                 if (idx !== -1) orders[idx] = order;
+            } else if (change.type === 'removed') {
+                orders = orders.filter(o => o.id !== order.id);
+                knownOrderIds.delete(order.id);
             }
         });
+        
         renderOrders();
         updateDashboard();
         updatePendingBadge();
     });
-}
-
-function playNotificationSound() {
-    try { new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdH2JkpqWko+C').play().catch(() => {}); } catch (e) {}
 }
 
 // ==================== NAVIGATION ====================
@@ -267,8 +449,9 @@ function renderOrders() {
 function renderOrderCard(order) {
     const date = order.createdAt?.toDate?.() || new Date(order.createdAt);
     const timeStr = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const isPending = order.status === 'pending';
     
-    return `<div class="order-card">
+    return `<div class="order-card ${isPending ? 'new-order' : ''}">
         <div class="order-header" onclick="toggleOrder('${order.id}')">
             <div><div class="order-id">#${order.id.slice(-6).toUpperCase()}</div><div class="order-time">${timeStr} - ${order.userName || 'Cliente'}</div></div>
             <span class="order-status status-${order.status}">${getStatusLabel(order.status)}</span>
