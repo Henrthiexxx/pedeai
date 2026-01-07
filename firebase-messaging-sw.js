@@ -1,5 +1,5 @@
 // firebase-messaging-sw.js
-// Coloque na RAIZ do projeto (mesmo nível do index.html)
+// Coloque na RAIZ do repositório pedeai (mesmo nível do index.html)
 
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
@@ -22,10 +22,8 @@ messaging.onBackgroundMessage((payload) => {
     const { title, body, icon } = payload.notification || {};
     const data = payload.data || {};
     
-    // Personaliza notificação conforme o tipo
     let notifTitle = title || '🔔 Pedrad';
     let notifBody = body || 'Você tem uma nova atualização';
-    let notifIcon = icon || '/icon-192.png';
     
     if (data.type === 'new_order') {
         notifTitle = '🔔 Novo Pedido!';
@@ -34,8 +32,8 @@ messaging.onBackgroundMessage((payload) => {
     
     const options = {
         body: notifBody,
-        icon: notifIcon,
-        badge: '/icon-72.png',
+        icon: icon || '/pedeai/icon-192.png',
+        badge: '/pedeai/icon-72.png',
         vibrate: [300, 100, 300, 100, 300],
         tag: data.orderId || 'pedrad-notification',
         data: data,
@@ -58,10 +56,10 @@ self.addEventListener('notificationclick', (event) => {
     
     if (action === 'close') return;
     
-    let url = '/';
+    let url = '/pedeai/';
     
     if (data.type === 'new_order' || data.type === 'order_update') {
-        url = '/?page=orders';
+        url = '/pedeai/?page=orders';
         if (data.orderId) {
             url += '&order=' + data.orderId;
         }
@@ -71,7 +69,7 @@ self.addEventListener('notificationclick', (event) => {
         clients.matchAll({ type: 'window', includeUncontrolled: true })
             .then(clientList => {
                 for (const client of clientList) {
-                    if (client.url.includes(self.location.origin) && 'focus' in client) {
+                    if (client.url.includes('/pedeai') && 'focus' in client) {
                         client.focus();
                         client.postMessage({
                             type: 'NOTIFICATION_CLICK',
