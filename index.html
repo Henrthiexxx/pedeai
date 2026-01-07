@@ -10,6 +10,18 @@
 <body>
     <div class="toast" id="toast"></div>
     
+    <!-- Notification Popup -->
+    <div class="notification-popup" id="notificationPopup">
+        <div class="notification-popup-content">
+            <div class="notification-popup-icon">🔔</div>
+            <div class="notification-popup-text">
+                <div class="notification-popup-title">Novo Pedido!</div>
+                <div class="notification-popup-body" id="notificationPopupBody">Você tem um novo pedido</div>
+            </div>
+            <button class="notification-popup-close" onclick="closeNotificationPopup()">×</button>
+        </div>
+    </div>
+    
     <!-- Auth -->
     <div id="authPage" class="auth-container">
         <div class="auth-box">
@@ -77,6 +89,7 @@
                     <h1 class="topbar-title" id="pageTitle">Dashboard</h1>
                 </div>
                 <div class="topbar-actions">
+                    <button class="btn btn-sm" id="notifBtn" onclick="requestNotificationPermission()" title="Ativar notificações">🔔</button>
                     <div class="toggle" id="storeToggle" onclick="toggleStoreStatus()"></div>
                 </div>
             </header>
@@ -209,6 +222,10 @@
                         <div class="setting-info"><div class="setting-label">Aceitar automaticamente</div><div class="setting-desc">Confirmar pedidos sem aprovação</div></div>
                         <div class="toggle" id="autoAcceptToggle" onclick="toggleSetting('autoAccept')"></div>
                     </div>
+                    <div class="setting-item">
+                        <div class="setting-info"><div class="setting-label">Notificações Push</div><div class="setting-desc">Receber alertas com app fechado</div></div>
+                        <button class="btn btn-primary btn-sm" onclick="requestNotificationPermission()">Ativar</button>
+                    </div>
                 </div>
                 <button class="btn btn-primary" onclick="saveSettings()">Salvar Configurações</button>
             </div>
@@ -287,10 +304,15 @@
         </div>
     </div>
 
+    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
+    
+    <!-- App -->
+    <script src="modules/fcm.js"></script>
     <script src="index.js"></script>
 </body>
 </html>
