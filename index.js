@@ -37,24 +37,30 @@ function initNotificationAudio() {
 }
 
 function playNotificationSound() {
-    try {
-        // Tenta tocar arquivo externo primeiro
-        const audio = new Audio('notification.mp3');
-        audio.volume = 0.8;
-        audio.play().catch(() => {
-            // Fallback para som embutido
-            if (notificationAudio) {
-                notificationAudio.currentTime = 0;
-                notificationAudio.play().catch(() => {});
-            }
-        });
-    } catch (e) {
-        // Fallback
-        if (notificationAudio) {
-            notificationAudio.currentTime = 0;
-            notificationAudio.play().catch(() => {});
-        }
+    // Som de notificação válido (beep duplo)
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function beep(frequency, duration, startTime) {
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        oscillator.frequency.value = frequency;
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(0.3, startTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+        
+        oscillator.start(startTime);
+        oscillator.stop(startTime + duration);
     }
+    
+    const now = audioCtx.currentTime;
+    beep(800, 0.15, now);        // Primeiro beep
+    beep(1000, 0.15, now + 0.2); // Segundo beep (mais agudo)
+    beep(800, 0.15, now + 0.4);  // Terceiro beep
     
     // Vibração
     if (navigator.vibrate) {
