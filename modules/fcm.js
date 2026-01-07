@@ -1,5 +1,5 @@
 // ==================== FCM MODULE ====================
-// Push notifications para Painel da Loja
+// Push notifications para Painel da Loja - GitHub Pages /pedeai/
 
 const FCMModule = {
     messaging: null,
@@ -13,15 +13,14 @@ const FCMModule = {
         }
 
         try {
-            // Registra Service Worker (ajuste o path conforme seu deploy)
-            // Para GitHub Pages: '/nome-repo/firebase-messaging-sw.js'
-            // Para domínio próprio: '/firebase-messaging-sw.js'
-            this.swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+            // Path correto para GitHub Pages /pedeai/
+            this.swReg = await navigator.serviceWorker.register('/pedeai/firebase-messaging-sw.js', {
+                scope: '/pedeai/'
+            });
             console.log('✅ Service Worker registrado');
 
             this.messaging = firebase.messaging();
 
-            // Listener para mensagens em foreground
             this.messaging.onMessage((payload) => {
                 console.log('📩 Mensagem FCM (foreground):', payload);
                 this.showForegroundNotification(payload);
@@ -43,7 +42,6 @@ const FCMModule = {
                 return null;
             }
 
-            // VAPID Key do Firebase Console
             const vapidKey = 'BEyLjUm82KxRNv4fCZOWxBln45CjHSleYDOgBCDffXVPP45SsFmZHxJxP0A0hJ0c8uZWdWU8u_YLIacXXYWtCV4';
 
             if (!this.messaging || !this.swReg) {
@@ -106,21 +104,18 @@ const FCMModule = {
         const { title, body } = payload.notification || {};
         const data = payload.data || {};
 
-        // Chama função global de notificação
         if (typeof handleNewOrderNotification === 'function') {
             handleNewOrderNotification(data, body || title);
         } else {
-            // Fallback
             if (typeof showToast === 'function') {
                 showToast(body || title || 'Nova atualização');
             }
         }
 
-        // Notificação do sistema
         if (Notification.permission === 'granted') {
             const notif = new Notification(title || '🔔 Pedrad Loja', {
                 body: body || 'Você tem uma nova atualização',
-                icon: '/icon-192.png',
+                icon: '/pedeai/icon-192.png',
                 tag: data.orderId || 'pedrad-store',
                 data: data,
                 requireInteraction: true
