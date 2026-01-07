@@ -19,6 +19,35 @@ const FCMModule = {
             });
             console.log('✅ Service Worker registrado');
 
+            // Aguarda o SW ficar ativo
+            if (this.swReg.installing) {
+                console.log('SW instalando...');
+                await new Promise(resolve => {
+                    this.swReg.installing.addEventListener('statechange', function() {
+                        if (this.state === 'activated') {
+                            console.log('SW ativado');
+                            resolve();
+                        }
+                    });
+                });
+            } else if (this.swReg.waiting) {
+                console.log('SW aguardando...');
+                await new Promise(resolve => {
+                    this.swReg.waiting.addEventListener('statechange', function() {
+                        if (this.state === 'activated') {
+                            console.log('SW ativado');
+                            resolve();
+                        }
+                    });
+                });
+            } else if (this.swReg.active) {
+                console.log('SW já ativo');
+            }
+
+            // Aguarda estar pronto
+            await navigator.serviceWorker.ready;
+            console.log('✅ Service Worker pronto');
+
             this.messaging = firebase.messaging();
 
             this.messaging.onMessage((payload) => {
@@ -44,14 +73,18 @@ const FCMModule = {
 
             const vapidKey = 'BEyLjUm82KxRNv4fCZOWxBln45CjHSleYDOgBCDffXVPP45SsFmZHxJxP0A0hJ0c8uZWdWU8u_YLIacXXYWtCV4';
 
-            if (!this.messaging || !this.swReg) {
+            if (!this.messaging) {
                 console.error('FCM não inicializado');
                 return null;
             }
 
+            // Garante que SW está pronto
+            const swReg = await navigator.serviceWorker.ready;
+            console.log('SW ready para getToken');
+
             this.token = await this.messaging.getToken({
                 vapidKey,
-                serviceWorkerRegistration: this.swReg
+                serviceWorkerRegistration: swReg
             });
 
             console.log('🔑 FCM Token:', this.token);
