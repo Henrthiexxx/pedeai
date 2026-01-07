@@ -516,27 +516,174 @@ function renderOrders() {
 function renderOrderCard(order) {
     const date = order.createdAt?.toDate?.() || new Date(order.createdAt);
     const timeStr = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const dateStr = date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
     const isPending = order.status === 'pending';
+    
+    // Informações do cliente
+    const customerName = order.userName || order.customerName || 'Cliente';
+    const customerPhone = order.userPhone || order.phone || '';
+    const customerCpf = order.userCpf || order.cpf || '';
+    
+    // Endereço
+    const addr = order.address || {};
+    const fullAddress = [
+        addr.street,
+        addr.number ? `nº ${addr.number}` : '',
+        addr.complement || '',
+        addr.neighborhood || '',
+        addr.city || '',
+        addr.cep ? `CEP: ${addr.cep}` : ''
+    ].filter(Boolean).join(', ');
+    const reference = addr.reference || '';
+    
+    // Pagamento
+    const paymentLabels = {
+        pix: '💠 PIX',
+        credit: '💳 Crédito',
+        debit: '💳 Débito',
+        cash: '💵 Dinheiro',
+        picpay: '💚 PicPay',
+        food_voucher: '🎫 Vale Alimentação'
+    };
+    const paymentMethod = paymentLabels[order.paymentMethod] || order.paymentMethod || 'Não informado';
+    const needChange = order.needChange && order.changeFor ? `Troco para ${formatCurrency(order.changeFor)}` : '';
+    
+    // Modo de entrega
+    const deliveryMode = order.deliveryMode === 'pickup' ? '🏃 Retirada no local' : '🛵 Entrega';
+    
+    // Taxa de entrega
+    const deliveryFee = order.deliveryFee || 0;
+    const subtotal = (order.total || 0) - deliveryFee;
+    
+    // Observações
+    const notes = order.notes || order.observation || '';
     
     return `<div class="order-card ${isPending ? 'new-order' : ''}">
         <div class="order-header" onclick="toggleOrder('${order.id}')">
-            <div><div class="order-id">#${order.id.slice(-6).toUpperCase()}</div><div class="order-time">${timeStr} - ${order.userName || 'Cliente'}</div></div>
+            <div>
+                <div class="order-id">#${order.id.slice(-6).toUpperCase()}</div>
+                <div class="order-time">${dateStr} ${timeStr}</div>
+            </div>
             <span class="order-status status-${order.status}">${getStatusLabel(order.status)}</span>
         </div>
         <div class="order-body" id="order-${order.id}">
-            <div class="order-items">
-                ${order.items.map(i => `
-                    <div class="order-item">
-                        <span>${i.qty}x ${i.name}${i.addons?.length ? ` <small style="color:var(--text-muted);">(${i.addons.map(a => a.name).join(', ')})</small>` : ''}</span>
-                        <span>${formatCurrency((i.price + (i.addons?.reduce((s,a) => s + a.price, 0) || 0)) * i.qty)}</span>
+            
+            <!-- Cliente -->
+            <div class="order-section">
+                <div class="order-section-title">👤 Cliente</div>
+                <div class="order-section-content">
+                    <div class="order-detail-row">
+                        <span class="order-detail-label">Nome</span>
+                        <span class="order-detail-value">${customerName}</span>
                     </div>
-                `).join('')}
-                <div class="order-item" style="font-weight: 600;"><span>Total</span><span>${formatCurrency(order.total)}</span></div>
+                    ${customerPhone ? `
+                    <div class="order-detail-row">
+                        <span class="order-detail-label">Telefone</span>
+                        <a href="tel:${customerPhone}" class="order-detail-value order-phone">${formatPhone(customerPhone)}</a>
+                        <a href="https://wa.me/55${customerPhone.replace(/\D/g, '')}" target="_blank" class="btn-whatsapp" title="Abrir WhatsApp">💬</a>
+                    </div>
+                    ` : ''}
+                    ${customerCpf ? `
+                    <div class="order-detail-row">
+                        <span class="order-detail-label">CPF</span>
+                        <span class="order-detail-value">${customerCpf}</span>
+                    </div>
+                    ` : ''}
+                </div>
             </div>
-            <div class="order-customer"><div class="order-customer-name">📍 ${order.address?.label || 'Endereço'}</div><div class="order-customer-address">${order.address?.street}, ${order.address?.number} - ${order.address?.neighborhood}</div></div>
+            
+            <!-- Endereço / Retirada -->
+            <div class="order-section">
+                <div class="order-section-title">${deliveryMode}</div>
+                <div class="order-section-content">
+                    ${order.deliveryMode !== 'pickup' ? `
+                    <div class="order-address-full">
+                        <div class="order-address-label">${addr.label || 'Endereço'}</div>
+                        <div class="order-address-text">${fullAddress || 'Não informado'}</div>
+                        ${reference ? `<div class="order-address-ref">📍 Ref: ${reference}</div>` : ''}
+                    </div>
+                    ` : `
+                    <div class="order-pickup-info">Cliente irá retirar no estabelecimento</div>
+                    `}
+                </div>
+            </div>
+            
+            <!-- Itens -->
+            <div class="order-section">
+                <div class="order-section-title">🛒 Itens do Pedido</div>
+                <div class="order-items">
+                    ${order.items.map(i => `
+                        <div class="order-item">
+                            <span class="order-item-qty">${i.qty}x</span>
+                            <span class="order-item-name">
+                                ${i.name}
+                                ${i.addons?.length ? `<small class="order-item-addons">(${i.addons.map(a => a.name).join(', ')})</small>` : ''}
+                                ${i.observation ? `<small class="order-item-obs">Obs: ${i.observation}</small>` : ''}
+                            </span>
+                            <span class="order-item-price">${formatCurrency((i.price + (i.addons?.reduce((s,a) => s + a.price, 0) || 0)) * i.qty)}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+            
+            <!-- Observações gerais -->
+            ${notes ? `
+            <div class="order-section">
+                <div class="order-section-title">📝 Observações</div>
+                <div class="order-notes">${notes}</div>
+            </div>
+            ` : ''}
+            
+            <!-- Pagamento e Totais -->
+            <div class="order-section">
+                <div class="order-section-title">💰 Pagamento</div>
+                <div class="order-section-content">
+                    <div class="order-detail-row">
+                        <span class="order-detail-label">Forma</span>
+                        <span class="order-detail-value">${paymentMethod}</span>
+                    </div>
+                    ${needChange ? `
+                    <div class="order-detail-row">
+                        <span class="order-detail-label">Troco</span>
+                        <span class="order-detail-value">${needChange}</span>
+                    </div>
+                    ` : ''}
+                    <div class="order-totals">
+                        <div class="order-total-row">
+                            <span>Subtotal</span>
+                            <span>${formatCurrency(subtotal)}</span>
+                        </div>
+                        ${deliveryFee > 0 ? `
+                        <div class="order-total-row">
+                            <span>Taxa de entrega</span>
+                            <span>${formatCurrency(deliveryFee)}</span>
+                        </div>
+                        ` : ''}
+                        <div class="order-total-row total">
+                            <span>Total</span>
+                            <span>${formatCurrency(order.total)}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Ações -->
             <div class="order-actions">${getOrderActions(order)}</div>
         </div>
     </div>`;
+}
+
+// Formata telefone
+function formatPhone(phone) {
+    if (!phone) return '';
+    const cleaned = phone.replace(/\D/g, '');
+    if (cleaned.length === 11) {
+        return `(${cleaned.slice(0,2)}) ${cleaned.slice(2,7)}-${cleaned.slice(7)}`;
+    }
+    if (cleaned.length === 10) {
+        return `(${cleaned.slice(0,2)}) ${cleaned.slice(2,6)}-${cleaned.slice(6)}`;
+    }
+    return phone;
 }
 
 function getOrderActions(order) {
