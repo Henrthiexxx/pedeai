@@ -29,9 +29,11 @@ const foodEmojis = ['🍔', '🍕', '🍟', '🌭', '🍗', '🥓', '🍖', '�
 
 // ==================== NOTIFICATION SYSTEM ====================
 
+let notificationInterval = null;
+let pendingAlertOrders = new Set(); // Pedidos com alerta ativo
+
 function playNotificationSound() {
     try {
-        // Web Audio API - funciona sem arquivo externo
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         
         function beep(frequency, duration, startTime) {
@@ -52,7 +54,6 @@ function playNotificationSound() {
         }
         
         const now = audioCtx.currentTime;
-        // Som de notificação: 3 beeps ascendentes
         beep(600, 0.12, now);
         beep(800, 0.12, now + 0.15);
         beep(1000, 0.2, now + 0.3);
@@ -61,10 +62,60 @@ function playNotificationSound() {
         console.log('Erro ao tocar som:', e);
     }
     
-    // Vibração
     if (navigator.vibrate) {
         navigator.vibrate([300, 100, 300, 100, 300]);
     }
+}
+
+// Inicia loop de notificação para pedido pendente
+function startNotificationLoop(orderId) {
+    pendingAlertOrders.add(orderId);
+    
+    // Se já tem um loop rodando, não cria outro
+    if (notificationInterval) return;
+    
+    // Toca imediatamente
+    playNotificationSound();
+    
+    // Loop a cada 5 segundos enquanto houver pedidos pendentes com alerta
+    notificationInterval = setInterval(() => {
+        if (pendingAlertOrders.size > 0) {
+            playNotificationSound();
+        } else {
+            stopNotificationLoop();
+        }
+    }, 5000);
+}
+
+// Para o loop de notificação
+function stopNotificationLoop() {
+    if (notificationInterval) {
+        clearInterval(notificationInterval);
+        notificationInterval = null;
+    }
+}
+
+// Remove pedido do alerta (quando status muda)
+function clearOrderAlert(orderId) {
+    pendingAlertOrders.delete(orderId);
+    
+    // Se não tem mais pedidos pendentes, para o loop
+    if (pendingAlertOrders.size === 0) {
+        stopNotificationLoop();
+        closeNotificationPopup();
+    }
+}
+
+// Verifica e limpa alertas de pedidos que não são mais pendentes
+function checkAndClearAlerts() {
+    const pendingOrderIds = orders.filter(o => o.status === 'pending').map(o => o.id);
+    
+    // Remove alertas de pedidos que não são mais pendentes
+    pendingAlertOrders.forEach(orderId => {
+        if (!pendingOrderIds.includes(orderId)) {
+            clearOrderAlert(orderId);
+        }
+    });
 }
 
 function showNotificationPopup(orderId, customerName, total) {
@@ -339,8 +390,8 @@ function setupRealtimeListeners() {
                     
                     // Notifica apenas pedidos pendentes (novos)
                     if (order.status === 'pending') {
-                        // Notificação local
-                        playNotificationSound();
+                        // Inicia loop de som
+                        startNotificationLoop(order.id);
                         showNotificationPopup(order.id, order.userName || 'Cliente', order.total || 0);
                         showToast('🔔 Novo pedido recebido!');
                         
@@ -348,7 +399,7 @@ function setupRealtimeListeners() {
                         if (Notification.permission === 'granted') {
                             const notif = new Notification('🔔 Novo Pedido!', {
                                 body: `#${order.id.slice(-6).toUpperCase()} - ${order.userName || 'Cliente'} - ${formatCurrency(order.total)}`,
-                                icon: '/icon-192.png',
+                                icon: '/pedeai/icon-192.png',
                                 tag: order.id,
                                 requireInteraction: true
                             });
@@ -370,12 +421,24 @@ function setupRealtimeListeners() {
                 }
             } else if (change.type === 'modified') {
                 const idx = orders.findIndex(o => o.id === order.id);
-                if (idx !== -1) orders[idx] = order;
+                if (idx !== -1) {
+                    const oldStatus = orders[idx].status;
+                    orders[idx] = order;
+                    
+                    // Se status mudou de 'pending', limpa o alerta
+                    if (oldStatus === 'pending' && order.status !== 'pending') {
+                        clearOrderAlert(order.id);
+                    }
+                }
             } else if (change.type === 'removed') {
                 orders = orders.filter(o => o.id !== order.id);
                 knownOrderIds.delete(order.id);
+                clearOrderAlert(order.id);
             }
         });
+        
+        // Verifica alertas órfãos
+        checkAndClearAlerts();
         
         renderOrders();
         updateDashboard();
@@ -494,6 +557,10 @@ async function updateOrderStatus(orderId, status) {
         const timeline = orders.find(o => o.id === orderId)?.timeline || [];
         timeline.push({ status, timestamp: new Date().toISOString(), message: getStatusLabel(status) });
         await db.collection('orders').doc(orderId).update({ status, timeline, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+        
+        // Limpa o alerta sonoro se estava pendente
+        clearOrderAlert(orderId);
+        
         showToast(`Pedido: ${getStatusLabel(status)}`);
     } catch (err) { showToast('Erro ao atualizar'); }
 }
