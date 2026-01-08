@@ -122,15 +122,13 @@ function showNotificationPopup(orderId, customerName, total) {
     const popup = document.getElementById('notificationPopup');
     const body = document.getElementById('notificationPopupBody');
     
+    // Atualiza com info do pedido mais recente
     body.textContent = `#${orderId.slice(-6).toUpperCase()} - ${customerName} - ${formatCurrency(total)}`;
     
     popup.classList.add('show');
     popup.dataset.orderId = orderId;
     
-    // Auto-hide após 15 segundos
-    setTimeout(() => {
-        closeNotificationPopup();
-    }, 15000);
+    // NÃO fecha automaticamente - persiste até aceitar/recusar o pedido
 }
 
 function closeNotificationPopup() {
