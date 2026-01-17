@@ -203,12 +203,22 @@
     modal.style.display = 'block';
   }
 
-  function closeEditorModal() {
-    const modal = document.getElementById('modalEditor');
-    const frame = document.getElementById('editorFrame');
-    frame.src = 'about:blank';
-    modal.style.display = 'none';
-  }
+ function closeEditorModal() {
+  const modal = document.getElementById('modalEditor');
+  const frame = document.getElementById('editorFrame');
+  if (!modal || !frame) return;
+
+  try { document.activeElement?.blur?.(); } catch(e){}
+
+  frame.src = 'about:blank';
+  modal.style.display = 'none';
+  modal.style.pointerEvents = 'none';
+
+  setTimeout(() => {
+    modal.style.pointerEvents = 'auto';
+  }, 50);
+}
+
 
     // ===================== UI ACTIONS =====================
   function openEdit(productId) {
