@@ -19,18 +19,13 @@ let orders = [];
 let products = [];
 let categories = [];
 let orderFilter = 'all';
-let selectedEmoji = '🍔';
-let productImageData = null;
 let storeImageData = null;
-let productAddons = [];
-let knownOrderIds = new Set(); // Para não notificar pedidos já carregados
-
-const foodEmojis = ['🍔', '🍕', '🍟', '🌭', '🍗', '🥓', '🍖', '🥩', '🍝', '🍜', '🍲', '🥗', '🌮', '🌯', '🥙', '🧆', '🍣', '🍤', '🍱', '🥡', '🍚', '🍛', '🍙', '🥟', '🍰', '🎂', '🍮', '🍩', '🍪', '🍫', '🍬', '🍭', '🍦', '🍨', '🍧', '🥤', '🧃', '🍺', '🍷', '☕', '🧋', '🥛', '💧', '🍇', '🍉', '🍊', '🍋', '🍌', '🍎', '🍒', '🥑', '🥕', '🌽', '🥔', '🧀', '🥚', '🥐', '🥖', '🥨', '🥯', '🥞', '🧇'];
+let knownOrderIds = new Set();
 
 // ==================== NOTIFICATION SYSTEM ====================
 
 let notificationInterval = null;
-let pendingAlertOrders = new Set(); // Pedidos com alerta ativo
+let pendingAlertOrders = new Set();
 
 function playNotificationSound() {
     try {
@@ -67,17 +62,10 @@ function playNotificationSound() {
     }
 }
 
-// Inicia loop de notificação para pedido pendente
 function startNotificationLoop(orderId) {
     pendingAlertOrders.add(orderId);
-    
-    // Se já tem um loop rodando, não cria outro
     if (notificationInterval) return;
-    
-    // Toca imediatamente
     playNotificationSound();
-    
-    // Loop a cada 5 segundos enquanto houver pedidos pendentes com alerta
     notificationInterval = setInterval(() => {
         if (pendingAlertOrders.size > 0) {
             playNotificationSound();
@@ -87,7 +75,6 @@ function startNotificationLoop(orderId) {
     }, 5000);
 }
 
-// Para o loop de notificação
 function stopNotificationLoop() {
     if (notificationInterval) {
         clearInterval(notificationInterval);
@@ -95,22 +82,16 @@ function stopNotificationLoop() {
     }
 }
 
-// Remove pedido do alerta (quando status muda)
 function clearOrderAlert(orderId) {
     pendingAlertOrders.delete(orderId);
-    
-    // Se não tem mais pedidos pendentes, para o loop
     if (pendingAlertOrders.size === 0) {
         stopNotificationLoop();
         closeNotificationPopup();
     }
 }
 
-// Verifica e limpa alertas de pedidos que não são mais pendentes
 function checkAndClearAlerts() {
     const pendingOrderIds = orders.filter(o => o.status === 'pending').map(o => o.id);
-    
-    // Remove alertas de pedidos que não são mais pendentes
     pendingAlertOrders.forEach(orderId => {
         if (!pendingOrderIds.includes(orderId)) {
             clearOrderAlert(orderId);
@@ -121,14 +102,9 @@ function checkAndClearAlerts() {
 function showNotificationPopup(orderId, customerName, total) {
     const popup = document.getElementById('notificationPopup');
     const body = document.getElementById('notificationPopupBody');
-    
-    // Atualiza com info do pedido mais recente
     body.textContent = `#${orderId.slice(-6).toUpperCase()} - ${customerName} - ${formatCurrency(total)}`;
-    
     popup.classList.add('show');
     popup.dataset.orderId = orderId;
-    
-    // NÃO fecha automaticamente - persiste até aceitar/recusar o pedido
 }
 
 function closeNotificationPopup() {
@@ -136,13 +112,11 @@ function closeNotificationPopup() {
     popup.classList.remove('show');
 }
 
-// Clique no popup leva ao pedido
 document.addEventListener('DOMContentLoaded', () => {
     const popup = document.getElementById('notificationPopup');
     if (popup) {
         popup.addEventListener('click', (e) => {
             if (e.target.classList.contains('notification-popup-close')) return;
-            
             const orderId = popup.dataset.orderId;
             if (orderId) {
                 showPage('orders');
@@ -159,17 +133,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Função chamada pelo FCM quando chega notificação
 function handleNewOrderNotification(data, message) {
     playNotificationSound();
     showToast('🔔 ' + (message || 'Novo pedido recebido!'));
-    
     if (data.orderId) {
         showNotificationPopup(data.orderId, data.customerName || 'Cliente', parseFloat(data.total) || 0);
     }
 }
 
-// Solicitar permissão de notificação (chamado por botão)
 async function requestNotificationPermission() {
     if (!currentStore) {
         showToast('Faça login primeiro');
@@ -178,7 +149,6 @@ async function requestNotificationPermission() {
     
     if (Notification.permission === 'granted') {
         showToast('Notificações já ativas!');
-        // Tenta registrar token mesmo assim
         await setupStorePushNotifications(currentStore.id);
         updateNotificationButton();
         return;
@@ -189,7 +159,6 @@ async function requestNotificationPermission() {
         return;
     }
     
-    // Solicita permissão
     const result = await setupStorePushNotifications(currentStore.id);
     
     if (Notification.permission === 'granted') {
@@ -245,8 +214,6 @@ async function handleLogin(e) {
     
     try {
         await auth.signInWithEmailAndPassword(email, password);
-        // Após login bem-sucedido, solicita permissão de notificação
-        // Isso é feito APÓS interação do usuário (submit do form)
         setTimeout(() => {
             if (currentStore && Notification.permission === 'default') {
                 requestNotificationPermission();
@@ -281,7 +248,27 @@ function showAuthPage() {
 function showMainApp() {
     document.getElementById('authPage').style.display = 'none';
     document.getElementById('mainApp').style.display = 'block';
-    initEmojiPicker();
+    
+    // Desabilita botões até loja carregar
+    disableProductButtons();
+}
+
+function disableProductButtons() {
+    const buttons = document.querySelectorAll('[onclick*="openProductModal"], [onclick*="editProduct"]');
+    buttons.forEach(btn => {
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        btn.title = 'Carregando loja...';
+    });
+}
+
+function enableProductButtons() {
+    const buttons = document.querySelectorAll('[onclick*="openProductModal"], [onclick*="editProduct"]');
+    buttons.forEach(btn => {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.title = '';
+    });
 }
 
 // ==================== DATA ====================
@@ -296,7 +283,14 @@ async function loadStoreData() {
         
         if (!snapshot.empty) {
             currentStore = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+            
+            // SALVA STOREID NO LOCALSTORAGE
+            localStorage.setItem('currentStoreId', currentStore.id);
+            console.log('✅ StoreId salvo no localStorage:', currentStore.id);
+            
             updateStoreUI();
+            enableProductButtons(); // Habilita botões quando loja carrega
+            console.log('✅ Loja carregada:', currentStore.id);
         }
     } catch (err) {
         console.error('Error loading store:', err);
@@ -345,7 +339,6 @@ async function loadOrders() {
             return dateB - dateA;
         });
         
-        // Marca pedidos existentes como conhecidos (não notificar na carga inicial)
         orders.forEach(o => knownOrderIds.add(o.id));
         
         renderOrders();
@@ -366,9 +359,11 @@ async function loadProducts() {
 }
 
 async function loadCategories() {
-    categories = [...new Set(products.map(p => p.category).filter(Boolean))];
+    // Carrega categorias salvas + extrai dos produtos
+    const savedCats = currentStore.categories || [];
+    const productCats = [...new Set(products.map(p => p.category).filter(Boolean))];
+    categories = [...new Set([...savedCats, ...productCats])].sort();
     renderCategories();
-    updateCategorySelect();
 }
 
 // ==================== REAL-TIME ====================
@@ -379,21 +374,17 @@ function setupRealtimeListeners() {
             const order = { id: change.doc.id, ...change.doc.data() };
             
             if (change.type === 'added') {
-                // Verifica se é pedido novo (não estava na lista)
                 const isNew = !knownOrderIds.has(order.id);
                 
                 if (isNew) {
                     knownOrderIds.add(order.id);
                     orders.unshift(order);
                     
-                    // Notifica apenas pedidos pendentes (novos)
                     if (order.status === 'pending') {
-                        // Inicia loop de som
                         startNotificationLoop(order.id);
                         showNotificationPopup(order.id, order.userName || 'Cliente', order.total || 0);
                         showToast('🔔 Novo pedido recebido!');
                         
-                        // Notificação do sistema (se permitido)
                         if (Notification.permission === 'granted') {
                             const notif = new Notification('🔔 Novo Pedido!', {
                                 body: `#${order.id.slice(-6).toUpperCase()} - ${order.userName || 'Cliente'} - ${formatCurrency(order.total)}`,
@@ -422,8 +413,6 @@ function setupRealtimeListeners() {
                 if (idx !== -1) {
                     const oldStatus = orders[idx].status;
                     orders[idx] = order;
-                    
-                    // Se status mudou de 'pending', limpa o alerta
                     if (oldStatus === 'pending' && order.status !== 'pending') {
                         clearOrderAlert(order.id);
                     }
@@ -435,9 +424,7 @@ function setupRealtimeListeners() {
             }
         });
         
-        // Verifica alertas órfãos
         checkAndClearAlerts();
-        
         renderOrders();
         updateDashboard();
         updatePendingBadge();
@@ -511,18 +498,30 @@ function renderOrders() {
         : filtered.map(o => renderOrderCard(o)).join('');
 }
 
+// Helper para sanitizar adicionais
+function sanitizeAddons(addons) {
+    if (!Array.isArray(addons)) return [];
+    
+    return addons
+        .filter(a => a && typeof a === 'object')
+        .map((a, index) => ({
+            name: String(a.name || '').trim(),
+            price: parseFloat(a.price) || 0,
+            order: typeof a.order === 'number' ? a.order : index
+        }))
+        .filter(a => a.name);
+}
+
 function renderOrderCard(order) {
     const date = order.createdAt?.toDate?.() || new Date(order.createdAt);
     const timeStr = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
     const dateStr = date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
     const isPending = order.status === 'pending';
     
-    // Informações do cliente
     const customerName = order.userName || order.customerName || 'Cliente';
     const customerPhone = order.userPhone || order.phone || '';
     const customerCpf = order.userCpf || order.cpf || '';
     
-    // Endereço
     const addr = order.address || {};
     const fullAddress = [
         addr.street,
@@ -534,7 +533,6 @@ function renderOrderCard(order) {
     ].filter(Boolean).join(', ');
     const reference = addr.reference || '';
     
-    // Pagamento
     const paymentLabels = {
         pix: '💠 PIX',
         credit: '💳 Crédito',
@@ -546,14 +544,9 @@ function renderOrderCard(order) {
     const paymentMethod = paymentLabels[order.paymentMethod] || order.paymentMethod || 'Não informado';
     const needChange = order.needChange && order.changeFor ? `Troco para ${formatCurrency(order.changeFor)}` : '';
     
-    // Modo de entrega
     const deliveryMode = order.deliveryMode === 'pickup' ? '🏃 Retirada no local' : '🛵 Entrega';
-    
-    // Taxa de entrega
     const deliveryFee = order.deliveryFee || 0;
     const subtotal = (order.total || 0) - deliveryFee;
-    
-    // Observações
     const notes = order.notes || order.observation || '';
     
     return `<div class="order-card ${isPending ? 'new-order' : ''}">
@@ -565,8 +558,6 @@ function renderOrderCard(order) {
             <span class="order-status status-${order.status}">${getStatusLabel(order.status)}</span>
         </div>
         <div class="order-body" id="order-${order.id}">
-            
-            <!-- Cliente -->
             <div class="order-section">
                 <div class="order-section-title">👤 Cliente</div>
                 <div class="order-section-content">
@@ -590,7 +581,6 @@ function renderOrderCard(order) {
                 </div>
             </div>
             
-            <!-- Endereço / Retirada -->
             <div class="order-section">
                 <div class="order-section-title">${deliveryMode}</div>
                 <div class="order-section-content">
@@ -606,25 +596,29 @@ function renderOrderCard(order) {
                 </div>
             </div>
             
-            <!-- Itens -->
             <div class="order-section">
                 <div class="order-section-title">🛒 Itens do Pedido</div>
                 <div class="order-items">
-                    ${order.items.map(i => `
+                    ${(order.items || []).map(i => {
+                        const addons = sanitizeAddons(i.addons || []);
+                        const addonTotal = addons.reduce((s, a) => s + (a.price || 0), 0);
+                        const itemTotal = (i.price + addonTotal) * i.qty;
+                        
+                        return `
                         <div class="order-item">
                             <span class="order-item-qty">${i.qty}x</span>
                             <span class="order-item-name">
                                 ${i.name}
-                                ${i.addons?.length ? `<small class="order-item-addons">(${i.addons.map(a => a.name).join(', ')})</small>` : ''}
+                                ${addons.length > 0 ? `<small class="order-item-addons">(${addons.map(a => a.name).join(', ')})</small>` : ''}
                                 ${i.observation ? `<small class="order-item-obs">Obs: ${i.observation}</small>` : ''}
                             </span>
-                            <span class="order-item-price">${formatCurrency((i.price + (i.addons?.reduce((s,a) => s + a.price, 0) || 0)) * i.qty)}</span>
+                            <span class="order-item-price">${formatCurrency(itemTotal)}</span>
                         </div>
-                    `).join('')}
+                    `;
+                    }).join('')}
                 </div>
             </div>
             
-            <!-- Observações gerais -->
             ${notes ? `
             <div class="order-section">
                 <div class="order-section-title">📝 Observações</div>
@@ -632,7 +626,6 @@ function renderOrderCard(order) {
             </div>
             ` : ''}
             
-            <!-- Pagamento e Totais -->
             <div class="order-section">
                 <div class="order-section-title">💰 Pagamento</div>
                 <div class="order-section-content">
@@ -665,13 +658,11 @@ function renderOrderCard(order) {
                 </div>
             </div>
             
-            <!-- Ações -->
             <div class="order-actions">${getOrderActions(order)}</div>
         </div>
     </div>`;
 }
 
-// Formata telefone
 function formatPhone(phone) {
     if (!phone) return '';
     const cleaned = phone.replace(/\D/g, '');
@@ -702,10 +693,7 @@ async function updateOrderStatus(orderId, status) {
         const timeline = orders.find(o => o.id === orderId)?.timeline || [];
         timeline.push({ status, timestamp: new Date().toISOString(), message: getStatusLabel(status) });
         await db.collection('orders').doc(orderId).update({ status, timeline, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
-        
-        // Limpa o alerta sonoro se estava pendente
         clearOrderAlert(orderId);
-        
         showToast(`Pedido: ${getStatusLabel(status)}`);
     } catch (err) { showToast('Erro ao atualizar'); }
 }
@@ -719,6 +707,7 @@ function renderProducts() {
     
     if (filtered.length === 0) {
         container.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;"><div class="empty-state-icon">🍽️</div><div class="empty-state-title">Nenhum produto</div><button class="btn btn-primary" onclick="openProductModal()">+ Adicionar</button></div>';
+        enableProductButtons(); // Habilita botão mesmo sem produtos
         return;
     }
     
@@ -731,170 +720,64 @@ function renderProducts() {
             <div class="product-actions"><button class="btn btn-secondary btn-sm" onclick="editProduct('${p.id}')">✏️</button><button class="btn btn-danger btn-sm" onclick="confirmDeleteProduct('${p.id}')">🗑️</button></div>
         </div>
     </div>`).join('');
+    
+    enableProductButtons(); // Habilita botões de editar
 }
 
 function filterProductsList() { renderProducts(); }
 
-function initEmojiPicker() {
-    document.getElementById('emojiPicker').innerHTML = foodEmojis.map(e => `<div class="emoji-item ${e === selectedEmoji ? 'selected' : ''}" onclick="selectEmoji('${e}')">${e}</div>`).join('');
-}
-
-function selectEmoji(emoji) {
-    selectedEmoji = emoji;
-    document.querySelectorAll('.emoji-item').forEach(el => el.classList.toggle('selected', el.textContent === emoji));
-    productImageData = null;
-    document.getElementById('productImageUpload').classList.remove('has-image');
-    document.getElementById('productImagePlaceholder').innerHTML = `<span>📷</span><div>Clique para enviar (quadrada)</div>`;
-}
-
-// ==================== ADDONS ====================
-
-function renderAddons() {
-    const container = document.getElementById('addonsList');
-    if (productAddons.length === 0) {
-        container.innerHTML = '<div class="addon-empty">Nenhum adicional cadastrado</div>';
-        return;
-    }
-    container.innerHTML = productAddons.map((addon, idx) => `
-        <div class="addon-item" draggable="true" ondragstart="dragAddon(event, ${idx})" ondragover="event.preventDefault()" ondrop="dropAddon(event, ${idx})">
-            <span class="addon-drag">⋮⋮</span>
-            <input type="text" class="form-input addon-name" value="${addon.name}" onchange="updateAddon(${idx}, 'name', this.value)">
-            <input type="number" class="form-input addon-price" value="${addon.price}" step="0.50" onchange="updateAddon(${idx}, 'price', parseFloat(this.value) || 0)">
-            <button type="button" class="btn btn-danger btn-sm" onclick="removeAddon(${idx})">×</button>
-        </div>
-    `).join('');
-}
-
-function addAddon() {
-    const nameInput = document.getElementById('newAddonName');
-    const priceInput = document.getElementById('newAddonPrice');
-    const name = nameInput.value.trim();
-    const price = parseFloat(priceInput.value) || 0;
-    
-    if (!name) { showToast('Digite o nome do adicional'); return; }
-    
-    productAddons.push({ name, price, order: productAddons.length });
-    nameInput.value = '';
-    priceInput.value = '';
-    renderAddons();
-}
-
-function updateAddon(idx, field, value) {
-    productAddons[idx][field] = value;
-}
-
-function removeAddon(idx) {
-    productAddons.splice(idx, 1);
-    productAddons.forEach((a, i) => a.order = i);
-    renderAddons();
-}
-
-let draggedAddonIdx = null;
-function dragAddon(e, idx) { draggedAddonIdx = idx; }
-function dropAddon(e, targetIdx) {
-    e.preventDefault();
-    if (draggedAddonIdx === null || draggedAddonIdx === targetIdx) return;
-    const [item] = productAddons.splice(draggedAddonIdx, 1);
-    productAddons.splice(targetIdx, 0, item);
-    productAddons.forEach((a, i) => a.order = i);
-    renderAddons();
-    draggedAddonIdx = null;
-}
-
-// ==================== PRODUCT MODAL ====================
+// ==================== PRODUCT EDITOR INTEGRATION ====================
 
 function openProductModal() {
-    document.getElementById('productId').value = '';
-    document.getElementById('productName').value = '';
-    document.getElementById('productDescription').value = '';
-    document.getElementById('productPrice').value = '';
-    document.getElementById('productCategory').value = categories[0] || '';
-    document.getElementById('productActiveToggle').classList.add('active');
-    document.getElementById('productModalTitle').textContent = 'Novo Produto';
-    productImageData = null;
-    document.getElementById('productImageUpload').classList.remove('has-image');
-    document.getElementById('productImagePlaceholder').innerHTML = `<span>📷</span><div>Clique para enviar (quadrada)</div>`;
-    selectedEmoji = '🍔';
-    productAddons = [];
-    initEmojiPicker();
-    renderAddons();
-    openModal('productModal');
+    openProductEditor();
 }
 
 function editProduct(productId) {
-    const p = products.find(x => x.id === productId);
-    if (!p) return;
+    openProductEditor(productId);
+}
+
+function openProductEditor(productId = null) {
+    console.log('openProductEditor chamado');
+    console.log('currentStore:', currentStore);
+    console.log('productId:', productId);
     
-    document.getElementById('productId').value = p.id;
-    document.getElementById('productName').value = p.name;
-    document.getElementById('productDescription').value = p.description || '';
-    document.getElementById('productPrice').value = p.price;
-    document.getElementById('productCategory').value = p.category || '';
-    document.getElementById('productModalTitle').textContent = 'Editar Produto';
-    document.getElementById('productActiveToggle').classList.toggle('active', p.active !== false);
-    
-    if (p.imageUrl) {
-        document.getElementById('productImageUpload').classList.add('has-image');
-        document.getElementById('productImageUpload').innerHTML = `<img src="${p.imageUrl}"><input type="file" id="productImageInput" accept="image/*" onchange="handleProductImageUpload(event)">`;
-    } else {
-        document.getElementById('productImageUpload').classList.remove('has-image');
-        document.getElementById('productImagePlaceholder').innerHTML = `<span>📷</span><div>Clique para enviar (quadrada)</div>`;
+    if (!currentStore) {
+        showToast('❌ Loja não carregada. Aguarde...');
+        console.error('currentStore está undefined');
+        return;
     }
-    
-    selectedEmoji = p.emoji || '🍔';
-    productAddons = (p.addons || []).map((a, i) => ({ ...a, order: a.order ?? i }));
-    productAddons.sort((a, b) => a.order - b.order);
-    initEmojiPicker();
-    renderAddons();
-    openModal('productModal');
+
+    if (!currentStore.id) {
+        showToast('❌ ID da loja não encontrado');
+        console.error('currentStore.id está undefined');
+        return;
+    }
+
+    const url = productId 
+        ? `product-editor.html?storeId=${currentStore.id}&productId=${productId}`
+        : `product-editor.html?storeId=${currentStore.id}`;
+
+    console.log('Abrindo URL:', url);
+
+    const width = 900;
+    const height = 800;
+    const left = (window.innerWidth - width) / 2;
+    const top = (window.innerHeight - height) / 2;
+
+    window.open(
+        url,
+        'ProductEditor',
+        `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
+    );
 }
 
-async function handleProductImageUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    productImageData = await compressImageSquare(file, 480, 0.75);
-    document.getElementById('productImageUpload').classList.add('has-image');
-    document.getElementById('productImageUpload').innerHTML = `<img src="${productImageData}"><input type="file" id="productImageInput" accept="image/*" onchange="handleProductImageUpload(event)">`;
-}
-
-async function saveProduct() {
-    const id = document.getElementById('productId').value;
-    const name = document.getElementById('productName').value.trim();
-    const price = parseFloat(document.getElementById('productPrice').value);
-    
-    if (!name || !price) { showToast('Preencha nome e preço'); return; }
-    
-    try {
-        const data = {
-            name,
-            description: document.getElementById('productDescription').value.trim(),
-            price,
-            category: document.getElementById('productCategory').value,
-            active: document.getElementById('productActiveToggle').classList.contains('active'),
-            emoji: selectedEmoji,
-            addons: productAddons.map((a, i) => ({ name: a.name, price: a.price, order: i })),
-            storeId: currentStore.id,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        };
-        
-        if (productImageData?.startsWith('data:')) {
-            data.imageUrl = productImageData;
-        }
-        
-        if (id) {
-            await db.collection('products').doc(id).update(data);
-        } else {
-            data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-            await db.collection('products').add(data);
-        }
-        
-        closeModal('productModal');
+window.addEventListener('message', async (event) => {
+    if (event.data.type === 'productSaved') {
         await loadProducts();
-        loadCategories();
-        showToast('Produto salvo!');
-    } catch (err) { console.error(err); showToast('Erro ao salvar'); }
-}
+        await loadCategories();
+        showToast('Produtos atualizados!');
+    }
+});
 
 function confirmDeleteProduct(productId) {
     const p = products.find(x => x.id === productId);
@@ -909,12 +792,6 @@ async function deleteProduct(productId) {
     } catch (err) { 
         showToast('Erro'); 
     }
-}
-
-function updateCategorySelect() {
-    document.getElementById('productCategory').innerHTML = categories.length > 0 
-        ? categories.map(c => `<option value="${c}">${c}</option>`).join('')
-        : '<option value="">Adicione categoria primeiro</option>';
 }
 
 // ==================== CATEGORIES ====================
@@ -932,9 +809,16 @@ async function saveCategory() {
     const name = document.getElementById('categoryName').value.trim();
     if (!name) { showToast('Digite o nome'); return; }
     if (categories.includes(name)) { showToast('Já existe'); return; }
+    
     categories.push(name);
+    
+    // Salva no Firestore
+    await db.collection('stores').doc(currentStore.id).update({ 
+        categories: categories 
+    });
+    currentStore.categories = categories;
+    
     renderCategories();
-    updateCategorySelect();
     closeModal('categoryModal');
     showToast('Criada');
 }
@@ -950,8 +834,14 @@ function confirmDeleteCategory(cat) {
 
 async function deleteCategory(cat) {
     categories = categories.filter(c => c !== cat);
+    
+    // Salva no Firestore
+    await db.collection('stores').doc(currentStore.id).update({ 
+        categories: categories 
+    });
+    currentStore.categories = categories;
+    
     renderCategories();
-    updateCategorySelect();
     showToast('Removida');
 }
 
@@ -1061,3 +951,28 @@ function showToast(msg) { const t = document.getElementById('toast'); t.textCont
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', (e) => { if (e.target === m) m.classList.remove('active'); }));
 });
+
+function openProductsPage() {
+  const url = new URL(window.location.href);
+
+  const storeId =
+    url.searchParams.get("storeId") ||
+    window.currentStoreId ||
+    localStorage.getItem("currentStoreId") ||
+    localStorage.getItem("CURRENT_STORE_ID") ||
+    localStorage.getItem("storeId") ||
+    localStorage.getItem("STORE_ID") ||
+    null;
+
+  if (!storeId) {
+    showToast("❌ StoreId não encontrado.");
+    return;
+  }
+
+  // garante que salva o certo pro resto do sistema
+  localStorage.setItem("currentStoreId", storeId);
+
+  window.location.href = `feed.html?storeId=${encodeURIComponent(storeId)}`;
+}
+
+

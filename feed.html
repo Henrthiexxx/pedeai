@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Feed de Produtos - Pedrad</title>
+  <style>
+    :root{
+      --bg:#000; --card:#0a0a0a; --input:#171717; --text:#fff; --muted:#737373;
+      --border:#262626; --primary:#fff; --danger:#ef4444; --success:#22c55e; --radius:12px;
+      --shadow: 0 10px 30px rgba(0,0,0,.45);
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);padding:20px;min-height:100vh}
+    .container{max-width:1100px;margin:0 auto}
+    .header{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+      margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)
+    }
+    .header h1{font-size:1.25rem;font-weight:700}
+    .sub{color:var(--muted);font-size:.85rem;margin-top:4px}
+    .btn{
+      padding:10px 14px;border-radius:10px;border:1px solid var(--border);
+      background:transparent;color:var(--text);cursor:pointer;font-size:.9rem;transition:.2s
+    }
+    .btn:hover{background:var(--primary);color:#000;border-color:var(--primary)}
+    .btn-primary{background:var(--primary);color:#000;border-color:var(--primary)}
+    .btn-danger{background:var(--danger);border-color:var(--danger);color:#fff}
+    .btn-ghost{background:transparent}
+    .btn-sm{padding:7px 10px;font-size:.85rem;border-radius:8px}
+    .toolbar{
+      display:flex;gap:10px;align-items:center;justify-content:space-between;
+      margin:16px 0 18px 0
+    }
+    .search{
+      flex:1;display:flex;gap:10px;align-items:center
+    }
+    .input{
+      width:100%;padding:12px 12px;background:var(--input);border:1px solid var(--border);
+      border-radius:10px;color:var(--text);font-size:.95rem
+    }
+    .input:focus{outline:none;border-color:var(--primary)}
+    .grid{
+      display:grid;grid-template-columns:repeat(3, 1fr);gap:14px
+    }
+    .card{
+      background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+      overflow:hidden;box-shadow:var(--shadow)
+    }
+    .img{
+      height:150px;background:var(--input);border-bottom:1px solid var(--border);
+      display:flex;align-items:center;justify-content:center;overflow:hidden
+    }
+    .img img{width:100%;height:100%;object-fit:cover}
+    .img .ph{color:var(--muted);font-size:.9rem}
+    .content{padding:14px}
+    .top{
+      display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px
+    }
+    .name{font-weight:800;font-size:1rem;line-height:1.2}
+    .cat{color:var(--muted);font-size:.82rem;margin-top:4px}
+    .price{font-weight:800;font-size:1rem}
+    .badges{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 12px 0}
+    .badge{
+      font-size:.75rem;padding:6px 9px;border-radius:999px;border:1px solid var(--border);
+      color:var(--muted);background:rgba(255,255,255,.03)
+    }
+    .badge.on{border-color:rgba(34,197,94,.35);color:#b7f7cc}
+    .badge.off{border-color:rgba(239,68,68,.35);color:#ffd0d0}
+    .actions{
+      display:flex;gap:10px;flex-wrap:wrap
+    }
+    .empty{
+      padding:28px;text-align:center;color:var(--muted);
+      border:1px dashed var(--border);border-radius:12px;background:var(--input)
+    }
+    .loading{padding:40px;text-align:center;color:var(--muted)}
+    .toast{
+      position:fixed;left:50%;bottom:20px;transform:translateX(-50%);
+      background:var(--card);border:1px solid var(--border);padding:12px 18px;border-radius:10px;
+      opacity:0;pointer-events:none;transition:.25s;z-index:9999
+    }
+    .toast.show{opacity:1}
+    @media(max-width:980px){ .grid{grid-template-columns:repeat(2,1fr)} }
+    @media(max-width:680px){
+      .grid{grid-template-columns:1fr}
+      .toolbar{flex-direction:column;align-items:stretch}
+      .search{flex-direction:column;align-items:stretch}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="toast" id="toast"></div>
+
+  <div class="container">
+    <div class="header">
+      <div>
+        <h1>📦 Feed de Produtos</h1>
+        <div class="sub" id="subInfo">Carregando loja...</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <button class="btn btn-primary" onclick="openCreate()">+ Novo Produto</button>
+        <button class="btn" onclick="window.close()">✕ Fechar</button>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="search">
+        <input class="input" id="searchInput" placeholder="Buscar por nome, categoria..." oninput="renderProducts()" />
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <button class="btn btn-ghost" onclick="refreshNow()">⟳ Atualizar</button>
+      </div>
+    </div>
+
+    <div id="loadingState" class="loading">Carregando...</div>
+    <div id="listState" style="display:none;">
+      <div id="grid" class="grid"></div>
+      <div id="emptyState" class="empty" style="display:none;">Nenhum produto encontrado.</div>
+    </div>
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+  <script>
+    // Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyAnIJRcUxN-0swpVnonPbJjTSK87o4CQ_g",
+      authDomain: "pedrad-814d0.firebaseapp.com",
+      projectId: "pedrad-814d0",
+      storageBucket: "pedrad-814d0.appspot.com",
+      messagingSenderId: "293587190550",
+      appId: "1:293587190550:web:80c9399f82847c80e20637"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    // ===================== IDS UNIVERSAIS =====================
+    function getUniversalStoreId() {
+      const url = new URL(window.location.href);
+      const qs = url.searchParams;
+
+      let storeId = qs.get('storeId');
+
+      if (!storeId && window.location.hash) {
+        const hash = window.location.hash.replace('#', '');
+        const hs = new URLSearchParams(hash);
+        storeId = hs.get('storeId');
+      }
+
+      storeId =
+        storeId ||
+        localStorage.getItem('currentStoreId') ||
+        localStorage.getItem('CURRENT_STORE_ID') ||
+        localStorage.getItem('storeId') ||
+        null;
+
+      return storeId;
+    }
+
+    const storeId = getUniversalStoreId();
+
+    // ===================== STATE =====================
+    let allProducts = [];
+    let unsub = null;
+
+    // ===================== HELPERS =====================
+    function escapeHtml(str) {
+      return String(str ?? '')
+        .replaceAll('&','&amp;')
+        .replaceAll('<','&lt;')
+        .replaceAll('>','&gt;')
+        .replaceAll('"','&quot;')
+        .replaceAll("'",'&#039;');
+    }
+
+    function moneyBR(v) {
+      const n = Number(v || 0);
+      return n.toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    function safeText(x) {
+      return String(x || '').trim();
+    }
+
+      function openEditorModal(url) {
+    const modal = document.getElementById('modalEditor');
+    const frame = document.getElementById('editorFrame');
+    frame.src = url;
+    modal.style.display = 'block';
+  }
+
+  function closeEditorModal() {
+    const modal = document.getElementById('modalEditor');
+    const frame = document.getElementById('editorFrame');
+    frame.src = 'about:blank';
+    modal.style.display = 'none';
+  }
+
+    // ===================== UI ACTIONS =====================
+  function openEdit(productId) {
+    const url = `edit.html?storeId=${encodeURIComponent(storeId)}&productId=${encodeURIComponent(productId)}`;
+    openEditorModal(url);
+  }
+
+  function openCreate() {
+    const url = `edit.html?storeId=${encodeURIComponent(storeId)}`;
+    openEditorModal(url);
+  }
+    async function deleteProduct(productId, name) {
+      const ok = confirm(`Excluir "${name}"?`);
+      if (!ok) return;
+
+      try {
+        await db.collection('products').doc(productId).delete();
+        showToast('Produto excluído!');
+      } catch (e) {
+        console.error('deleteProduct error:', e);
+        showToast('Erro ao excluir: ' + (e.code || e.message));
+      }
+    }
+
+      window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeEditorModal();
+  });
+
+    async function copyProduct(p) {
+      try {
+        const clone = JSON.parse(JSON.stringify(p || {}));
+        delete clone.id;
+
+        clone.name = (safeText(clone.name) || 'Produto') + ' (cópia)';
+        clone.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+        clone.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+
+        // garante storeId
+        clone.storeId = storeId;
+
+        await db.collection('products').add(clone);
+        showToast('Produto copiado!');
+      } catch (e) {
+        console.error('copyProduct error:', e);
+        showToast('Erro ao copiar: ' + (e.code || e.message));
+      }
+    }
+
+    function renderProducts() {
+      const grid = document.getElementById('grid');
+      const empty = document.getElementById('emptyState');
+      const q = safeText(document.getElementById('searchInput').value).toLowerCase();
+
+      let list = [...allProducts];
+
+      // ordena no front (evita index no Firestore)
+      list.sort((a,b) => safeText(a.name).localeCompare(safeText(b.name), 'pt-BR'));
+
+      if (q) {
+        list = list.filter(p => {
+          const name = safeText(p.name).toLowerCase();
+          const cat = safeText(p.category).toLowerCase();
+          return name.includes(q) || cat.includes(q);
+        });
+      }
+
+      if (!list.length) {
+        grid.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+
+      empty.style.display = 'none';
+
+      grid.innerHTML = list.map(p => {
+        const img = safeText(p.imageUrl);
+        const isActive = p.active !== false;
+        const desc = safeText(p.description);
+        const cat = safeText(p.category) || 'Sem categoria';
+
+        return `
+          <div class="card">
+            <div class="img">
+              ${
+                img
+                  ? `<img src="${escapeHtml(img)}" alt="Produto" onerror="this.remove(); this.parentElement.innerHTML='<div class=ph>Sem imagem</div>';">`
+                  : `<div class="ph">Sem imagem</div>`
+              }
+            </div>
+
+            <div class="content">
+              <div class="top">
+                <div>
+                  <div class="name">${escapeHtml(safeText(p.name) || 'Sem nome')}</div>
+                  <div class="cat">${escapeHtml(cat)}</div>
+                </div>
+                <div class="price">${moneyBR(p.price)}</div>
+              </div>
+
+              <div class="badges">
+                <span class="badge ${isActive ? 'on' : 'off'}">${isActive ? 'Ativo' : 'Inativo'}</span>
+                ${desc ? `<span class="badge">📝 ${escapeHtml(desc.length > 28 ? desc.slice(0, 28) + '…' : desc)}</span>` : ''}
+              </div>
+
+              <div class="actions">
+                <button class="btn btn-primary btn-sm" onclick="openEdit('${escapeHtml(p.id)}')">✏️ Editar</button>
+                <button class="btn btn-sm" onclick='copyProduct(${JSON.stringify(p).replaceAll("'", "\\'")})'>📄 Copiar</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteProduct('${escapeHtml(p.id)}','${escapeHtml(safeText(p.name) || 'Produto')}')">🗑️ Excluir</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ===================== DATA =====================
+    async function loadStoreInfo() {
+      try {
+        const doc = await db.collection('stores').doc(storeId).get();
+        const data = doc.exists ? (doc.data() || {}) : {};
+        const storeName = safeText(data.name || data.nome || '');
+        document.getElementById('subInfo').textContent = storeName
+          ? `Loja: ${storeName} • ID: ${storeId}`
+          : `StoreId: ${storeId}`;
+      } catch (e) {
+        document.getElementById('subInfo').textContent = `StoreId: ${storeId}`;
+      }
+    }
+
+    function listenProducts() {
+      if (unsub) unsub();
+
+      unsub = db.collection('products')
+        .where('storeId', '==', storeId)
+        .onSnapshot((snap) => {
+          allProducts = snap.docs.map(d => ({ id: d.id, ...(d.data() || {}) }));
+          document.getElementById('loadingState').style.display = 'none';
+          document.getElementById('listState').style.display = 'block';
+          renderProducts();
+        }, (err) => {
+          console.error('listenProducts error:', err);
+          document.getElementById('loadingState').style.display = 'none';
+          document.getElementById('listState').style.display = 'block';
+          showToast('Erro ao carregar produtos: ' + (err.code || err.message));
+          allProducts = [];
+          renderProducts();
+        });
+    }
+
+    function refreshNow() {
+      showToast('Atualizando...');
+      listenProducts();
+    }
+
+    // ===================== AUTH GATE =====================
+    async function waitAuth() {
+      return new Promise((resolve) => {
+        const unsubAuth = auth.onAuthStateChanged((u) => {
+          unsubAuth();
+          resolve(u);
+        });
+      });
+    }
+
+    (async () => {
+      if (!storeId) {
+        document.getElementById('loadingState').innerHTML = `
+          <div style="text-align:center;padding:40px;color:var(--muted)">
+            ⚠️ StoreId não informado.
+          </div>
+        `;
+        return;
+      }
+
+      const user = auth.currentUser || await waitAuth();
+      if (!user) {
+        document.getElementById('loadingState').innerHTML = `
+          <div style="text-align:center;padding:40px;color:var(--muted)">
+            ⚠️ Faça login no painel antes de abrir o feed.
+          </div>
+        `;
+        return;
+      }
+
+      await loadStoreInfo();
+      listenProducts();
+
+      // Atualiza automaticamente quando voltar do edit.html
+      window.addEventListener('message', (event) => {
+        if (event?.data?.type === 'productSaved') {
+          showToast('Atualizando feed...');
+          listenProducts();
+        }
+      });
+    })();
+  </script>
+  <!-- POPUP (MODAL) EDITOR -->
+<div id="modalEditor" style="display:none; position:fixed; inset:0; z-index:99999;">
+  <div onclick="closeEditorModal()"
+       style="position:absolute; inset:0; background:rgba(0,0,0,.65)"></div>
+
+  <div style="
+    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+    width:min(980px, 96vw); height:min(820px, 92vh);
+    background:#0a0a0a; border:1px solid #262626; border-radius:14px;
+    overflow:hidden; box-shadow:0 25px 80px rgba(0,0,0,.6);
+    display:flex; flex-direction:column;
+  ">
+    <div style="
+      height:52px; display:flex; align-items:center; justify-content:space-between;
+      padding:0 14px; border-bottom:1px solid #262626; background:#000;
+    ">
+      <div style="font-weight:800">✏️ Editor de Produto</div>
+      <button class="btn" onclick="closeEditorModal()">✕ Fechar</button>
+    </div>
+
+    <iframe id="editorFrame" src="about:blank"
+      style="flex:1; width:100%; border:0; background:#000;"></iframe>
+  </div>
+</div>
+</body>
+</html>

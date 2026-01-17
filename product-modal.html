@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Produto</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #0a0a0a;
+            --bg-card: #111;
+            --bg-secondary: #1a1a1a;
+            --text: #fff;
+            --text-muted: #888;
+            --border: #222;
+            --primary: #6366f1;
+            --success: #22c55e;
+            --danger: #ef4444;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .header-title { font-size: 1.3rem; font-weight: 600; }
+        .btn-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 2rem;
+            cursor: pointer;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .form-group { margin-bottom: 20px; }
+        .form-label {
+            display: block;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--bg-secondary);
+            color: var(--text);
+            font-size: 1rem;
+        }
+        .form-input:focus { outline: none; border-color: var(--primary); }
+        textarea.form-input { min-height: 80px; resize: vertical; }
+        
+        .image-upload {
+            width: 100%;
+            height: 200px;
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background: var(--bg-secondary);
+            overflow: hidden;
+            position: relative;
+        }
+        .image-upload:hover { border-color: var(--primary); }
+        .image-upload img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .image-upload input { display: none; }
+        .image-placeholder {
+            text-align: center;
+            color: var(--text-muted);
+        }
+        .image-placeholder span { font-size: 3rem; display: block; margin-bottom: 8px; }
+        
+        .emoji-picker {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .emoji-item {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            border-radius: 8px;
+            background: var(--bg-secondary);
+            border: 2px solid transparent;
+        }
+        .emoji-item:hover { background: var(--bg-card); }
+        .emoji-item.selected { border-color: var(--primary); background: var(--primary)20; }
+        
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        
+        .toggle {
+            width: 50px;
+            height: 28px;
+            background: var(--border);
+            border-radius: 14px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .toggle::after {
+            content: '';
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            background: #fff;
+            border-radius: 50%;
+            top: 3px;
+            left: 3px;
+            transition: left 0.2s;
+        }
+        .toggle.active {
+            background: var(--success);
+        }
+        .toggle.active::after {
+            left: 25px;
+        }
+        
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+        .setting-label { font-weight: 500; }
+        .setting-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+        
+        /* Adicionais */
+        .addons-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+        }
+        .addons-title {
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .addons-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .addon-item {
+            display: grid;
+            grid-template-columns: 24px 1fr 90px 40px;
+            gap: 8px;
+            align-items: center;
+            padding: 8px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+        .addon-drag {
+            color: var(--text-muted);
+            cursor: move;
+            user-select: none;
+        }
+        .addon-name {
+            padding: 8px 12px;
+            font-size: 0.9rem;
+        }
+        .addon-price {
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            text-align: right;
+        }
+        .addon-add-row {
+            display: grid;
+            grid-template-columns: 1fr 90px 50px;
+            gap: 8px;
+        }
+        .addon-empty {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        .btn-danger {
+            background: var(--danger);
+            color: #fff;
+        }
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+        }
+        .btn-block {
+            width: 100%;
+        }
+        
+        .actions {
+            position: sticky;
+            bottom: 0;
+            background: var(--bg);
+            padding: 16px 0;
+            display: flex;
+            gap: 12px;
+            border-top: 1px solid var(--border);
+            margin-top: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 class="header-title" id="modalTitle">Novo Produto</h1>
+        <button class="btn-close" onclick="window.close()">×</button>
+    </div>
+    
+    <input type="hidden" id="productId">
+    <input type="hidden" id="storeId">
+    
+    <div class="form-group">
+        <label class="form-label">Imagem do Produto</label>
+        <div class="image-upload" id="imageUpload" onclick="document.getElementById('imageInput').click()">
+            <div class="image-placeholder" id="imagePlaceholder">
+                <span>📷</span>
+                <div>Clique para enviar imagem</div>
+                <small style="color: var(--text-muted); font-size: 0.75rem;">(Recomendado: quadrada, 800x800px)</small>
+            </div>
+            <input type="file" id="imageInput" accept="image/*">
+        </div>
+    </div>
+    
+    <div class="form-group">
+        <label class="form-label">Ou escolha um ícone</label>
+        <div class="emoji-picker" id="emojiPicker"></div>
+    </div>
+    
+    <div class="form-group">
+        <label class="form-label">Nome do Produto *</label>
+        <input type="text" class="form-input" id="productName" placeholder="Ex: X-Burger Especial" required>
+    </div>
+    
+    <div class="form-group">
+        <label class="form-label">Descrição</label>
+        <textarea class="form-input" id="productDescription" placeholder="Ingredientes, tamanho, etc..."></textarea>
+    </div>
+    
+    <div class="grid-2">
+        <div class="form-group">
+            <label class="form-label">Preço (R$) *</label>
+            <input type="number" class="form-input" id="productPrice" placeholder="0.00" step="0.10" min="0" required>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Categoria *</label>
+            <select class="form-input" id="productCategory" required></select>
+        </div>
+    </div>
+    
+    <!-- Adicionais -->
+    <div class="form-group">
+        <div class="addons-section">
+            <div class="addons-title">
+                ➕ Adicionais Disponíveis
+            </div>
+            <div class="addons-list" id="addonsList"></div>
+            <div class="addon-add-row">
+                <input type="text" class="form-input" id="newAddonName" placeholder="Nome do adicional" style="padding: 10px 12px;">
+                <input type="number" class="form-input" id="newAddonPrice" placeholder="R$ 0.00" step="0.50" min="0" style="padding: 10px 12px;">
+                <button type="button" class="btn btn-primary btn-sm" onclick="addAddon()" style="width: 50px;">+</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="setting-item">
+        <div>
+            <div class="setting-label">Produto ativo</div>
+            <div class="setting-desc">Visível no cardápio para clientes</div>
+        </div>
+        <div class="toggle active" id="activeToggle" onclick="this.classList.toggle('active')"></div>
+    </div>
+    
+    <div class="actions">
+        <button class="btn btn-secondary" onclick="window.close()" style="flex: 1;">Cancelar</button>
+        <button class="btn btn-primary" onclick="saveProduct()" style="flex: 2;">Salvar Produto</button>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAnIJRcUxN-0swpVnonPbJjTSK87o4CQ_g",
+            authDomain: "pedrad-814d0.firebaseapp.com",
+            projectId: "pedrad-814d0",
+            storageBucket: "pedrad-814d0.appspot.com",
+            messagingSenderId: "293587190550",
+            appId: "1:293587190550:web:80c9399f82847c80e20637"
+        };
+        
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
+        
+        let selectedEmoji = '🍔';
+        let imageData = null;
+        let addons = [];
+        let draggedIdx = null;
+        
+        const foodEmojis = ['🍔', '🍕', '🍟', '🌭', '🍗', '🥓', '🍖', '🥩', '🍝', '🍜', '🍲', '🥗', '🌮', '🌯', '🥙', '🧆', '🍣', '🍤', '🍱', '🥡', '🍚', '🍛', '🍙', '🥟', '🍰', '🎂', '🍮', '🍩', '🍪', '🍫', '🍬', '🍭', '🍦', '🍨', '🍧', '🥤', '🧃', '🍺', '🍷', '☕', '🧋', '🥛'];
+        
+        // Inicializa
+        window.addEventListener('DOMContentLoaded', init);
+        
+        async function init() {
+            renderEmojiPicker();
+            await loadCategories();
+            
+            // Recebe dados do window.opener
+            const params = new URLSearchParams(window.location.search);
+            const productId = params.get('id');
+            const storeId = params.get('storeId');
+            
+            if (storeId) {
+                document.getElementById('storeId').value = storeId;
+            }
+            
+            if (productId) {
+                await loadProduct(productId);
+            }
+            
+            // Image upload
+            document.getElementById('imageInput').addEventListener('change', handleImageUpload);
+        }
+        
+        function renderEmojiPicker() {
+            document.getElementById('emojiPicker').innerHTML = foodEmojis.map(e => 
+                `<div class="emoji-item ${e === selectedEmoji ? 'selected' : ''}" onclick="selectEmoji('${e}')">${e}</div>`
+            ).join('');
+        }
+        
+        function selectEmoji(emoji) {
+            selectedEmoji = emoji;
+            imageData = null;
+            document.querySelectorAll('.emoji-item').forEach(el => 
+                el.classList.toggle('selected', el.textContent === emoji)
+            );
+            document.getElementById('imageUpload').classList.remove('has-image');
+            document.getElementById('imagePlaceholder').style.display = 'block';
+        }
+        
+        async function handleImageUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            imageData = await compressImage(file, 800, 0.8);
+            
+            const upload = document.getElementById('imageUpload');
+            upload.classList.add('has-image');
+            upload.innerHTML = `<img src="${imageData}"><input type="file" id="imageInput" accept="image/*">`;
+            document.getElementById('imageInput').addEventListener('change', handleImageUpload);
+        }
+        
+        function compressImage(file, maxSize, quality) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const srcSize = Math.min(img.width, img.height);
+                        const cropX = (img.width - srcSize) / 2;
+                        const cropY = (img.height - srcSize) / 2;
+                        const finalSize = Math.min(srcSize, maxSize);
+                        canvas.width = finalSize;
+                        canvas.height = finalSize;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, cropX, cropY, srcSize, srcSize, 0, 0, finalSize, finalSize);
+                        resolve(canvas.toDataURL('image/jpeg', quality));
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+        
+        async function loadCategories() {
+            const storeId = document.getElementById('storeId').value;
+            if (!storeId) return;
+            
+            const snapshot = await db.collection('products').where('storeId', '==', storeId).get();
+            const categories = [...new Set(snapshot.docs.map(d => d.data().category).filter(Boolean))];
+            
+            const select = document.getElementById('productCategory');
+            select.innerHTML = categories.length > 0
+                ? categories.map(c => `<option value="${c}">${c}</option>`).join('')
+                : '<option value="">Nenhuma categoria</option>';
+        }
+        
+        async function loadProduct(productId) {
+            try {
+                const doc = await db.collection('products').doc(productId).get();
+                if (!doc.exists) return;
+                
+                const p = doc.data();
+                
+                document.getElementById('productId').value = productId;
+                document.getElementById('modalTitle').textContent = 'Editar Produto';
+                document.getElementById('productName').value = p.name;
+                document.getElementById('productDescription').value = p.description || '';
+                document.getElementById('productPrice').value = p.price;
+                document.getElementById('productCategory').value = p.category || '';
+                document.getElementById('activeToggle').classList.toggle('active', p.active !== false);
+                
+                if (p.imageUrl) {
+                    imageData = p.imageUrl;
+                    const upload = document.getElementById('imageUpload');
+                    upload.classList.add('has-image');
+                    upload.innerHTML = `<img src="${p.imageUrl}"><input type="file" id="imageInput" accept="image/*">`;
+                    document.getElementById('imageInput').addEventListener('change', handleImageUpload);
+                } else {
+                    selectedEmoji = p.emoji || '🍔';
+                    renderEmojiPicker();
+                }
+                
+                addons = (p.addons || []).map((a, i) => ({ ...a, order: a.order ?? i }));
+                addons.sort((a, b) => a.order - b.order);
+                renderAddons();
+                
+            } catch (err) {
+                console.error('Erro ao carregar produto:', err);
+                alert('Erro ao carregar produto');
+            }
+        }
+        
+        // ==================== ADICIONAIS ====================
+        
+        function renderAddons() {
+            const container = document.getElementById('addonsList');
+            if (addons.length === 0) {
+                container.innerHTML = '<div class="addon-empty">Nenhum adicional cadastrado</div>';
+                return;
+            }
+            container.innerHTML = addons.map((addon, idx) => `
+                <div class="addon-item" draggable="true" 
+                    ondragstart="dragStart(${idx})" 
+                    ondragover="event.preventDefault()" 
+                    ondrop="drop(${idx})">
+                    <span class="addon-drag">⋮⋮</span>
+                    <input type="text" class="form-input addon-name" value="${addon.name}" 
+                        onchange="updateAddon(${idx}, 'name', this.value)">
+                    <input type="number" class="form-input addon-price" value="${addon.price}" 
+                        step="0.50" min="0" onchange="updateAddon(${idx}, 'price', parseFloat(this.value) || 0)">
+                    <button type="button" class="btn btn-danger btn-sm" onclick="removeAddon(${idx})">×</button>
+                </div>
+            `).join('');
+        }
+        
+        function addAddon() {
+            const nameInput = document.getElementById('newAddonName');
+            const priceInput = document.getElementById('newAddonPrice');
+            const name = nameInput.value.trim();
+            const price = parseFloat(priceInput.value) || 0;
+            
+            if (!name) {
+                alert('Digite o nome do adicional');
+                return;
+            }
+            
+            addons.push({ name, price, order: addons.length });
+            nameInput.value = '';
+            priceInput.value = '';
+            renderAddons();
+        }
+        
+        function updateAddon(idx, field, value) {
+            addons[idx][field] = value;
+        }
+        
+        function removeAddon(idx) {
+            addons.splice(idx, 1);
+            addons.forEach((a, i) => a.order = i);
+            renderAddons();
+        }
+        
+        function dragStart(idx) {
+            draggedIdx = idx;
+        }
+        
+        function drop(targetIdx) {
+            event.preventDefault();
+            if (draggedIdx === null || draggedIdx === targetIdx) return;
+            
+            const [item] = addons.splice(draggedIdx, 1);
+            addons.splice(targetIdx, 0, item);
+            addons.forEach((a, i) => a.order = i);
+            renderAddons();
+            draggedIdx = null;
+        }
+        
+        // ==================== SAVE ====================
+        
+        async function saveProduct() {
+            const name = document.getElementById('productName').value.trim();
+            const price = parseFloat(document.getElementById('productPrice').value);
+            const category = document.getElementById('productCategory').value;
+            const storeId = document.getElementById('storeId').value;
+            
+            if (!name || !price || !category || !storeId) {
+                alert('Preencha todos os campos obrigatórios');
+                return;
+            }
+            
+            try {
+                const productId = document.getElementById('productId').value;
+                
+                const data = {
+                    name,
+                    description: document.getElementById('productDescription').value.trim(),
+                    price,
+                    category,
+                    active: document.getElementById('activeToggle').classList.contains('active'),
+                    emoji: selectedEmoji,
+                    addons: addons.map((a, i) => ({ 
+                        name: a.name, 
+                        price: a.price, 
+                        order: i 
+                    })),
+                    storeId,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                
+                if (imageData?.startsWith('data:')) {
+                    data.imageUrl = imageData;
+                }
+                
+                if (productId) {
+                    await db.collection('products').doc(productId).update(data);
+                } else {
+                    data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                    await db.collection('products').add(data);
+                }
+                
+                // Notifica janela pai
+                if (window.opener && !window.opener.closed) {
+                    window.opener.postMessage({ type: 'PRODUCT_SAVED' }, '*');
+                }
+                
+                window.close();
+                
+            } catch (err) {
+                console.error('Erro ao salvar:', err);
+                alert('Erro ao salvar produto');
+            }
+        }
+    </script>
+</body>
+</html>

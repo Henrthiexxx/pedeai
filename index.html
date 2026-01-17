@@ -69,12 +69,16 @@
                 </div>
                 <div class="nav-section">
                     <div class="nav-section-title">Cardápio</div>
-                    <div class="nav-item" onclick="showPage('products')"><span>🍽️</span> Produtos</div>
+                    <div class="nav-item" onclick="openProductsPage()"><span>🍽️</span> Produtos</div>
+
                     <div class="nav-item" onclick="showPage('categories')"><span>📁</span> Categorias</div>
                 </div>
                 <div class="nav-section">
                     <div class="nav-section-title">Configurações</div>
-                    <div class="nav-item" onclick="showPage('store')"><span>🏪</span> Minha Loja</div>
+                    <div class="nav-item" onclick="window.location.href='config.html'">
+  <span>🏪</span> Minha Loja
+</div>
+
                     <div class="nav-item" onclick="showPage('settings')"><span>⚙️</span> Configurações</div>
                     <div class="nav-item" onclick="handleLogout()"><span>🚪</span> Sair</div>
                 </div>
@@ -232,49 +236,7 @@
         </main>
     </div>
     
-    <!-- Product Modal -->
-    <div class="modal" id="productModal">
-        <div class="modal-content">
-            <div class="modal-header"><div class="modal-title" id="productModalTitle">Novo Produto</div><button class="modal-close" onclick="closeModal('productModal')">×</button></div>
-            <div class="modal-body">
-                <input type="hidden" id="productId">
-                <div class="form-group">
-                    <label class="form-label">Imagem do Produto</label>
-                    <div class="image-upload" id="productImageUpload" onclick="document.getElementById('productImageInput').click()">
-                        <div class="image-upload-placeholder" id="productImagePlaceholder"><span>📷</span><div>Clique para enviar imagem</div></div>
-                        <input type="file" id="productImageInput" accept="image/*" onchange="handleProductImageUpload(event)">
-                    </div>
-                </div>
-                <div class="form-group"><label class="form-label">Ou escolha um ícone</label><div class="emoji-picker" id="emojiPicker"></div></div>
-                <div class="form-group"><label class="form-label">Nome do Produto</label><input type="text" class="form-input" id="productName" placeholder="Ex: X-Burger Especial"></div>
-                <div class="form-group"><label class="form-label">Descrição</label><textarea class="form-input" id="productDescription" placeholder="Ingredientes, tamanho..." style="min-height: 60px;"></textarea></div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                    <div class="form-group"><label class="form-label">Preço (R$)</label><input type="number" class="form-input" id="productPrice" placeholder="0.00" step="0.10"></div>
-                    <div class="form-group"><label class="form-label">Categoria</label><select class="form-input" id="productCategory"></select></div>
-                </div>
-                
-                <!-- Adicionais -->
-                <div class="form-group">
-                    <label class="form-label">➕ Adicionais</label>
-                    <div class="addons-list" id="addonsList"></div>
-                    <div class="addon-add-row">
-                        <input type="text" class="form-input" id="newAddonName" placeholder="Nome do adicional">
-                        <input type="number" class="form-input" id="newAddonPrice" placeholder="R$" step="0.50" style="width: 90px;">
-                        <button type="button" class="btn btn-secondary btn-sm" onclick="addAddon()">+</button>
-                    </div>
-                </div>
-                
-                <div class="setting-item" style="margin-top: 8px;">
-                    <div class="setting-info"><div class="setting-label">Produto ativo</div><div class="setting-desc">Visível no cardápio</div></div>
-                    <div class="toggle active" id="productActiveToggle"></div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeModal('productModal')">Cancelar</button>
-                <button class="btn btn-primary" onclick="saveProduct()">Salvar</button>
-            </div>
-        </div>
-    </div>
+
     
     <!-- Category Modal -->
     <div class="modal" id="categoryModal">
