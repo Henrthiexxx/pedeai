@@ -74,7 +74,8 @@
   <div class="container">
     <div class="header">
       <h1 id="pageTitle">Novo Produto</h1>
-      <button class="btn" onclick="window.close()">✕ Fechar</button>
+     
+
     </div>
 
     <div id="loadingState" class="loading">Carregando...</div>
@@ -602,6 +603,23 @@
       t.classList.add('show');
       setTimeout(() => t.classList.remove('show'), 2500);
     }
+
+    function closeEditorModal() {
+  const modal = document.getElementById('modalEditor');
+  const frame = document.getElementById('editorFrame');
+  if (!modal || !frame) return;
+
+  try { document.activeElement?.blur?.(); } catch(e){}
+
+  frame.src = 'about:blank';
+  modal.style.display = 'none';
+  modal.style.pointerEvents = 'none';
+
+  setTimeout(() => {
+    modal.style.pointerEvents = 'auto';
+  }, 50);
+}
+
 
     // ===================== START (AUTH GATE) =====================
     async function waitAuth() {

@@ -71,6 +71,7 @@
                     <div class="nav-section-title">Cardápio</div>
                     <div class="nav-item" onclick="openProductsPage()"><span>🍽️</span> Produtos</div>
 
+
                     <div class="nav-item" onclick="showPage('categories')"><span>📁</span> Categorias</div>
                 </div>
                 <div class="nav-section">
@@ -276,5 +277,28 @@
     <!-- App -->
     <script src="modules/fcm.js"></script>
     <script src="index.js"></script>
+    <div id="modalProducts" style="display:none; position:fixed; inset:0; z-index:99999;">
+  <div onclick="closeProductsModal()" ontouchstart="closeProductsModal(); return false;"
+       style="position:absolute; inset:0; background:rgba(0,0,0,.65)"></div>
+
+  <div style="
+    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+    width:min(1100px, 96vw); height:min(860px, 92vh);
+    background:#0a0a0a; border:1px solid #262626; border-radius:14px;
+    overflow:hidden; box-shadow:0 25px 80px rgba(0,0,0,.6);
+    display:flex; flex-direction:column;">
+    
+    <div style="height:52px; display:flex; align-items:center; justify-content:space-between;
+      padding:0 14px; border-bottom:1px solid #262626; background:#000;">
+      <div style="font-weight:800">🍽️ Produtos</div>
+      <button class="btn" type="button" onclick="closeProductsModal()"
+        ontouchstart="closeProductsModal(); return false;">✕ Fechar</button>
+    </div>
+
+    <iframe id="productsFrame" src="about:blank"
+      style="flex:1; width:100%; border:0; background:#000;"></iframe>
+  </div>
+</div>
+
 </body>
 </html>

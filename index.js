@@ -62,6 +62,17 @@ function playNotificationSound() {
     }
 }
 
+function getUniversalStoreId() {
+  return (
+    window.storeId ||
+    localStorage.getItem('currentStoreId') ||
+    localStorage.getItem('CURRENT_STORE_ID') ||
+    localStorage.getItem('storeId') ||
+    null
+  );
+}
+
+
 function startNotificationLoop(orderId) {
     pendingAlertOrders.add(orderId);
     if (notificationInterval) return;
@@ -953,26 +964,22 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function openProductsPage() {
-  const url = new URL(window.location.href);
+  const sid = getUniversalStoreId();
+  if (!sid) return showToast("StoreId não encontrado");
 
-  const storeId =
-    url.searchParams.get("storeId") ||
-    window.currentStoreId ||
-    localStorage.getItem("currentStoreId") ||
-    localStorage.getItem("CURRENT_STORE_ID") ||
-    localStorage.getItem("storeId") ||
-    localStorage.getItem("STORE_ID") ||
-    null;
+  const modal = document.getElementById('modalProducts');
+  const frame = document.getElementById('productsFrame');
 
-  if (!storeId) {
-    showToast("❌ StoreId não encontrado.");
-    return;
-  }
+  frame.src = `feed.html?storeId=${encodeURIComponent(sid)}`;
+  modal.style.display = 'block';
+}
 
-  // garante que salva o certo pro resto do sistema
-  localStorage.setItem("currentStoreId", storeId);
 
-  window.location.href = `feed.html?storeId=${encodeURIComponent(storeId)}`;
+function closeProductsModal() {
+  const modal = document.getElementById('modalProducts');
+  const frame = document.getElementById('productsFrame');
+  frame.src = 'about:blank';
+  modal.style.display = 'none';
 }
 
 
