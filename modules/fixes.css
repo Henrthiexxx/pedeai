@@ -1,0 +1,219 @@
+/* ==================== FIXES CSS ==================== */
+/* Correções visuais e de tema */
+
+/* ===== TEMA PRETO NA BARRA SUPERIOR (MOBILE) ===== */
+/* Garante que não haja cor roxa em nenhum lugar */
+
+:root {
+    --primary: #ffffff !important;
+    --bg: #000000 !important;
+}
+
+/* Remove qualquer vestígio de roxo */
+.btn-primary,
+.toggle.active,
+.category-chip.active,
+.filter-chip.active,
+.mode-option.selected,
+.payment-option.selected,
+.addon-option.selected {
+    background: var(--primary) !important;
+    border-color: var(--primary) !important;
+    color: #000 !important;
+}
+
+/* ===== PEDIDO - NOME COMO TÍTULO ===== */
+.order-card .order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 16px;
+    cursor: pointer;
+}
+
+.order-customer-name {
+    font-weight: 600;
+    font-size: 1.05rem;
+    color: var(--text);
+    margin-bottom: 4px;
+}
+
+.order-meta {
+    display: flex;
+    gap: 12px;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    flex-wrap: wrap;
+}
+
+.order-meta span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Código do pedido menor, secundário */
+.order-id {
+    font-size: 0.8rem !important;
+    font-weight: 400 !important;
+    color: var(--text-muted) !important;
+}
+
+/* ===== TELEFONE OCULTO ===== */
+.phone-hidden {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-style: italic;
+    padding: 8px 12px;
+    background: var(--bg-input);
+    border-radius: 8px;
+    border: 1px dashed var(--border);
+}
+
+/* ===== CATEGORIAS - BADGE DE CONTAGEM ===== */
+.category-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 8px;
+    background: var(--bg-input);
+    border-radius: 12px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-left: 8px;
+}
+
+.category-count.has-products {
+    background: var(--primary);
+    color: #000;
+}
+
+/* ===== SAFE AREA (MOBILE) ===== */
+body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+.header {
+    padding-top: calc(env(safe-area-inset-top) + 10px) !important;
+}
+
+.nav {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 10px) !important;
+}
+
+/* ===== POPUP OVERLAY ===== */
+.popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+}
+
+.popup-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.popup-box {
+    background: #0a0a0a;
+    border: 1px solid #262626;
+    border-radius: 16px;
+    max-width: 380px;
+    width: 100%;
+    animation: popupSlideIn 0.25s ease;
+    overflow: hidden;
+}
+
+@keyframes popupSlideIn {
+    from { opacity: 0; transform: scale(0.95) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ===== SUPORTE LINK ===== */
+.support-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.support-link:hover {
+    border-color: var(--primary);
+    transform: translateX(4px);
+}
+
+/* ===== COOLDOWN BADGE ===== */
+.cooldown-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 0.65rem;
+    padding: 4px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+/* ===== DISABLED CARD ===== */
+.radio-card.disabled,
+.card.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* ===== ORDER ACTIONS RESPONSIVO ===== */
+.order-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    margin-top: 16px;
+}
+
+.order-actions .btn {
+    flex: 1;
+    min-width: 120px;
+}
+
+@media (max-width: 480px) {
+    .order-actions {
+        flex-direction: column;
+    }
+    .order-actions .btn {
+        width: 100%;
+    }
+}
+
+/* ===== NOTCH/CUTOUT SAFE ===== */
+@supports (padding-top: env(safe-area-inset-top)) {
+    .header {
+        padding-top: max(env(safe-area-inset-top), 12px);
+    }
+    
+    .nav {
+        padding-bottom: max(env(safe-area-inset-bottom), 12px);
+    }
+    
+    .modal-content {
+        margin-bottom: env(safe-area-inset-bottom);
+    }
+}
