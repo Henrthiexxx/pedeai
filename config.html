@@ -151,14 +151,28 @@
             .image-url-actions { flex-direction: column; }
             .btn { width: 100%; }
         }
+        /* permite rolagem mas esconde a barra */
+.modalBox,
+.modalBox iframe {
+  overflow: auto;
+  scrollbar-width: none;       /* Firefox */
+  -ms-overflow-style: none;    /* IE/Edge antigo */
+}
+
+.modalBox::-webkit-scrollbar,
+.modalBox iframe::-webkit-scrollbar {
+  width: 0;
+  height: 0;                   /* Chrome/Safari */
+}
+
     </style>
 </head>
 <body>
     <div class="toast" id="toast"></div>
     <div class="container">
         <div class="header">
-            <a href="index.html" class="btn-back">← Voltar</a>
-            <h1>⚙️ Configuração da Loja</h1>
+            
+            <h1>⚙️ Configurações</h1>
         </div>
 
         <div class="card">

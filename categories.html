@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Categorias</title>
+  <meta name="theme-color" content="#000000">
+  <style>
+    :root {
+      --bg: #000; --bg-card: #0a0a0a; --bg-input: #111;
+      --border: #262626; --text: #fafafa; --text-muted: #737373;
+      --primary: #fff; --danger: #ef4444; --success: #22c55e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg); color: var(--text);
+      min-height: 100vh; padding-bottom: 100px;
+    }
+
+    /* Header */
+    .header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: 64px; background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 12px;
+      padding: 0 16px; padding-top: env(safe-area-inset-top);
+    }
+    .btn-back {
+      width: 44px; height: 44px; border-radius: 12px;
+      background: var(--bg-input); border: 1px solid var(--border);
+      color: var(--text); font-size: 1.1rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .header-title { font-size: 1rem; font-weight: 700; letter-spacing: 1px; }
+
+    /* Container */
+    .container {
+      max-width: 600px; margin: 0 auto;
+      padding: 84px 16px 20px;
+    }
+
+    /* Stats */
+    .stats {
+      display: flex; gap: 12px; margin-bottom: 20px;
+    }
+    .stat-card {
+      flex: 1; background: var(--bg-card);
+      border: 1px solid var(--border); border-radius: 14px;
+      padding: 16px; text-align: center;
+    }
+    .stat-value { font-size: 1.8rem; font-weight: 800; }
+    .stat-label { font-size: .75rem; color: var(--text-muted); margin-top: 4px; }
+
+    /* Add Form */
+    .add-form {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 16px; margin-bottom: 20px;
+    }
+    .add-form-title {
+      font-size: .8rem; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+    .add-form-row { display: flex; gap: 10px; }
+    .form-input {
+      flex: 1; padding: 14px 16px; border-radius: 10px;
+      border: 1px solid var(--border); background: var(--bg-input);
+      color: var(--text); font-size: 1rem;
+    }
+    .form-input:focus { outline: none; border-color: var(--primary); }
+    .btn {
+      padding: 14px 20px; border-radius: 10px; border: none;
+      font-size: .9rem; font-weight: 600; cursor: pointer;
+      transition: all .2s;
+    }
+    .btn-primary { background: var(--primary); color: #000; }
+    .btn-primary:hover { opacity: .9; }
+    .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
+    .btn-danger { background: rgba(239,68,68,.15); color: var(--danger); border: 1px solid rgba(239,68,68,.3); }
+    .btn-danger:hover { background: rgba(239,68,68,.25); }
+
+    /* Categories List */
+    .categories-list { display: flex; flex-direction: column; gap: 10px; }
+    .category-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 16px;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .category-icon {
+      width: 48px; height: 48px; border-radius: 12px;
+      background: var(--bg-input); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+    }
+    .category-info { flex: 1; min-width: 0; }
+    .category-name { font-weight: 700; font-size: 1rem; margin-bottom: 2px; }
+    .category-count { font-size: .85rem; color: var(--text-muted); }
+    .category-actions { display: flex; gap: 8px; }
+    .btn-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      border: 1px solid var(--border); background: var(--bg-input);
+      color: var(--text); font-size: 1rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .btn-icon:hover { border-color: var(--primary); }
+    .btn-icon.danger { border-color: rgba(239,68,68,.3); color: var(--danger); }
+    .btn-icon.danger:hover { background: rgba(239,68,68,.1); }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center; padding: 60px 20px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+    .empty-icon { font-size: 3rem; margin-bottom: 12px; }
+    .empty-title { font-weight: 700; margin-bottom: 8px; }
+    .empty-desc { color: var(--text-muted); font-size: .9rem; }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--bg-card); padding: 14px 24px;
+      border-radius: 12px; border: 1px solid var(--border);
+      z-index: 1000; opacity: 0; transition: all .3s;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+    /* Loading */
+    .loading {
+      display: flex; align-items: center; justify-content: center;
+      padding: 60px; color: var(--text-muted);
+    }
+
+    /* Confirm Popup */
+    .popup-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.85); z-index: 9999;
+      align-items: center; justify-content: center; padding: 20px;
+    }
+    .popup-overlay.show { display: flex; }
+    .popup-box {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 16px; max-width: 360px; width: 100%; overflow: hidden;
+    }
+    .popup-header { padding: 24px 20px 0; text-align: center; }
+    .popup-icon { font-size: 3rem; margin-bottom: 12px; }
+    .popup-title { font-size: 1.1rem; font-weight: 700; }
+    .popup-message {
+      padding: 12px 20px 24px; text-align: center;
+      color: var(--text-muted); font-size: .9rem; line-height: 1.5;
+    }
+    .popup-actions { display: flex; border-top: 1px solid var(--border); }
+    .popup-btn {
+      flex: 1; padding: 16px; border: none; background: transparent;
+      color: var(--text); font-size: .95rem; cursor: pointer;
+    }
+    .popup-btn:hover { background: rgba(255,255,255,.05); }
+    .popup-btn.cancel { color: var(--text-muted); }
+    .popup-btn.danger { color: var(--danger); font-weight: 600; }
+    .popup-btn + .popup-btn { border-left: 1px solid var(--border); }
+
+    /* Edit Mode */
+    .category-card.editing { border-color: var(--primary); }
+    .edit-input {
+      flex: 1; padding: 10px 14px; border-radius: 8px;
+      border: 1px solid var(--border); background: var(--bg-input);
+      color: var(--text); font-size: 1rem;
+    }
+    .edit-input:focus { outline: none; border-color: var(--primary); }
+  </style>
+</head>
+<body>
+  <header class="header">
+    
+    <div class="header-title">CATEGORIAS</div>
+  </header>
+
+  <div class="container">
+    <!-- Stats -->
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-value" id="totalCategories">0</div>
+        <div class="stat-label">Categorias</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="totalProducts">0</div>
+        <div class="stat-label">Produtos</div>
+      </div>
+    </div>
+
+    <!-- Add Form -->
+    <div class="add-form">
+      <div class="add-form-title">➕ Nova Categoria</div>
+      <div class="add-form-row">
+        <input type="text" class="form-input" id="newCategoryName" 
+               placeholder="Nome da categoria" maxlength="50"
+               onkeypress="if(event.key==='Enter')addCategory()">
+        <button class="btn btn-primary" id="btnAdd" onclick="addCategory()">Adicionar</button>
+      </div>
+    </div>
+
+    <!-- Categories List -->
+    <div id="categoriesList">
+      <div class="loading">Carregando...</div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- Confirm Delete Popup -->
+  <div class="popup-overlay" id="deletePopup">
+    <div class="popup-box">
+      <div class="popup-header">
+        <div class="popup-icon">🗑️</div>
+        <div class="popup-title">Excluir categoria?</div>
+      </div>
+      <div class="popup-message" id="deleteMessage">Esta categoria será removida permanentemente.</div>
+      <div class="popup-actions">
+        <button class="popup-btn cancel" onclick="closeDeletePopup()">Cancelar</button>
+        <button class="popup-btn danger" id="btnConfirmDelete">Excluir</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAnIJRcUxN-0swpVnonPbJjTSK87o4CQ_g",
+      authDomain: "pedrad-814d0.firebaseapp.com",
+      projectId: "pedrad-814d0",
+      storageBucket: "pedrad-814d0.appspot.com",
+      messagingSenderId: "293587190550",
+      appId: "1:293587190550:web:80c9399f82847c80e20637"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    let storeId = null;
+    let categories = [];
+    let products = [];
+    let categoryToDelete = null;
+
+    // ===== AUTH =====
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        await loadStore(user);
+      } else {
+        location.href = 'index.html';
+      }
+    });
+
+    // ===== LOAD STORE =====
+    async function loadStore(user) {
+      try {
+        // Tenta pelo email primeiro
+        let snapshot = await db.collection('stores')
+          .where('ownerEmail', '==', user.email).limit(1).get();
+        
+        if (snapshot.empty) {
+          snapshot = await db.collection('stores')
+            .where('ownerId', '==', user.uid).limit(1).get();
+        }
+
+        if (!snapshot.empty) {
+          storeId = snapshot.docs[0].id;
+          const storeData = snapshot.docs[0].data();
+          categories = storeData.categories || [];
+          
+          await loadProducts();
+          renderCategories();
+        } else {
+          showToast('Loja não encontrada');
+        }
+      } catch (err) {
+        console.error('Erro ao carregar loja:', err);
+        showToast('Erro ao carregar');
+      }
+    }
+
+    // ===== LOAD PRODUCTS =====
+    async function loadProducts() {
+      try {
+        const snapshot = await db.collection('products')
+          .where('storeId', '==', storeId).get();
+        
+        products = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+
+        // Extrai categorias dos produtos que não estão na lista
+        const productCategories = [...new Set(
+          products.map(p => p.category).filter(Boolean)
+        )];
+
+        // Merge: categorias salvas + categorias de produtos
+        const allCategories = [...new Set([...categories, ...productCategories])];
+        
+        // Se encontrou novas categorias, salva
+        if (allCategories.length > categories.length) {
+          categories = allCategories.sort();
+          await saveCategoriesToStore();
+        }
+
+      } catch (err) {
+        console.error('Erro ao carregar produtos:', err);
+      }
+    }
+
+    // ===== COUNT PRODUCTS BY CATEGORY =====
+    function countProducts(categoryName) {
+      return products.filter(p => 
+        (p.category || '').toLowerCase().trim() === categoryName.toLowerCase().trim()
+      ).length;
+    }
+
+    // ===== RENDER =====
+    function renderCategories() {
+      const container = document.getElementById('categoriesList');
+      
+      // Update stats
+      document.getElementById('totalCategories').textContent = categories.length;
+      document.getElementById('totalProducts').textContent = products.length;
+
+      if (categories.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">📁</div>
+            <div class="empty-title">Nenhuma categoria</div>
+            <div class="empty-desc">Crie categorias para organizar seus produtos</div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = categories.map((cat, index) => {
+        const count = countProducts(cat);
+        const icon = getCategoryIcon(cat);
+        
+        return `
+          <div class="category-card" id="cat-${index}">
+            <div class="category-icon">${icon}</div>
+            <div class="category-info">
+              <div class="category-name">${escapeHtml(cat)}</div>
+              <div class="category-count">${count} produto${count !== 1 ? 's' : ''}</div>
+            </div>
+            <div class="category-actions">
+              <button class="btn-icon" onclick="editCategory(${index})" title="Editar">✏️</button>
+              <button class="btn-icon danger" onclick="confirmDelete(${index})" title="Excluir">🗑️</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ===== GET CATEGORY ICON =====
+    function getCategoryIcon(name) {
+      const lower = name.toLowerCase();
+      if (lower.includes('hambur') || lower.includes('burger')) return '🍔';
+      if (lower.includes('pizza')) return '🍕';
+      if (lower.includes('bebida') || lower.includes('drink')) return '🥤';
+      if (lower.includes('sobremesa') || lower.includes('doce')) return '🍰';
+      if (lower.includes('salada')) return '🥗';
+      if (lower.includes('lanche')) return '🌭';
+      if (lower.includes('açaí') || lower.includes('acai')) return '🍇';
+      if (lower.includes('sorvete')) return '🍦';
+      if (lower.includes('sushi') || lower.includes('japon')) return '🍣';
+      if (lower.includes('frango')) return '🍗';
+      if (lower.includes('carne')) return '🥩';
+      if (lower.includes('peixe') || lower.includes('frutos')) return '🐟';
+      if (lower.includes('massa') || lower.includes('pasta')) return '🍝';
+      if (lower.includes('porç') || lower.includes('porcao')) return '🍟';
+      if (lower.includes('combo')) return '🍱';
+      if (lower.includes('promo')) return '🏷️';
+      return '📁';
+    }
+
+    // ===== ADD CATEGORY =====
+    async function addCategory() {
+      const input = document.getElementById('newCategoryName');
+      const name = input.value.trim();
+
+      if (!name) {
+        showToast('Digite o nome da categoria');
+        input.focus();
+        return;
+      }
+
+      // Verifica duplicata (case-insensitive)
+      const exists = categories.some(c => 
+        c.toLowerCase().trim() === name.toLowerCase().trim()
+      );
+
+      if (exists) {
+        showToast('Categoria já existe');
+        return;
+      }
+
+      const btn = document.getElementById('btnAdd');
+      btn.disabled = true;
+      btn.textContent = 'Salvando...';
+
+      try {
+        categories.push(name);
+        categories.sort();
+        await saveCategoriesToStore();
+        
+        input.value = '';
+        renderCategories();
+        showToast('✓ Categoria criada!');
+
+      } catch (err) {
+        console.error('Erro ao criar:', err);
+        categories.pop(); // Reverte
+        showToast('Erro ao criar');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Adicionar';
+      }
+    }
+
+    // ===== EDIT CATEGORY =====
+    function editCategory(index) {
+      const card = document.getElementById(`cat-${index}`);
+      const oldName = categories[index];
+      const count = countProducts(oldName);
+
+      card.classList.add('editing');
+      card.innerHTML = `
+        <div class="category-icon">${getCategoryIcon(oldName)}</div>
+        <input type="text" class="edit-input" id="editInput-${index}" 
+               value="${escapeHtml(oldName)}" maxlength="50"
+               onkeypress="if(event.key==='Enter')saveEdit(${index})">
+        <div class="category-actions">
+          <button class="btn-icon" onclick="saveEdit(${index})" title="Salvar">✓</button>
+          <button class="btn-icon" onclick="cancelEdit(${index})" title="Cancelar">✗</button>
+        </div>
+      `;
+
+      const input = document.getElementById(`editInput-${index}`);
+      input.focus();
+      input.select();
+    }
+
+    async function saveEdit(index) {
+      const input = document.getElementById(`editInput-${index}`);
+      const newName = input.value.trim();
+      const oldName = categories[index];
+
+      if (!newName) {
+        showToast('Nome não pode ser vazio');
+        return;
+      }
+
+      if (newName === oldName) {
+        renderCategories();
+        return;
+      }
+
+      // Verifica duplicata
+      const exists = categories.some((c, i) => 
+        i !== index && c.toLowerCase().trim() === newName.toLowerCase().trim()
+      );
+
+      if (exists) {
+        showToast('Categoria já existe');
+        return;
+      }
+
+      try {
+        // Atualiza produtos com essa categoria
+        const productsToUpdate = products.filter(p => 
+          (p.category || '').toLowerCase().trim() === oldName.toLowerCase().trim()
+        );
+
+        const batch = db.batch();
+        
+        productsToUpdate.forEach(p => {
+          const ref = db.collection('products').doc(p.id);
+          batch.update(ref, { category: newName });
+        });
+
+        // Atualiza categoria na lista
+        categories[index] = newName;
+        categories.sort();
+
+        // Salva no store
+        const storeRef = db.collection('stores').doc(storeId);
+        batch.update(storeRef, { categories: categories });
+
+        await batch.commit();
+
+        // Atualiza produtos localmente
+        productsToUpdate.forEach(p => p.category = newName);
+
+        renderCategories();
+        showToast(`✓ Atualizado! ${productsToUpdate.length} produto(s) atualizados`);
+
+      } catch (err) {
+        console.error('Erro ao editar:', err);
+        showToast('Erro ao editar');
+        renderCategories();
+      }
+    }
+
+    function cancelEdit(index) {
+      renderCategories();
+    }
+
+    // ===== DELETE CATEGORY =====
+    function confirmDelete(index) {
+      const name = categories[index];
+      const count = countProducts(name);
+
+      if (count > 0) {
+        showToast(`❌ Remova ${count} produto(s) desta categoria primeiro`);
+        return;
+      }
+
+      categoryToDelete = index;
+      document.getElementById('deleteMessage').textContent = 
+        `A categoria "${name}" será removida permanentemente.`;
+      document.getElementById('deletePopup').classList.add('show');
+      
+      document.getElementById('btnConfirmDelete').onclick = () => deleteCategory();
+    }
+
+    function closeDeletePopup() {
+      document.getElementById('deletePopup').classList.remove('show');
+      categoryToDelete = null;
+    }
+
+    async function deleteCategory() {
+      if (categoryToDelete === null) return;
+
+      const name = categories[categoryToDelete];
+      
+      try {
+        categories.splice(categoryToDelete, 1);
+        await saveCategoriesToStore();
+        
+        closeDeletePopup();
+        renderCategories();
+        showToast('✓ Categoria removida');
+
+      } catch (err) {
+        console.error('Erro ao excluir:', err);
+        showToast('Erro ao excluir');
+      }
+    }
+
+    // ===== SAVE TO STORE =====
+    async function saveCategoriesToStore() {
+      await db.collection('stores').doc(storeId).update({
+        categories: categories
+      });
+    }
+
+    // ===== UTILS =====
+    function goBack() {
+      if (window.opener) {
+        window.close();
+      } else if (document.referrer.includes(location.host)) {
+        history.back();
+      } else {
+        location.href = 'index.html';
+      }
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // Click outside popup to close
+    document.getElementById('deletePopup').addEventListener('click', function(e) {
+      if (e.target === this) closeDeletePopup();
+    });
+  </script>
+</body>
+</html>

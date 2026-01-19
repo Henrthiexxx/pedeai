@@ -340,9 +340,10 @@
         const doc = await db.collection('stores').doc(storeId).get();
         const data = doc.exists ? (doc.data() || {}) : {};
         const storeName = safeText(data.name || data.nome || '');
-        document.getElementById('subInfo').textContent = storeName
-          ? `Loja: ${storeName} • ID: ${storeId}`
-          : `StoreId: ${storeId}`;
+document.getElementById('subInfo').textContent = storeName
+  ? `Loja: ${storeName}`
+  : `Loja carregada`;
+
       } catch (e) {
         document.getElementById('subInfo').textContent = `StoreId: ${storeId}`;
       }

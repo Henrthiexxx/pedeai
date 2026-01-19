@@ -1628,3 +1628,24 @@ textarea.form-input { min-height: 100px; resize: vertical; }
     flex: 1;
     min-width: 120px;
 }
+
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;z-index:9999;padding:12px}
+.modal.show{display:flex;align-items:center;justify-content:center}
+.modalBox{width:min(980px,100%);height:min(92vh,100%);background:#000;border:1px solid #262626;border-radius:14px;overflow:hidden;position:relative}
+.modalClose{position:absolute;top:10px;right:10px;z-index:2;background:#111;border:1px solid #262626;color:#fff;border-radius:10px;padding:8px 10px;cursor:pointer}
+.modalBox iframe{width:100%;height:100%;border:0}
+/* permite rolagem mas esconde a barra */
+/* permite rolagem mas esconde a barra */
+.modalBox,
+.modalBox iframe {
+  overflow: auto;
+  scrollbar-width: none;       /* Firefox */
+  -ms-overflow-style: none;    /* IE/Edge antigo */
+}
+
+.modalBox::-webkit-scrollbar,
+.modalBox iframe::-webkit-scrollbar {
+  width: 0;
+  height: 0;                   /* Chrome/Safari */
+}
+

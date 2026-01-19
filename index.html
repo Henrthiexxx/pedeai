@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Pedrad - Painel da Loja</title>
+    <title>Pedra Delivery- Painel da Loja</title>
     <meta name="theme-color" content="#6366f1">
     <link rel="stylesheet" href="index.css">
 </head>
@@ -26,7 +26,7 @@
     <div id="authPage" class="auth-container">
         <div class="auth-box">
             <div class="auth-logo">
-                <h1>🏪 Pedrad Loja</h1>
+                <h1>Pedra Delivery</h1>
                 <p style="color: var(--text-muted); margin-top: 8px;">Painel do estabelecimento</p>
             </div>
             <div class="card">
@@ -52,7 +52,7 @@
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <div class="sidebar-logo">🏪 Pedrad</div>
+                <div class="sidebar-logo">Pedra Delivery</div>
                 <div class="store-info">
                     <div class="store-avatar" id="sidebarAvatar">🍔</div>
                     <div>
@@ -64,7 +64,7 @@
             <nav class="sidebar-nav">
                 <div class="nav-section">
                     <div class="nav-section-title">Principal</div>
-                    <div class="nav-item active" onclick="showPage('dashboard')"><span>📊</span> Dashboard</div>
+                    <div class="nav-item active" onclick="showPage('dashboard')"><span>📊</span> Painel Central</div>
                     <div class="nav-item" onclick="showPage('orders')"><span>📦</span> Pedidos <span class="nav-badge" id="pendingBadge" style="display:none;">0</span></div>
                 </div>
                 <div class="nav-section">
@@ -72,15 +72,15 @@
                     <div class="nav-item" onclick="openProductsPage()"><span>🍽️</span> Produtos</div>
 
 
-                    <div class="nav-item" onclick="showPage('categories')"><span>📁</span> Categorias</div>
-                </div>
+                   <div class="nav-item" onclick="openPopup('categories.html')"><span>📁</span> Categorias</div>
+
                 <div class="nav-section">
                     <div class="nav-section-title">Configurações</div>
-                    <div class="nav-item" onclick="window.location.href='config.html'">
-  <span>🏪</span> Minha Loja
+                 
 </div>
 
-                    <div class="nav-item" onclick="showPage('settings')"><span>⚙️</span> Configurações</div>
+                    <div class="nav-item" onclick="openConfigPopup()"><span>⚙️</span> Configurações</div>
+
                     <div class="nav-item" onclick="handleLogout()"><span>🚪</span> Sair</div>
                 </div>
             </nav>
@@ -147,7 +147,7 @@
             <!-- Store -->
             <div id="storePage" class="page">
                 <div class="card">
-                    <div class="card-title" style="margin-bottom: 20px;">🏪 Informações da Loja</div>
+                    <div class="card-title" style="margin-bottom: 20px;">Informações da Loja</div>
                     <div class="form-group">
                         <label class="form-label">Logo / Imagem da Loja</label>
                         <div class="image-upload" id="storeImageUpload" onclick="document.getElementById('storeImageInput').click()">
@@ -299,9 +299,52 @@
       style="flex:1; width:100%; border:0; background:#000;"></iframe>
   </div>
 </div>
+<div id="configModal" class="modal">
+  <div class="modalBox">
+    <button class="modalClose" onclick="closeConfigPopup()">✕</button>
+    <iframe id="configFrame" src="config.html"></iframe>
+  </div>
+</div>
+
 <script src="modules/popup-system.js"></script>
 <script src="modules/fixes.js"></script>
 <script src="modules/billing-system.js"></script>
 <script src="modules/fixes.js"></script>
+<script>
+function openConfigPopup(){
+  document.getElementById('configModal').classList.add('show');
+}
+function closeConfigPopup(){
+  document.getElementById('configModal').classList.remove('show');
+}
+window.addEventListener('message',(e)=>{
+  if(e.data==='closeConfig') closeConfigPopup();
+});
+</script>
+<div id="appPopup" class="modal">
+  <div class="modalBox">
+    <button class="modalClose" onclick="closePopup()">✕</button>
+    <iframe id="popupFrame"></iframe>
+  </div>
+</div>
+<script>
+function openPopup(page){
+  const modal = document.getElementById('appPopup');
+  const frame = document.getElementById('popupFrame');
+  frame.src = page;
+  modal.classList.add('show');
+}
+function closePopup(){
+  document.getElementById('appPopup').classList.remove('show');
+  document.getElementById('popupFrame').src = '';
+}
+
+/* permite fechar de dentro do iframe */
+window.addEventListener('message', (e)=>{
+  if(e.data === 'closePopup') closePopup();
+});
+</script>
+
+
 </body>
 </html>
