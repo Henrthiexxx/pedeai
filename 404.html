@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Página não encontrada - Pedrad</title>
+    <meta name="theme-color" content="#000000">
+    <style>
+        :root {
+            --bg: #000; --card: #0a0a0a; --input: #171717;
+            --text: #fff; --muted: #737373; --border: #262626;
+            --primary: #fff;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg); color: var(--text);
+            min-height: 100vh; display: flex;
+            align-items: center; justify-content: center;
+            padding: 20px; text-align: center;
+        }
+        .container { max-width: 400px; }
+        .error-code {
+            font-size: 6rem; font-weight: 200;
+            letter-spacing: -8px; margin-bottom: 16px;
+            background: linear-gradient(180deg, #fff 0%, #333 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .error-title {
+            font-size: 1.3rem; font-weight: 500;
+            margin-bottom: 12px; letter-spacing: 1px;
+        }
+        .error-desc {
+            color: var(--muted); font-size: 0.95rem;
+            line-height: 1.6; margin-bottom: 32px;
+        }
+        .btn {
+            display: inline-flex; align-items: center;
+            gap: 8px; padding: 14px 28px;
+            background: var(--primary); color: #000;
+            border: none; border-radius: 10px;
+            font-size: 0.9rem; font-weight: 500;
+            cursor: pointer; text-decoration: none;
+            text-transform: uppercase; letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+        .btn:hover { transform: translateY(-2px); }
+        .links {
+            margin-top: 32px; display: flex;
+            gap: 24px; justify-content: center;
+        }
+        .links a {
+            color: var(--muted); font-size: 0.85rem;
+            text-decoration: none; transition: color 0.2s;
+        }
+        .links a:hover { color: var(--text); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="error-code">404</div>
+        <div class="error-title">Página não encontrada</div>
+        <div class="error-desc">
+            A página que você está procurando pode ter sido removida, 
+            renomeada ou está temporariamente indisponível.
+        </div>
+        <a href="index.html" class="btn">← Voltar ao início</a>
+        <div class="links">
+            <a href="suporte.html">Suporte</a>
+            <a href="orders.html">Meus Pedidos</a>
+            <a href="profile.html">Perfil</a>
+        </div>
+    </div>
+</body>
+</html>

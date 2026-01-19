@@ -2,360 +2,148 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Configuração da Loja - Pedrad</title>
-    <meta name="theme-color" content="#ffffff">
+    <meta name="theme-color" content="#000000">
     <style>
         :root {
             --primary: #ffffff;
-            --primary-dark: #e5e5e5;
-            --success: #ffffff;
-            --warning: #a3a3a3;
-            --danger: #737373;
             --bg: #000000;
             --bg-card: #0a0a0a;
             --bg-input: #171717;
             --text: #ffffff;
             --text-muted: #737373;
             --border: #262626;
+            --danger: #ef4444;
             --radius: 12px;
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
+            background: var(--bg); color: var(--text); min-height: 100vh;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
         }
-
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 20px;
-            padding-bottom: 60px;
-        }
-
+        .container { max-width: 900px; margin: 0 auto; padding: 20px; padding-bottom: 60px; }
         .header {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            margin-bottom: 32px;
-            padding-bottom: 16px;
+            display: flex; align-items: center; gap: 16px;
+            margin-bottom: 32px; padding-bottom: 16px;
             border-bottom: 1px solid var(--border);
         }
-
-        .header h1 {
-            font-size: 1rem;
-            font-weight: 300;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            flex: 1;
-        }
-
+        .header h1 { font-size: 1rem; font-weight: 300; letter-spacing: 2px; text-transform: uppercase; flex: 1; }
         .btn-back {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 10px 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: all 0.2s ease;
+            background: transparent; border: 1px solid var(--border);
+            color: var(--text); padding: 10px 14px; border-radius: 8px;
+            cursor: pointer; text-decoration: none; display: inline-flex;
+            align-items: center; gap: 8px; font-size: 0.8rem;
+            text-transform: uppercase; letter-spacing: 1px; transition: all 0.2s ease;
         }
-
-        .btn-back:hover {
-            background: var(--primary);
-            color: #000;
-            border-color: var(--primary);
-        }
-
+        .btn-back:hover { background: var(--primary); color: #000; border-color: var(--primary); }
         .card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 24px;
-            margin-bottom: 16px;
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 24px; margin-bottom: 16px;
             transition: all 0.2s ease;
         }
-
-        .card:hover {
-            border-color: var(--text-muted);
-        }
-
-        .card-title {
-            font-size: 0.85rem;
-            font-weight: 500;
-            letter-spacing: 1px;
-            margin-bottom: 20px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
+        .card:hover { border-color: var(--text-muted); }
+        .card-title { font-size: 0.85rem; font-weight: 500; letter-spacing: 1px; margin-bottom: 20px; }
+        .form-group { margin-bottom: 20px; }
         .form-label {
-            display: block;
-            margin-bottom: 10px;
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            display: block; margin-bottom: 10px; font-size: 0.7rem;
+            color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;
         }
-
         .form-input, select.form-input {
-            width: 100%;
-            padding: 16px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            background: var(--bg-input);
-            color: var(--text);
-            font-size: 1rem;
-            transition: all 0.2s ease;
+            width: 100%; padding: 16px; border-radius: 8px;
+            border: 1px solid var(--border); background: var(--bg-input);
+            color: var(--text); font-size: 1rem; transition: all 0.2s ease;
         }
-
-        .form-input:focus {
-            outline: none;
-            border-color: var(--primary);
-            background: #1a1a1a;
-        }
-
-        textarea.form-input {
-            min-height: 100px;
-            resize: vertical;
-            font-family: inherit;
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
-
-        /* ===== imagem por URL ===== */
-        .image-preview-wrap {
-            display: flex;
-            gap: 16px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
+        .form-input:focus { outline: none; border-color: var(--primary); background: #1a1a1a; }
+        textarea.form-input { min-height: 100px; resize: vertical; font-family: inherit; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .image-preview-wrap { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
         .image-preview {
-            width: 140px;
-            height: 140px;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            background: var(--bg-input);
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex: 0 0 auto;
+            width: 140px; height: 140px; border: 1px solid var(--border);
+            border-radius: var(--radius); background: var(--bg-input);
+            overflow: hidden; display: flex; align-items: center;
+            justify-content: center; flex: 0 0 auto;
         }
-
-        .image-preview img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
+        .image-preview img { width: 100%; height: 100%; object-fit: cover; }
         .image-placeholder {
-            color: var(--text-muted);
-            font-size: 0.75rem;
-            text-align: center;
-            padding: 12px;
-            line-height: 1.3;
+            color: var(--text-muted); font-size: 0.75rem;
+            text-align: center; padding: 12px; line-height: 1.3;
         }
-
-        .image-url-actions {
-            display: flex;
-            gap: 10px;
-            width: 100%;
-        }
-
+        .image-url-actions { display: flex; gap: 10px; width: 100%; }
         .settings-section {
-            background: var(--bg-card);
-            border-radius: var(--radius);
-            padding: 24px;
-            margin-bottom: 16px;
-            border: 1px solid var(--border);
+            background: var(--bg-card); border-radius: var(--radius);
+            padding: 24px; margin-bottom: 16px; border: 1px solid var(--border);
             transition: all 0.2s ease;
         }
-
-        .settings-section:hover {
-            border-color: var(--text-muted);
-        }
-
-        .settings-title {
-            font-size: 0.85rem;
-            font-weight: 500;
-            margin-bottom: 20px;
-            letter-spacing: 1px;
-        }
-
-        .radio-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 12px;
-        }
-
+        .settings-section:hover { border-color: var(--text-muted); }
+        .settings-title { font-size: 0.85rem; font-weight: 500; margin-bottom: 20px; letter-spacing: 1px; }
+        .radio-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
         .radio-card {
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 20px 16px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            background: var(--bg-input); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 20px 16px; text-align: center;
+            cursor: pointer; transition: all 0.2s ease; position: relative;
         }
-
-        .radio-card:hover {
-            border-color: var(--text-muted);
+        .radio-card:hover { border-color: var(--text-muted); }
+        .radio-card.selected { border-color: var(--primary); background: rgba(255, 255, 255, 0.05); }
+        .radio-card.disabled {
+            opacity: 0.5; cursor: not-allowed; pointer-events: none;
         }
-
-        .radio-card.selected {
-            border-color: var(--primary);
-            background: rgba(255, 255, 255, 0.05);
+        .radio-card-icon { font-size: 1.8rem; margin-bottom: 12px; }
+        .radio-card-title { font-weight: 500; margin-bottom: 6px; font-size: 0.85rem; }
+        .radio-card-desc { font-size: 0.7rem; color: var(--text-muted); }
+        .cooldown-badge {
+            position: absolute; top: 8px; right: 8px;
+            background: var(--danger); color: #fff;
+            font-size: 0.65rem; padding: 4px 8px;
+            border-radius: 10px; font-weight: 600;
         }
-
-        .radio-card-icon {
-            font-size: 1.8rem;
-            margin-bottom: 12px;
+        .cooldown-info {
+            background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 8px; padding: 12px; margin-top: 16px;
+            font-size: 0.8rem; color: #fca5a5;
         }
-
-        .radio-card-title {
-            font-weight: 500;
-            margin-bottom: 6px;
-            font-size: 0.85rem;
-        }
-
-        .radio-card-desc {
-            font-size: 0.7rem;
-            color: var(--text-muted);
-        }
-
         .setting-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px 0;
+            display: flex; justify-content: space-between;
+            align-items: center; padding: 16px 0;
             border-bottom: 1px solid var(--border);
         }
-
-        .setting-item:last-child {
-            border-bottom: none;
-        }
-
-        .setting-label {
-            font-weight: 500;
-            font-size: 0.9rem;
-        }
-
-        .setting-desc {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-top: 4px;
-        }
-
+        .setting-item:last-child { border-bottom: none; }
+        .setting-label { font-weight: 500; font-size: 0.9rem; }
+        .setting-desc { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
         .toggle {
-            width: 48px;
-            height: 24px;
-            background: var(--border);
-            border-radius: 12px;
-            position: relative;
-            cursor: pointer;
+            width: 48px; height: 24px; background: var(--border);
+            border-radius: 12px; position: relative; cursor: pointer;
             transition: all 0.3s ease;
         }
-
-        .toggle.active {
-            background: var(--primary);
-        }
-
+        .toggle.active { background: var(--primary); }
         .toggle::after {
-            content: '';
-            position: absolute;
-            width: 18px;
-            height: 18px;
-            background: var(--bg);
-            border-radius: 50%;
-            top: 3px;
-            left: 3px;
-            transition: all 0.3s ease;
+            content: ''; position: absolute; width: 18px; height: 18px;
+            background: var(--bg); border-radius: 50%;
+            top: 3px; left: 3px; transition: all 0.3s ease;
         }
-
-        .toggle.active::after {
-            left: 27px;
-            background: #000;
-        }
-
+        .toggle.active::after { left: 27px; background: #000; }
         .btn {
-            padding: 14px 20px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            font-size: 0.8rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            background: transparent;
-            color: var(--text);
-            white-space: nowrap;
+            padding: 14px 20px; border-radius: 8px; border: 1px solid var(--border);
+            font-size: 0.8rem; font-weight: 500; cursor: pointer;
+            transition: all 0.2s ease; display: inline-flex;
+            align-items: center; justify-content: center; gap: 8px;
+            text-transform: uppercase; letter-spacing: 1px;
+            background: transparent; color: var(--text); white-space: nowrap;
         }
-
-        .btn:hover {
-            background: var(--primary);
-            color: #000;
-            border-color: var(--primary);
-        }
-
-        .btn-primary {
-            background: var(--primary);
-            color: #000;
-            border-color: var(--primary);
-        }
-
-        .btn-primary:hover {
-            background: transparent;
-            color: var(--primary);
-        }
-
-        .btn-block {
-            width: 100%;
-        }
-
+        .btn:hover { background: var(--primary); color: #000; border-color: var(--primary); }
+        .btn-primary { background: var(--primary); color: #000; border-color: var(--primary); }
+        .btn-primary:hover { background: transparent; color: var(--primary); }
+        .btn-block { width: 100%; }
         .toast {
-            position: fixed;
-            bottom: 24px;
-            left: 50%;
+            position: fixed; bottom: 24px; left: 50%;
             transform: translateX(-50%) translateY(100px);
-            background: var(--bg-card);
-            padding: 16px 28px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            z-index: 300;
-            opacity: 0;
-            transition: all 0.3s ease;
-            font-size: 0.85rem;
-            letter-spacing: 0.5px;
+            background: var(--bg-card); padding: 16px 28px; border-radius: 8px;
+            border: 1px solid var(--border); z-index: 300; opacity: 0;
+            transition: all 0.3s ease; font-size: 0.85rem; letter-spacing: 0.5px;
         }
-
-        .toast.show {
-            transform: translateX(-50%) translateY(0);
-            opacity: 1;
-        }
-
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
         @media (max-width: 768px) {
             .form-row { grid-template-columns: 1fr; }
             .radio-cards { grid-template-columns: 1fr; }
@@ -363,16 +151,10 @@
             .image-url-actions { flex-direction: column; }
             .btn { width: 100%; }
         }
-
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: var(--bg); }
-        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
     </style>
 </head>
 <body>
     <div class="toast" id="toast"></div>
-
     <div class="container">
         <div class="header">
             <a href="index.html" class="btn-back">← Voltar</a>
@@ -381,31 +163,25 @@
 
         <div class="card">
             <div class="card-title">🏪 Informações Básicas</div>
-
-            <!-- IMAGEM POR URL -->
             <div class="form-group">
                 <label class="form-label">Logo / Imagem da Loja (URL)</label>
-
                 <div class="image-preview-wrap">
                     <div class="image-preview" id="storeImagePreview">
                         <div class="image-placeholder">Sem imagem<br>cole a URL abaixo</div>
                     </div>
-
                     <div style="flex: 1; min-width: 240px;">
                         <input type="url" class="form-input" id="storeImageUrl" placeholder="https://exemplo.com/minha-imagem.jpg">
                         <div class="image-url-actions" style="margin-top: 10px;">
                             <button class="btn" onclick="previewStoreImage()">Pré-visualizar</button>
-                            <button class="btn" onclick="clearStoreImage()">Remover Imagem</button>
+                            <button class="btn" onclick="clearStoreImage()">Remover</button>
                         </div>
                     </div>
                 </div>
             </div>
-
             <div class="form-group">
                 <label class="form-label">Nome da Loja</label>
                 <input type="text" class="form-input" id="storeName" placeholder="Nome do estabelecimento">
             </div>
-
             <div class="form-group">
                 <label class="form-label">Categoria</label>
                 <select class="form-input" id="storeCategory">
@@ -420,12 +196,10 @@
                     <option value="Outro">📦 Outro</option>
                 </select>
             </div>
-
             <div class="form-group">
                 <label class="form-label">Descrição</label>
                 <textarea class="form-input" id="storeDescription" placeholder="Fale sobre sua loja..."></textarea>
             </div>
-
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Tempo de entrega</label>
@@ -436,17 +210,14 @@
                     <input type="number" class="form-input" id="storeDeliveryFee" placeholder="5.00" step="0.50">
                 </div>
             </div>
-
             <div class="form-group">
                 <label class="form-label">Endereço</label>
                 <input type="text" class="form-input" id="storeAddress" placeholder="Rua, número - Bairro">
             </div>
-
             <div class="form-group">
                 <label class="form-label">Telefone / WhatsApp</label>
                 <input type="tel" class="form-input" id="storePhone" placeholder="(00) 00000-0000">
             </div>
-
             <button class="btn btn-primary btn-block" onclick="saveStoreInfo()">Salvar Informações</button>
         </div>
 
@@ -456,17 +227,22 @@
                 <div class="radio-card" id="deliveryApp" onclick="selectDeliveryType('app')">
                     <div class="radio-card-icon">🛵</div>
                     <div class="radio-card-title">Entregador do App</div>
-                    <div class="radio-card-desc">Entregadores parceiros</div>
+                    <div class="radio-card-desc">Entregadores parceiros Pedrad</div>
                 </div>
                 <div class="radio-card" id="deliveryOwn" onclick="selectDeliveryType('own')">
                     <div class="radio-card-icon">👨‍💼</div>
                     <div class="radio-card-title">Entregador Próprio</div>
-                    <div class="radio-card-desc">Sua equipe</div>
+                    <div class="radio-card-desc">Sua equipe de entrega</div>
                 </div>
-                <div class="radio-card" id="deliveryBoth" onclick="selectDeliveryType('both')">
-                    <div class="radio-card-icon">🔄</div>
-                    <div class="radio-card-title">Ambos</div>
-                    <div class="radio-card-desc">Conforme disponibilidade</div>
+            </div>
+            <div class="cooldown-info" id="cooldownInfo" style="display:none;">
+                ⏰ <strong>Cooldown ativo:</strong> Você poderá trocar novamente em <span id="cooldownTime">--</span>
+            </div>
+            <div class="form-group" style="margin-top:20px;">
+                <label class="form-label">Tempo de cooldown entre trocas (minutos)</label>
+                <input type="number" class="form-input" id="deliveryCooldown" placeholder="50" min="0" max="1440" value="50">
+                <div style="font-size:0.75rem;color:var(--text-muted);margin-top:8px;">
+                    Define quanto tempo deve esperar para trocar o tipo de entrega novamente.
                 </div>
             </div>
         </div>
@@ -519,7 +295,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyAnIJRcUxN-0swpVnonPbJjTSK87o4CQ_g",
@@ -529,52 +304,27 @@
             messagingSenderId: "293587190550",
             appId: "1:293587190550:web:80c9399f82847c80e20637"
         };
-
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
 
         let currentStore = null;
+        let cooldownInterval = null;
 
-        // ==========================
-        // PERSISTÊNCIA FORTE (NÃO DESLOGA)
-        // ==========================
         auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
             .then(() => {
                 auth.onAuthStateChanged(async (user) => {
-                    if (user) {
-                        await loadStoreData(user);
-                    } else {
-                        window.location.href = 'index.html';
-                    }
-                });
-            })
-            .catch((err) => {
-                console.error("Persistência falhou:", err);
-                // fallback: ainda assim segue
-                auth.onAuthStateChanged(async (user) => {
-                    if (user) {
-                        await loadStoreData(user);
-                    } else {
-                        window.location.href = 'index.html';
-                    }
+                    if (user) await loadStoreData(user);
+                    else window.location.href = 'index.html';
                 });
             });
 
         async function loadStoreData(user) {
             try {
-                let snapshot = await db.collection('stores')
-                    .where('ownerEmail', '==', user.email)
-                    .limit(1)
-                    .get();
-
+                let snapshot = await db.collection('stores').where('ownerEmail', '==', user.email).limit(1).get();
                 if (snapshot.empty) {
-                    snapshot = await db.collection('stores')
-                        .where('ownerId', '==', user.uid)
-                        .limit(1)
-                        .get();
+                    snapshot = await db.collection('stores').where('ownerId', '==', user.uid).limit(1).get();
                 }
-
                 if (!snapshot.empty) {
                     currentStore = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
                     loadStoreUI();
@@ -596,29 +346,90 @@
             document.getElementById('storeDeliveryFee').value = currentStore.deliveryFee ?? '';
             document.getElementById('storeAddress').value = currentStore.address || '';
             document.getElementById('storePhone').value = currentStore.phone || '';
-
-            // imagem por URL
             document.getElementById('storeImageUrl').value = currentStore.imageUrl || '';
+            document.getElementById('deliveryCooldown').value = currentStore.deliveryCooldownMinutes || 50;
+            
             updateImagePreview(currentStore.imageUrl || '');
+            selectDeliveryType(currentStore.deliveryType || 'app', false);
+            checkCooldown();
 
-            // entrega
-            selectDeliveryType(currentStore.deliveryType || 'app');
-
-            // settings
             const s = currentStore.settings || {};
             document.getElementById('weekdayOpen').value = s.weekdayOpen || '18:00';
             document.getElementById('weekdayClose').value = s.weekdayClose || '23:00';
             document.getElementById('weekendOpen').value = s.weekendOpen || '11:00';
             document.getElementById('weekendClose').value = s.weekendClose || '23:00';
-
-            // resets antes de aplicar
-            document.getElementById('soundToggle').classList.toggle('active', !!s.soundEnabled);
+            document.getElementById('soundToggle').classList.toggle('active', s.soundEnabled !== false);
             document.getElementById('autoAcceptToggle').classList.toggle('active', !!s.autoAccept);
         }
 
-        // ==========================
-        // IMAGEM SOMENTE POR URL
-        // ==========================
+        // ===== COOLDOWN SYSTEM =====
+        function checkCooldown() {
+            const lastChange = currentStore.deliveryTypeLastChanged?.toDate?.() || 
+                              (currentStore.deliveryTypeLastChanged ? new Date(currentStore.deliveryTypeLastChanged) : null);
+            
+            if (!lastChange) return enableDeliveryCards();
+            
+            const cooldownMs = (currentStore.deliveryCooldownMinutes || 50) * 60 * 1000;
+            const elapsed = Date.now() - lastChange.getTime();
+            const remaining = cooldownMs - elapsed;
+
+            if (remaining <= 0) {
+                enableDeliveryCards();
+                return;
+            }
+
+            // Desabilita a opção não selecionada
+            const currentType = currentStore.deliveryType || 'app';
+            const otherCard = currentType === 'app' ? 'deliveryOwn' : 'deliveryApp';
+            
+            document.getElementById(otherCard).classList.add('disabled');
+            document.getElementById('cooldownInfo').style.display = 'block';
+            
+            updateCooldownDisplay(remaining);
+            
+            if (cooldownInterval) clearInterval(cooldownInterval);
+            cooldownInterval = setInterval(() => {
+                const newRemaining = remaining - (Date.now() - (Date.now() - remaining));
+                const check = cooldownMs - (Date.now() - lastChange.getTime());
+                if (check <= 0) {
+                    clearInterval(cooldownInterval);
+                    enableDeliveryCards();
+                } else {
+                    updateCooldownDisplay(check);
+                }
+            }, 1000);
+        }
+
+        function updateCooldownDisplay(ms) {
+            const mins = Math.floor(ms / 60000);
+            const secs = Math.floor((ms % 60000) / 1000);
+            document.getElementById('cooldownTime').textContent = 
+                `${mins}m ${secs.toString().padStart(2, '0')}s`;
+        }
+
+        function enableDeliveryCards() {
+            document.getElementById('deliveryApp').classList.remove('disabled');
+            document.getElementById('deliveryOwn').classList.remove('disabled');
+            document.getElementById('cooldownInfo').style.display = 'none';
+        }
+
+        function selectDeliveryType(type, save = true) {
+            // Verifica cooldown
+            if (save && currentStore) {
+                const card = type === 'app' ? 'deliveryApp' : 'deliveryOwn';
+                if (document.getElementById(card).classList.contains('disabled')) {
+                    showToast('⏰ Aguarde o cooldown terminar');
+                    return;
+                }
+            }
+
+            ['deliveryApp', 'deliveryOwn'].forEach(id => 
+                document.getElementById(id).classList.remove('selected')
+            );
+            document.getElementById(type === 'app' ? 'deliveryApp' : 'deliveryOwn').classList.add('selected');
+        }
+
+        // ===== IMAGE =====
         function previewStoreImage() {
             const url = (document.getElementById('storeImageUrl').value || '').trim();
             updateImagePreview(url);
@@ -633,53 +444,27 @@
 
         function updateImagePreview(url) {
             const preview = document.getElementById('storeImagePreview');
-
             if (!url) {
                 preview.innerHTML = `<div class="image-placeholder">Sem imagem<br>cole a URL abaixo</div>`;
                 return;
             }
-
-            // evita erro visual se quebrar
-            preview.innerHTML = `<img src="${escapeHtml(url)}" alt="Imagem da loja" onerror="this.remove();document.getElementById('storeImagePreview').innerHTML='<div class=&quot;image-placeholder&quot;>Imagem inválida<br>verifique a URL</div>';">`;
+            preview.innerHTML = `<img src="${escapeHtml(url)}" alt="Logo" 
+                onerror="this.remove();document.getElementById('storeImagePreview').innerHTML='<div class=image-placeholder>Imagem inválida</div>';">`;
         }
 
         function escapeHtml(str) {
-            return String(str)
-                .replaceAll('&', '&amp;')
-                .replaceAll('<', '&lt;')
-                .replaceAll('>', '&gt;')
-                .replaceAll('"', '&quot;')
-                .replaceAll("'", '&#039;');
-        }
-
-        // ==========================
-        // UI CONTROLS
-        // ==========================
-        function selectDeliveryType(type) {
-            ['deliveryApp', 'deliveryOwn', 'deliveryBoth'].forEach(id =>
-                document.getElementById(id).classList.remove('selected')
-            );
-
-            const elementId = type === 'app' ? 'deliveryApp' : type === 'own' ? 'deliveryOwn' : 'deliveryBoth';
-            document.getElementById(elementId).classList.add('selected');
+            return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
         }
 
         function toggleSetting(setting) {
             document.getElementById(`${setting}Toggle`).classList.toggle('active');
         }
 
-        // ==========================
-        // SAVE
-        // ==========================
+        // ===== SAVE =====
         async function saveStoreInfo() {
             try {
-                if (!currentStore?.id) {
-                    showToast('Loja não carregada');
-                    return;
-                }
-
-                const imageUrl = (document.getElementById('storeImageUrl').value || '').trim();
-
+                if (!currentStore?.id) { showToast('Loja não carregada'); return; }
                 const data = {
                     name: (document.getElementById('storeName').value || '').trim(),
                     category: document.getElementById('storeCategory').value,
@@ -688,31 +473,23 @@
                     deliveryFee: parseFloat(document.getElementById('storeDeliveryFee').value) || 0,
                     address: (document.getElementById('storeAddress').value || '').trim(),
                     phone: (document.getElementById('storePhone').value || '').trim(),
-                    imageUrl: imageUrl || '',
+                    imageUrl: (document.getElementById('storeImageUrl').value || '').trim(),
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
-
                 await db.collection('stores').doc(currentStore.id).update(data);
                 showToast('✓ Informações salvas!');
-            } catch (err) {
-                console.error(err);
-                showToast('✗ Erro ao salvar');
-            }
+            } catch (err) { console.error(err); showToast('✗ Erro ao salvar'); }
         }
 
         async function saveAllSettings() {
             try {
-                if (!currentStore?.id) {
-                    showToast('Loja não carregada');
-                    return;
-                }
+                if (!currentStore?.id) { showToast('Loja não carregada'); return; }
 
-                const deliveryType =
-                    document.getElementById('deliveryApp').classList.contains('selected') ? 'app' :
-                    document.getElementById('deliveryOwn').classList.contains('selected') ? 'own' : 'both';
+                const newType = document.getElementById('deliveryApp').classList.contains('selected') ? 'app' : 'own';
+                const typeChanged = newType !== (currentStore.deliveryType || 'app');
 
-                await db.collection('stores').doc(currentStore.id).update({
-                    deliveryType,
+                const updateData = {
+                    deliveryCooldownMinutes: parseInt(document.getElementById('deliveryCooldown').value) || 50,
                     settings: {
                         soundEnabled: document.getElementById('soundToggle').classList.contains('active'),
                         autoAccept: document.getElementById('autoAcceptToggle').classList.contains('active'),
@@ -722,13 +499,24 @@
                         weekendClose: document.getElementById('weekendClose').value
                     },
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
+                };
+
+                // Se mudou tipo de entrega, atualiza timestamp
+                if (typeChanged) {
+                    updateData.deliveryType = newType;
+                    updateData.deliveryTypeLastChanged = firebase.firestore.FieldValue.serverTimestamp();
+                }
+
+                await db.collection('stores').doc(currentStore.id).update(updateData);
+                
+                currentStore.deliveryType = newType;
+                if (typeChanged) {
+                    currentStore.deliveryTypeLastChanged = new Date();
+                    checkCooldown();
+                }
 
                 showToast('✓ Configurações salvas!');
-            } catch (err) {
-                console.error(err);
-                showToast('✗ Erro ao salvar');
-            }
+            } catch (err) { console.error(err); showToast('✗ Erro ao salvar'); }
         }
 
         function showToast(msg) {

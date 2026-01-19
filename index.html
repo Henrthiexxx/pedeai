@@ -3,611 +3,305 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Pedrad - Delivery</title>
-    <meta name="theme-color" content="#000000">
-     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-
+    <title>Pedrad - Painel da Loja</title>
+    <meta name="theme-color" content="#6366f1">
     <link rel="stylesheet" href="index.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-    <link rel="stylesheet" href="client-review-modal.css">
-    
-    <style>
-/*        
-body:not(.auth-ready) #authPage,
-body:not(.auth-ready) #mainApp {
-opacity: 0;
-pointer-events: none;
-}
-
-/* Loading */
-.product-img img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  display:block;
-}
-.main{ padding-top: 70px; padding-bottom: 80px; }
-
-
-.auth-loading {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 2rem;
-    z-index: 9999;
-}
-
-body.auth-ready .auth-loading {
-    display: none;
-}
-
-/* Transição suave */
-#authPage,
-#mainApp {
-    transition: opacity 0.3s ease;
-}
-        /* CSS adicional para botão de avaliações pendentes */
-        .profile-menu-content {
-            flex: 1;
-        }
-        
-        .profile-menu-title {
-            font-weight: 600;
-            font-size: 0.95rem;
-            margin-bottom: 2px;
-        }
-        
-        .profile-menu-subtitle {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-        }
-        
-        .profile-menu-badge {
-            min-width: 24px;
-            height: 24px;
-            background: var(--primary);
-            color: #000;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 8px;
-        }
-        
-        .profile-menu-badge:empty {
-            display: none;
-        }
-        
-        /* FIX: Limita scroll das páginas */
-        .page {
-            overflow-y: auto !important;
-            overflow-x: hidden !important;
-            max-height: calc(100vh - 120px) !important;
-            -webkit-overflow-scrolling: touch;
-        }
-        
-        /* FIX: Garante que profile-menu é visível */
-        .profile-menu {
-            display: flex !important;
-            flex-direction: column !important;
-            gap: 0 !important;
-        }
-        
-        .profile-menu-item {
-            display: flex !important;
-            opacity: 1 !important;
-            visibility: visible !important;
-        }
-    </style>
 </head>
 <body>
-     
-
-    <div class="offline-banner" id="offlineBanner">Você está offline</div>
     <div class="toast" id="toast"></div>
     
-    <!-- Auth Page -->
+    <!-- Notification Popup -->
+    <div class="notification-popup" id="notificationPopup">
+        <div class="notification-popup-content">
+            <div class="notification-popup-icon">🔔</div>
+            <div class="notification-popup-text">
+                <div class="notification-popup-title">Novo Pedido!</div>
+                <div class="notification-popup-body" id="notificationPopupBody">Você tem um novo pedido</div>
+            </div>
+            <button class="notification-popup-close" onclick="closeNotificationPopup()">×</button>
+        </div>
+    </div>
+    
+    <!-- Auth -->
     <div id="authPage" class="auth-container">
-        <div class="auth-logo">
-            <h1>Pedra Delivery</h1>
-            <p>Delivery</p>
-        </div>
-        
-        <div class="auth-tabs">
-            <button class="auth-tab active" onclick="switchAuthTab('login')">Entrar</button>
-            <button class="auth-tab" onclick="switchAuthTab('register')">Criar conta</button>
-        </div>
-        
-        <form id="loginForm" class="auth-form active" onsubmit="handleLogin(event)">
-            <div class="input-group">
-                <label>E-mail</label>
-                <input type="email" class="input" id="loginEmail" placeholder="seu@email.com" required>
+        <div class="auth-box">
+            <div class="auth-logo">
+                <h1>🏪 Pedrad Loja</h1>
+                <p style="color: var(--text-muted); margin-top: 8px;">Painel do estabelecimento</p>
             </div>
-            <div class="input-group">
-                <label>Senha</label>
-                <input type="password" class="input" id="loginPassword" placeholder="••••••••" required>
-            </div>
-            <button type="submit" class="btn btn-primary">Entrar</button>
-        </form>
-        
-        <form id="registerForm" class="auth-form" onsubmit="handleRegister(event)">
-            <div class="input-group">
-                <label>Nome completo</label>
-                <input type="text" class="input" id="registerName" placeholder="Seu nome" required>
-            </div>
-            <div class="input-group">
-                <label>E-mail</label>
-                <input type="email" class="input" id="registerEmail" placeholder="seu@email.com" required>
-            </div>
-            <div class="input-group">
-                <label>Telefone</label>
-                <input type="tel" class="input" id="registerPhone" placeholder="(00) 00000-0000" required>
-            </div>
-            <div class="input-group">
-                <label>Senha</label>
-                <input type="password" class="input" id="registerPassword" placeholder="Mínimo 6 caracteres" required minlength="6">
-            </div>
-            <button type="submit" class="btn btn-primary">Criar conta</button>
-        </form>
-    </div>
-    
-    <!-- Main App -->
-    <div id="mainApp" style="display: none;">
-        <header class="header">
-            <div class="header-title">PEDRA DELIVERY</div>
-            <div class="header-actions">
-                <button class="header-btn" onclick="showPage('cart')">
-                    ◎
-                    <span class="cart-badge" id="cartBadge"></span>
-                </button>
-                <button class="header-btn notification-badge-btn" id="notificationBadge" onclick="openNotifications()">
-                    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M18 16V11a6 6 0 1 0-12 0v5l-2 2h16l-2-2Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
-                        <path d="M12 22a2 2 0 0 0 2-2H10a2 2 0 0 0 2 2Z" fill="currentColor"/>
-                    </svg>
-                    <span class="notification-badge-count" id="notificationBadgeCount"></span>
-                </button>
-            </div>
-        </header>
-        
-        <!-- Notifications Page -->
-        <div id="notificationsPage" class="page">
-            <h2 style="margin-bottom:24px;font-weight:400;letter-spacing:1px;">Notificações</h2>
-            <div id="notificationsList"></div>
-            <button class="btn btn-secondary" onclick="NotificationSync.clearAll(); NotificationSync.renderHistory('notificationsList')">
-                Limpar tudo
-            </button>
-        </div>
-
-        <!-- Home Page -->
-        <div id="homePage" class="page active">            
-            <div id="storeSelection">
-                <h2 style="margin-bottom: 8px; font-weight: 400; letter-spacing: 1px;">Escolha uma loja</h2>
-                <p style="color: var(--text-muted); margin-bottom: 24px; font-size: 0.85rem;">Selecione onde você quer pedir</p>
-                
-                <!-- Filtros -->
-                <div id="storeFilters"></div>
-                
-                <div id="storesGrid" class="stores-grid"></div>
-            </div>
-            
-            <div id="storeMenu" style="display: none;">
-                <div class="store-header-bar" onclick="backToStores()">
-                    <span class="back-btn">←</span>
-                    <div class="store-header-info">
-                        <span class="store-header-name" id="selectedStoreName">Loja</span>
-                        <span class="store-header-status" id="selectedStoreStatus">Aberto</span>
+            <div class="card">
+                <form onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label class="form-label">E-mail</label>
+                        <input type="email" class="form-input" id="loginEmail" placeholder="loja@email.com" required>
                     </div>
-                </div>
-                
-                <div class="search-bar">
-                    <input type="text" class="search-input" placeholder="Buscar produtos..." id="searchInput" oninput="filterProducts()">
-                </div>
-                
-                <div class="categories" id="categoriesContainer"></div>
-                <div class="products-grid" id="productsGrid"></div>
-            </div>
-        </div>
-        
-        <!-- Cart Page -->
-        <div id="cartPage" class="page">
-            <h2 style="margin-bottom: 24px; font-weight: 400; letter-spacing: 1px;">Carrinho</h2>
-            <div id="cartItems"></div>
-            <div id="cartSummary" style="display: none;">
-                <div class="card" style="margin-top: 16px;">
-                    <div class="summary-row">
-                        <span>Subtotal</span>
-                        <span id="cartSubtotal">R$ 0,00</span>
+                    <div class="form-group">
+                        <label class="form-label">Senha</label>
+                        <input type="password" class="form-input" id="loginPassword" placeholder="••••••••" required>
                     </div>
-                    <div class="summary-row" id="cartDiscountRow" style="display:none; color: var(--primary);">
-                        <span>Desconto</span>
-                        <span id="cartDiscount">- R$ 0,00</span>
-                    </div>
-                    <div class="summary-row">
-                        <span>Taxa de entrega</span>
-                        <span id="cartDelivery">R$ 0,00</span>
-                    </div>
-                    <div class="summary-row total">
-                        <span>Total</span>
-                        <span id="cartTotal">R$ 0,00</span>
-                    </div>
-                </div>
-                <!-- TROQUE O onclick DO BOTÃO "Finalizar pedido" (no Cart Page) -->
-
-<button class="btn btn-primary" onclick="window.location.href='checkout.html'" style="margin-top: 16px;">
-  Finalizar pedido
-</button>
-
-                 
-            </div>
-        </div>
-        
-        <!-- Orders Page -->
-        <div id="ordersPage" class="page">
-            <h2 style="margin-bottom: 24px; font-weight: 400; letter-spacing: 1px;">Meus Pedidos</h2>
-            <div id="ordersList"></div>
-        </div>
-        
-
-        
- <!-- Meus Endereços -->
-
-        
-        <!-- Tracking Page -->
-        <div id="trackingPage" class="page"></div>
-        
-<!-- Navigation -->
-<nav class="nav">
-    <div class="nav-item active" onclick="showPage('home')">
-        <span>⌂</span>
-        Início
-    </div>
-    <div class="nav-item" onclick="window.location.href='orders.html'">
-        <span>≡</span>
-        Pedidos
-    </div>
-    <div class="nav-item" onclick="window.location.href='profile.html'">
-        <span>○</span>
-        Perfil
-    </div>
-</nav>
-    
-<!-- Product Modal -->
-<!-- Product View Modal (CLIENTE) -->
-<div class="modal" id="productModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <div class="modal-title" id="modalProductName">Produto</div>
-            <button class="modal-close" onclick="closeModal('productModal')">×</button>
-        </div>
-        <div class="modal-body">
-            <div class="product-modal-img" id="modalProductImg">🍽️</div>
-            <p class="product-modal-desc" id="modalProductDesc"></p>
-            <div id="modalAddons"></div>
-            <div class="product-modal-footer">
-                <div class="qty-control">
-                    <button class="qty-btn" onclick="changeModalQty(-1)">−</button>
-                    <span class="qty-value" id="modalQty">1</span>
-                    <button class="qty-btn" onclick="changeModalQty(1)">+</button>
-                </div>
-                <div class="product-modal-price" id="modalProductPrice">R$ 0,00</div>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-primary" style="width:100%" onclick="addToCartFromModal()">Adicionar ao carrinho</button>
-        </div>
-    </div>
-</div>
-    <!-- Checkout Modal -->
-    <div class="modal" id="checkoutModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">Finalizar Pedido</div>
-                <button class="modal-close" onclick="closeModal('checkoutModal')">×</button>
-            </div>
-            <div class="modal-body">
-                <h3 style="margin-bottom: 12px; font-weight: 400; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Tipo de pedido</h3>
-                <div class="delivery-mode-selector" style="display:flex;gap:8px;margin-bottom:24px;">
-                    <div class="mode-option selected" id="modeDelivery" onclick="setDeliveryMode('delivery')">
-                        <span>🛵</span> Entrega
-                    </div>
-                    <div class="mode-option" id="modePickup" onclick="setDeliveryMode('pickup')">
-                        <span>🏪</span> Retirar na Loja
-                    </div>
-                </div>
-
-                <div id="addressSection">
-                    <h3 style="margin-bottom: 12px; font-weight: 400; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Endereço de entrega</h3>
-                    <div id="checkoutAddresses"></div>
-                    <button class="btn btn-secondary btn-sm" onclick="showAddAddressModal()" style="margin-bottom: 24px;">
-                        + Adicionar novo endereço
-                    </button>
-                </div>
-
-                <h3 style="margin-bottom: 12px; font-weight: 400; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Cupom de desconto</h3>
-                <div class="coupon-box">
-                    <input type="text" class="input" id="couponInput" placeholder="Digite o código">
-                    <button class="btn btn-secondary btn-sm" onclick="applyCoupon()">Aplicar</button>
-                </div>
-                <div id="couponStatus" class="coupon-status"></div>
-
-                <h3 style="margin-bottom: 12px; font-weight: 400; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Forma de pagamento</h3>
-                <div class="payment-options" id="paymentOptions">
-                    <label class="payment-option selected">
-                        <input type="radio" name="payment" value="pix" checked onchange="selectPayment(this)">
-                        <span class="payment-icon">◉</span>
-                        <span class="payment-info"><span class="payment-name">PIX</span><span class="payment-desc">Pagamento instantâneo</span></span>
-                    </label>
-                    <label class="payment-option">
-                        <input type="radio" name="payment" value="credit" onchange="selectPayment(this)">
-                        <span class="payment-icon">💳</span>
-                        <span class="payment-info"><span class="payment-name">Crédito</span><span class="payment-desc">Cartão de crédito</span></span>
-                    </label>
-                    <label class="payment-option">
-                        <input type="radio" name="payment" value="debit" onchange="selectPayment(this)">
-                        <span class="payment-icon">💳</span>
-                        <span class="payment-info"><span class="payment-name">Débito</span><span class="payment-desc">Cartão de débito</span></span>
-                    </label>
-                    <label class="payment-option">
-                        <input type="radio" name="payment" value="cash" onchange="selectPayment(this)">
-                        <span class="payment-icon">💵</span>
-                        <span class="payment-info"><span class="payment-name">Dinheiro</span><span class="payment-desc">Pagar na entrega/retirada</span></span>
-                    </label>
-                    <label class="payment-option">
-                        <input type="radio" name="payment" value="picpay" onchange="selectPayment(this)">
-                        <span class="payment-icon">📱</span>
-                        <span class="payment-info"><span class="payment-name">PicPay</span><span class="payment-desc">Carteira digital</span></span>
-                    </label>
-                    <label class="payment-option">
-                        <input type="radio" name="payment" value="alimentacao" onchange="selectPayment(this)">
-                        <span class="payment-icon">🍽️</span>
-                        <span class="payment-info"><span class="payment-name">Alimentação</span><span class="payment-desc">Vale alimentação/refeição</span></span>
-                    </label>
-                </div>
-
-                <div class="card">
-                    <div class="summary-row">
-                        <span>Subtotal</span>
-                        <span id="checkoutSubtotal">R$ 0,00</span>
-                    </div>
-                    <div class="summary-row" id="checkoutDiscountRow" style="display:none; color: var(--primary);">
-                        <span>Desconto</span>
-                        <span id="checkoutDiscount">- R$ 0,00</span>
-                    </div>
-                    <div class="summary-row" id="checkoutDeliveryRow">
-                        <span>Entrega (<span id="checkoutNeighborhood">-</span>)</span>
-                        <span id="checkoutDelivery">R$ 0,00</span>
-                    </div>
-                    <div class="summary-row total">
-                        <span>Total</span>
-                        <span id="checkoutTotal">R$ 0,00</span>
-                    </div>
-                </div>
-
-                <button class="btn btn-primary" onclick="submitOrder()" style="margin-top: 16px;">
-                    Confirmar pedido
-                </button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Add Address Modal -->
-    <div class="modal" id="addressModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">Novo Endereço</div>
-                <button class="modal-close" onclick="closeModal('addressModal')">×</button>
-            </div>
-            <div class="modal-body">
-                <form onsubmit="saveAddress(event)">
-                    <div class="input-group">
-                        <label>Apelido (ex: Casa, Trabalho)</label>
-                        <input type="text" class="input" id="addressLabel" placeholder="Casa" required>
-                    </div>
-                    <div class="input-group">
-                        <label>Rua</label>
-                        <input type="text" class="input" id="addressStreet" placeholder="Nome da rua" required>
-                    </div>
-                    <div class="input-group">
-                        <label>Número</label>
-                        <input type="text" class="input" id="addressNumber" placeholder="123" required>
-                    </div>
-                    <div class="input-group">
-                        <label>Complemento</label>
-                        <input type="text" class="input" id="addressComplement" placeholder="Apto, Bloco...">
-                    </div>
-                    <div class="input-group">
-                        <label>Bairro</label>
-                        <select class="input" id="addressNeighborhood" required>
-                            <option value="">Selecione o bairro</option>
-                        </select>
-                    </div>
-                    <div class="input-group">
-                        <label>Ponto de referência</label>
-                        <input type="text" class="input" id="addressReference" placeholder="Próximo a...">
-                    </div>
-                    
-                    <div class="location-box" id="addressLocationBox">
-                        <div class="location-status" id="addressLocationStatus">
-                            <span class="location-icon">◎</span>
-                            <span>Localização não capturada</span>
-                        </div>
-                        <div style="display:flex;gap:8px;margin-top:12px;">
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="captureAddressLocation()" style="flex:1;">GPS automático</button>
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="openMapPicker()" style="flex:1;">Escolher no mapa</button>
-                        </div>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary">Salvar endereço</button>
+                    <button type="submit" class="btn btn-primary btn-block">Entrar</button>
                 </form>
             </div>
         </div>
     </div>
     
-    <!-- Order Detail Modal -->
-    <div class="modal" id="orderModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">Detalhes do Pedido</div>
-                <button class="modal-close" onclick="closeModal('orderModal')">×</button>
-                
+    <!-- Main App -->
+    <div id="mainApp" style="display: none;">
+        <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+        
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">🏪 Pedrad</div>
+                <div class="store-info">
+                    <div class="store-avatar" id="sidebarAvatar">🍔</div>
+                    <div>
+                        <div class="store-name" id="sidebarStoreName">Minha Loja</div>
+                        <div class="store-status" id="sidebarStatus">🟢 Aberto</div>
+                    </div>
+                </div>
             </div>
-            <div class="modal-body" id="orderDetailContent"></div>
-        </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Principal</div>
+                    <div class="nav-item active" onclick="showPage('dashboard')"><span>📊</span> Dashboard</div>
+                    <div class="nav-item" onclick="showPage('orders')"><span>📦</span> Pedidos <span class="nav-badge" id="pendingBadge" style="display:none;">0</span></div>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Cardápio</div>
+                    <div class="nav-item" onclick="openProductsPage()"><span>🍽️</span> Produtos</div>
+
+
+                    <div class="nav-item" onclick="showPage('categories')"><span>📁</span> Categorias</div>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Configurações</div>
+                    <div class="nav-item" onclick="window.location.href='config.html'">
+  <span>🏪</span> Minha Loja
+</div>
+
+                    <div class="nav-item" onclick="showPage('settings')"><span>⚙️</span> Configurações</div>
+                    <div class="nav-item" onclick="handleLogout()"><span>🚪</span> Sair</div>
+                </div>
+            </nav>
+        </aside>
+        
+        <!-- Main -->
+        <main class="main-content">
+            <header class="topbar">
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+                    <h1 class="topbar-title" id="pageTitle">Dashboard</h1>
+                </div>
+                <div class="topbar-actions">
+                    <button class="btn btn-sm" id="notifBtn" onclick="requestNotificationPermission()" title="Ativar notificações">🔔</button>
+                    <div class="toggle" id="storeToggle" onclick="toggleStoreStatus()"></div>
+                </div>
+            </header>
+            
+            <!-- Dashboard -->
+            <div id="dashboardPage" class="page active">
+                <div class="stats-grid">
+                    <div class="stat-card"><div class="stat-icon warning">📦</div><div class="stat-value" id="statPending">0</div><div class="stat-label">Pedidos pendentes</div></div>
+                    <div class="stat-card"><div class="stat-icon primary">📋</div><div class="stat-value" id="statToday">0</div><div class="stat-label">Pedidos hoje</div></div>
+                    <div class="stat-card"><div class="stat-icon success">💰</div><div class="stat-value" id="statRevenue">R$ 0</div><div class="stat-label">Faturamento hoje</div></div>
+                    <div class="stat-card"><div class="stat-icon danger">🍽️</div><div class="stat-value" id="statProducts">0</div><div class="stat-label">Produtos ativos</div></div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><div class="card-title">📦 Pedidos Recentes</div><button class="btn btn-secondary btn-sm" onclick="showPage('orders')">Ver todos</button></div>
+                    <div id="recentOrders"></div>
+                </div>
+            </div>
+            
+            <!-- Orders -->
+            <div id="ordersPage" class="page">
+                <div class="orders-filters">
+                    <div class="filter-chip active" onclick="filterOrders('all')">Todos</div>
+                    <div class="filter-chip" onclick="filterOrders('pending')">🟡 Pendentes</div>
+                    <div class="filter-chip" onclick="filterOrders('preparing')">🔵 Preparando</div>
+                    <div class="filter-chip" onclick="filterOrders('ready')">🟣 Pronto</div>
+                    <div class="filter-chip" onclick="filterOrders('delivering')">🟢 Entregando</div>
+                    <div class="filter-chip" onclick="filterOrders('delivered')">✅ Entregues</div>
+                </div>
+                <div id="ordersList"></div>
+            </div>
+            
+            <!-- Products -->
+            <div id="productsPage" class="page">
+                <div class="products-header">
+                    <input type="text" class="form-input" style="max-width: 300px;" placeholder="🔍 Buscar produto..." id="productSearch" oninput="filterProductsList()">
+                    <button class="btn btn-primary" onclick="openProductModal()">+ Novo Produto</button>
+                </div>
+                <div class="products-grid" id="productsList"></div>
+            </div>
+            
+            <!-- Categories -->
+            <div id="categoriesPage" class="page">
+                <div class="products-header">
+                    <h3>Categorias do Cardápio</h3>
+                    <button class="btn btn-primary" onclick="openCategoryModal()">+ Nova Categoria</button>
+                </div>
+                <div id="categoriesList"></div>
+            </div>
+            
+            <!-- Store -->
+            <div id="storePage" class="page">
+                <div class="card">
+                    <div class="card-title" style="margin-bottom: 20px;">🏪 Informações da Loja</div>
+                    <div class="form-group">
+                        <label class="form-label">Logo / Imagem da Loja</label>
+                        <div class="image-upload" id="storeImageUpload" onclick="document.getElementById('storeImageInput').click()">
+                            <div class="image-upload-placeholder" id="storeImagePlaceholder"><span>📷</span><div>Clique para enviar imagem</div></div>
+                            <input type="file" id="storeImageInput" accept="image/*" onchange="handleStoreImageUpload(event)">
+                        </div>
+                    </div>
+                    <div class="form-group"><label class="form-label">Nome da Loja</label><input type="text" class="form-input" id="storeName" placeholder="Nome do estabelecimento"></div>
+                    <div class="form-group">
+                        <label class="form-label">Categoria</label>
+                        <select class="form-input" id="storeCategory">
+                            <option value="Hambúrgueres">🍔 Hambúrgueres</option>
+                            <option value="Pizzaria">🍕 Pizzaria</option>
+                            <option value="Japonesa">🍣 Japonesa</option>
+                            <option value="Açaí e Sorvetes">🍇 Açaí e Sorvetes</option>
+                            <option value="Brasileira">🍛 Brasileira</option>
+                            <option value="Lanches">🌭 Lanches</option>
+                            <option value="Doces">🍰 Doces</option>
+                            <option value="Bebidas">🍹 Bebidas</option>
+                            <option value="Outro">📦 Outro</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label class="form-label">Descrição</label><textarea class="form-input" id="storeDescription" placeholder="Fale sobre sua loja..."></textarea></div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="form-group"><label class="form-label">Tempo de entrega</label><input type="text" class="form-input" id="storeDeliveryTime" placeholder="30-45 min"></div>
+                        <div class="form-group"><label class="form-label">Taxa de entrega (R$)</label><input type="number" class="form-input" id="storeDeliveryFee" placeholder="5.00" step="0.50"></div>
+                    </div>
+                    <div class="form-group"><label class="form-label">Endereço</label><input type="text" class="form-input" id="storeAddress" placeholder="Rua, número - Bairro"></div>
+                    <div class="form-group"><label class="form-label">Telefone / WhatsApp</label><input type="tel" class="form-input" id="storePhone" placeholder="(00) 00000-0000"></div>
+                    <button class="btn btn-primary btn-block" onclick="saveStoreInfo()">Salvar Informações</button>
+                </div>
+            </div>
+            
+            <!-- Settings -->
+            <div id="settingsPage" class="page">
+                <div class="settings-section">
+                    <div class="settings-title">🚚 Entrega</div>
+                    <div class="form-group">
+                        <label class="form-label">Tipo de entregador</label>
+                        <div class="radio-cards">
+                            <div class="radio-card" id="deliveryApp" onclick="selectDeliveryType('app')"><div class="radio-card-icon">🛵</div><div class="radio-card-title">Entregador do App</div><div class="radio-card-desc">Entregadores parceiros</div></div>
+                            <div class="radio-card" id="deliveryOwn" onclick="selectDeliveryType('own')"><div class="radio-card-icon">👨‍💼</div><div class="radio-card-title">Entregador Próprio</div><div class="radio-card-desc">Sua equipe</div></div>
+                            <div class="radio-card" id="deliveryBoth" onclick="selectDeliveryType('both')"><div class="radio-card-icon">🔄</div><div class="radio-card-title">Ambos</div><div class="radio-card-desc">Conforme disponibilidade</div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <div class="settings-title">🕐 Horário de Funcionamento</div>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <div class="setting-label">Segunda a Sexta</div>
+                            <div style="display: flex; gap: 8px; margin-top: 8px;">
+                                <input type="time" class="form-input" id="weekdayOpen" value="18:00" style="width: auto;">
+                                <span style="align-self: center;">às</span>
+                                <input type="time" class="form-input" id="weekdayClose" value="23:00" style="width: auto;">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <div class="setting-label">Sábado e Domingo</div>
+                            <div style="display: flex; gap: 8px; margin-top: 8px;">
+                                <input type="time" class="form-input" id="weekendOpen" value="11:00" style="width: auto;">
+                                <span style="align-self: center;">às</span>
+                                <input type="time" class="form-input" id="weekendClose" value="23:00" style="width: auto;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <div class="settings-title">🔔 Notificações</div>
+                    <div class="setting-item">
+                        <div class="setting-info"><div class="setting-label">Som de novo pedido</div><div class="setting-desc">Tocar som quando receber pedido</div></div>
+                        <div class="toggle active" id="soundToggle" onclick="toggleSetting('sound')"></div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-info"><div class="setting-label">Aceitar automaticamente</div><div class="setting-desc">Confirmar pedidos sem aprovação</div></div>
+                        <div class="toggle" id="autoAcceptToggle" onclick="toggleSetting('autoAccept')"></div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-info"><div class="setting-label">Notificações Push</div><div class="setting-desc">Receber alertas com app fechado</div></div>
+                        <button class="btn btn-primary btn-sm" onclick="requestNotificationPermission()">Ativar</button>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="saveSettings()">Salvar Configurações</button>
+            </div>
+        </main>
     </div>
     
-    <!-- Scripts do Firebase e módulos -->
+
+    
+    <!-- Category Modal -->
+    <div class="modal" id="categoryModal">
+        <div class="modal-content">
+            <div class="modal-header"><div class="modal-title">Nova Categoria</div><button class="modal-close" onclick="closeModal('categoryModal')">×</button></div>
+            <div class="modal-body">
+                <div class="form-group"><label class="form-label">Nome da Categoria</label><input type="text" class="form-input" id="categoryName" placeholder="Ex: Lanches, Bebidas..."></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('categoryModal')">Cancelar</button>
+                <button class="btn btn-primary" onclick="saveCategory()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div class="modal" id="confirmModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-body" style="text-align: center; padding: 30px;">
+                <div class="modal-title" id="confirmModalTitle" style="margin-bottom: 12px;">Confirmar</div>
+                <div style="color: var(--text-muted); margin-bottom: 24px;" id="confirmModalText">Deseja continuar?</div>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn btn-secondary" id="confirmModalCancel" onclick="closeModal('confirmModal')" style="flex:1;">Cancelar</button>
+                    <button class="btn btn-danger" id="confirmModalBtn" style="flex:1;">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-   <script src="index.js"></script>
-<script src="modules/stores.js"></script>
-<script src="modules/notifications.js"></script>
-<script src="modules/tracking.js"></script>
-<script src="modules/store-cache.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
     
-    <!-- SCRIPT DE AVALIAÇÕES - DEVE VIR DEPOIS DO INDEX.JS -->
-    <script>
-    window.addEventListener('load', function() {
-        console.log('🔧 Inicializando sistema de avaliações pendentes...');
-        
-        window.updatePendingReviewsBadge = async function() {
-            if (!window.currentUser) {
-                console.log('⚠️ currentUser ainda não disponível');
-                return;
-            }
-            
-            try {
-                const snapshot = await db.collection('orders')
-                    .where('userId', '==', window.currentUser.uid)
-                    .where('status', '==', 'delivered')
-                    .where('reviewed', '==', false)
-                    .get();
-                
-                const count = snapshot.size;
-                const badge = document.getElementById('pendingReviewsBadge');
-                
-                if (badge) {
-                    badge.textContent = count;
-                    badge.style.display = count > 0 ? 'flex' : 'none';
-                    console.log(`✅ Badge atualizado: ${count} avaliações pendentes`);
-                } else {
-                    console.error('❌ Badge não encontrado no DOM');
-                }
-                
-            } catch (err) {
-                console.error('❌ Erro ao contar avaliações pendentes:', err);
-            }
-        };
-        
-        const _originalShowPage = window.showPage;
-        
-        if (typeof _originalShowPage === 'function') {
-            window.showPage = function(pageId) {
-                _originalShowPage(pageId);
-                
-                if (pageId === 'profile' && window.currentUser) {
-                    setTimeout(window.updatePendingReviewsBadge, 500);
-                }
-            };
-            
-            console.log('✅ showPage interceptado com sucesso');
-        } else {
-            console.error('❌ showPage não está definido. Tentando novamente em 1s...');
-            setTimeout(arguments.callee, 1000);
-            return;
-        }
-        
-        document.addEventListener('visibilitychange', function() {
-            if (!document.hidden && window.currentUser) {
-                const profilePage = document.getElementById('profilePage');
-                if (profilePage && profilePage.classList.contains('active')) {
-                    window.updatePendingReviewsBadge();
-                }
-            }
-        });
-        
-        console.log('✅ Sistema de avaliações inicializado');
-    });
-    </script>
-    <!-- OPCIONAL: se existir algum lugar chamando showPage('orders'), crie esse fallback (cole em um <script> após index.js) -->
-<script>
-  (function(){
-    const _showPage = window.showPage;
-    window.showPage = function(pageId){
-      if (pageId === 'orders') {
-        window.location.href = 'orders.html';
-        return;
-      }
-      if (typeof _showPage === 'function') return _showPage(pageId);
-    };
-  })();
+    <!-- App -->
+    <script src="modules/fcm.js"></script>
+    <script src="index.js"></script>
+    <div id="modalProducts" style="display:none; position:fixed; inset:0; z-index:99999;">
+  <div onclick="closeProductsModal()" ontouchstart="closeProductsModal(); return false;"
+       style="position:absolute; inset:0; background:rgba(0,0,0,.65)"></div>
 
-  
-</script>
+  <div style="
+    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+    width:min(1100px, 96vw); height:min(860px, 92vh);
+    background:#0a0a0a; border:1px solid #262626; border-radius:14px;
+    overflow:hidden; box-shadow:0 25px 80px rgba(0,0,0,.6);
+    display:flex; flex-direction:column;">
+    
+    <div style="height:52px; display:flex; align-items:center; justify-content:space-between;
+      padding:0 14px; border-bottom:1px solid #262626; background:#000;">
+      <div style="font-weight:800">🍽️ Produtos</div>
+      <button class="btn" type="button" onclick="closeProductsModal()"
+        ontouchstart="closeProductsModal(); return false;">✕ Fechar</button>
+    </div>
 
-    <script src="modules/polish.js"></script>
-    <script>
-  window.addEventListener("load", async () => {
-    firebase.auth().onAuthStateChanged(async (user) => {
-      if (!user) return;
-
-      // chama seu carregamento real (precisa existir no seu JS)
-      if (typeof loadStores === "function") await loadStores();
-      if (typeof renderStores === "function") await renderStores();
-    });
-  });
-
-
-function closeProductPopup(){
-  document.getElementById("htmlPopup").style.display = "none";
-  document.getElementById("popupFrame").src = "about:blank";
-}
-
-function addToCartFromPopup(product, qty, addons){
-  const key = "cart"; // ⚠️ troque aqui se seu carrinho usa outra chave
-  const cart = JSON.parse(localStorage.getItem(key) || "[]");
-
-  cart.push({
-    productId: product.id,
-    storeId: product.storeId,
-    name: product.name,
-    price: Number(product.price||0),
-    qty: Number(qty||1),
-    addons: addons || [],
-    createdAt: Date.now()
-  });
-
-  localStorage.setItem(key, JSON.stringify(cart));
-
-  if (typeof renderCart === "function") renderCart();
-  if (typeof updateCartBadge === "function") updateCartBadge();
-}
-window.addEventListener("message", (ev) => {
-  if (!ev.data) return;
-
-  if (ev.data.type === "closePopup") {
-    document.getElementById("htmlPopup").style.display = "none";
-    document.getElementById("popupFrame").src = "about:blank";
-  }
-
-  if (ev.data.type === "cartUpdated") {
-    loadCartFromStorage();
-    renderCart();
-    updateCartBadge?.();
-  }
-});
-
-</script>
-<div id="htmlPopup" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.6)">
-  <div style="width:min(520px,92vw);height:min(820px,92vh);margin:4vh auto;background:#0a0a0a;border:1px solid #262626;border-radius:14px;overflow:hidden">
-    <iframe id="popupFrame" style="width:100%;height:100%;border:0"></iframe>
+    <iframe id="productsFrame" src="about:blank"
+      style="flex:1; width:100%; border:0; background:#000;"></iframe>
   </div>
 </div>
-
+<script src="modules/popup-system.js"></script>
+<script src="modules/fixes.js"></script>
+<script src="modules/billing-system.js"></script>
+<script src="modules/fixes.js"></script>
 </body>
 </html>

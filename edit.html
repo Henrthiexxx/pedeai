@@ -2,15 +2,20 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Produto - Pedrad</title>
+  <meta name="theme-color" content="#000000">
   <style>
     :root{
       --bg:#000; --card:#0a0a0a; --input:#171717; --text:#fff; --muted:#737373;
       --border:#262626; --primary:#fff; --danger:#ef4444; --success:#22c55e; --radius:12px;
     }
     *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);padding:20px;min-height:100vh}
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+      background:var(--bg);color:var(--text);padding:20px;min-height:100vh;
+      padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);
+    }
     .container{max-width:900px;margin:0 auto}
     .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--border)}
     .header h1{font-size:1.3rem;font-weight:600}
@@ -24,41 +29,28 @@
     .form-group{margin-bottom:16px}
     .form-label{display:block;margin-bottom:8px;font-size:.85rem;font-weight:600}
     .help{font-size:.78rem;color:var(--muted);margin-top:6px;line-height:1.35}
-    .form-input, select, textarea{
-      width:100%;padding:12px;background:var(--input);border:1px solid var(--border);
-      border-radius:10px;color:var(--text);font-size:.95rem
-    }
-    .form-input:focus, select:focus, textarea:focus{outline:none;border-color:var(--primary)}
+    .form-input,select,textarea{width:100%;padding:12px;background:var(--input);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:.95rem}
+    .form-input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)}
     textarea{resize:vertical;min-height:80px}
     .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--border);margin-top:10px}
     .toggle{width:52px;height:28px;background:var(--border);border-radius:14px;position:relative;cursor:pointer;transition:.25s}
     .toggle::after{content:"";position:absolute;width:22px;height:22px;border-radius:50%;background:#fff;top:3px;left:3px;transition:.25s}
     .toggle.active{background:var(--success)}
     .toggle.active::after{left:27px}
-    .toast{
-      position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--card);
-      border:1px solid var(--border);padding:12px 18px;border-radius:10px;opacity:0;pointer-events:none;transition:.25s;z-index:9999
-    }
+    .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--card);border:1px solid var(--border);padding:12px 18px;border-radius:10px;opacity:0;pointer-events:none;transition:.25s;z-index:9999}
     .toast.show{opacity:1}
     .loading{padding:40px;text-align:center;color:var(--muted)}
     .opt-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
     .opt-title{font-weight:700;font-size:.95rem}
     .opt-sub{color:var(--muted);font-size:.78rem;margin-top:4px}
-    .opt-item{
-      display:grid;grid-template-columns:30px 1fr 120px 40px;gap:10px;align-items:center;
-      padding:10px;background:var(--input);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;cursor:move
-    }
+    .opt-item{display:grid;grid-template-columns:30px 1fr 120px 40px;gap:10px;align-items:center;padding:10px;background:var(--input);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;cursor:move}
     .drag{color:var(--muted);text-align:center}
-    .opt-name,.opt-price{
-      padding:9px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.9rem
-    }
+    .opt-name,.opt-price{padding:9px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.9rem}
     .opt-add-row{display:grid;grid-template-columns:1fr 120px 60px;gap:10px;margin-top:10px}
     .empty{color:var(--muted);font-size:.9rem;text-align:center;padding:14px;border:1px dashed var(--border);border-radius:10px;background:var(--input)}
-    .img-preview{
-      width:100%;height:220px;border:1px solid var(--border);border-radius:12px;background:var(--input);
-      display:flex;align-items:center;justify-content:center;overflow:hidden
-    }
+    .img-preview{width:100%;height:220px;border:1px solid var(--border);border-radius:12px;background:var(--input);display:flex;align-items:center;justify-content:center;overflow:hidden}
     .img-preview img{width:100%;height:100%;object-fit:cover}
+    .actions-bar{display:flex;gap:12px;position:sticky;bottom:0;background:var(--bg);padding:16px 0;border-top:1px solid var(--border);margin-top:24px}
     @media(max-width:700px){
       .grid-2{grid-template-columns:1fr}
       .opt-item{grid-template-columns:22px 1fr 90px 36px}
@@ -67,15 +59,11 @@
     }
   </style>
 </head>
-
 <body>
   <div class="toast" id="toast"></div>
-
   <div class="container">
     <div class="header">
       <h1 id="pageTitle">Novo Produto</h1>
-     
-
     </div>
 
     <div id="loadingState" class="loading">Carregando...</div>
@@ -84,36 +72,26 @@
       <input type="hidden" id="productId" />
       <input type="hidden" id="storeId" />
 
-      <!-- Imagem por URL -->
       <div class="card">
         <div class="form-group">
           <label class="form-label">Imagem do Produto (URL)</label>
-          <input type="url" class="form-input" id="imageUrl"
-                 placeholder="https://exemplo.com/imagem.jpg"
-                 oninput="updateImagePreview(this.value)" />
-          <div class="help">
-            ✅ Aceita qualquer URL HTTP/HTTPS.<br>
-            ❌ Base64 <b>data:</b> não é permitido (fica pesado e estoura limites).
-          </div>
+          <input type="url" class="form-input" id="imageUrl" placeholder="https://exemplo.com/imagem.jpg" oninput="updateImagePreview(this.value)" />
+          <div class="help">✅ Aceita URLs HTTP/HTTPS | ❌ Base64 não permitido</div>
         </div>
-
         <div class="img-preview" id="imgPreview">
           <div style="color:var(--muted);font-size:.9rem;">Prévia da imagem</div>
         </div>
       </div>
 
-      <!-- Básico -->
       <div class="card">
         <div class="form-group">
           <label class="form-label">Nome do Produto *</label>
           <input type="text" class="form-input" id="productName" placeholder="Ex: X-Burger Especial">
         </div>
-
         <div class="form-group">
           <label class="form-label">Descrição</label>
           <textarea class="form-input" id="productDescription" placeholder="Ingredientes, tamanho..."></textarea>
         </div>
-
         <div class="grid-2">
           <div class="form-group">
             <label class="form-label">Preço Base (R$) *</label>
@@ -121,12 +99,9 @@
           </div>
           <div class="form-group">
             <label class="form-label">Categoria *</label>
-            <select class="form-input" id="productCategory">
-              <option value="">Carregando...</option>
-            </select>
+            <select class="form-input" id="productCategory"><option value="">Carregando...</option></select>
           </div>
         </div>
-
         <div class="toggle-row">
           <div>
             <div class="form-label" style="margin:0;">Produto ativo</div>
@@ -136,69 +111,47 @@
         </div>
       </div>
 
-      <!-- Sabores -->
       <div class="card">
-        <div class="opt-header">
-          <div>
-            <div class="opt-title">🍕 Sabores (opcional)</div>
-            <div class="opt-sub">Cada sabor pode ter preço adicional (ex: +2,00)</div>
-          </div>
-        </div>
+        <div class="opt-header"><div><div class="opt-title">🍕 Sabores (opcional)</div><div class="opt-sub">Cada sabor pode ter preço adicional</div></div></div>
         <div id="flavorsList"></div>
         <div class="opt-add-row">
-          <input type="text" class="form-input" id="newFlavorName" placeholder="Nome do sabor (ex: Calabresa)">
-          <input type="number" class="form-input" id="newFlavorPrice" placeholder="+ R$ 0.00" step="0.50" min="0">
+          <input type="text" class="form-input" id="newFlavorName" placeholder="Nome do sabor">
+          <input type="number" class="form-input" id="newFlavorPrice" placeholder="+ R$" step="0.50" min="0">
           <button class="btn btn-primary btn-sm" onclick="addOption('flavors')">+</button>
         </div>
       </div>
 
-      <!-- Tamanhos -->
       <div class="card">
-        <div class="opt-header">
-          <div>
-            <div class="opt-title">📏 Tamanhos (opcional)</div>
-            <div class="opt-sub">Ex: Pequena +0, Média +5, Grande +10</div>
-          </div>
-        </div>
+        <div class="opt-header"><div><div class="opt-title">📏 Tamanhos (opcional)</div><div class="opt-sub">Ex: Pequena, Média, Grande</div></div></div>
         <div id="sizesList"></div>
         <div class="opt-add-row">
-          <input type="text" class="form-input" id="newSizeName" placeholder="Nome do tamanho (ex: Grande)">
-          <input type="number" class="form-input" id="newSizePrice" placeholder="+ R$ 0.00" step="0.50" min="0">
+          <input type="text" class="form-input" id="newSizeName" placeholder="Nome do tamanho">
+          <input type="number" class="form-input" id="newSizePrice" placeholder="+ R$" step="0.50" min="0">
           <button class="btn btn-primary btn-sm" onclick="addOption('sizes')">+</button>
         </div>
       </div>
 
-      <!-- Extras -->
       <div class="card">
-        <div class="opt-header">
-          <div>
-            <div class="opt-title">➕ Extras (opcional)</div>
-            <div class="opt-sub">O cliente escolhe extras e soma no valor final</div>
-          </div>
-        </div>
+        <div class="opt-header"><div><div class="opt-title">➕ Extras (opcional)</div><div class="opt-sub">O cliente escolhe e soma no valor</div></div></div>
         <div id="extrasList"></div>
         <div class="opt-add-row">
-          <input type="text" class="form-input" id="newExtraName" placeholder="Nome do extra (ex: Bacon)">
-          <input type="number" class="form-input" id="newExtraPrice" placeholder="+ R$ 0.00" step="0.50" min="0">
+          <input type="text" class="form-input" id="newExtraName" placeholder="Nome do extra">
+          <input type="number" class="form-input" id="newExtraPrice" placeholder="+ R$" step="0.50" min="0">
           <button class="btn btn-primary btn-sm" onclick="addOption('extras')">+</button>
         </div>
       </div>
 
-      <!-- Ações -->
-      <div style="display:flex; gap:12px;">
-        <button class="btn" onclick="window.close()" style="flex:1;">Cancelar</button>
+      <div class="actions-bar">
+        <button class="btn" onclick="closeEditor()" style="flex:1;">Cancelar</button>
         <button class="btn btn-primary" onclick="saveProduct()" style="flex:2;">Salvar Produto</button>
       </div>
     </div>
   </div>
 
-  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-
   <script>
-    // Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyAnIJRcUxN-0swpVnonPbJjTSK87o4CQ_g",
       authDomain: "pedrad-814d0.firebaseapp.com",
@@ -207,75 +160,53 @@
       messagingSenderId: "293587190550",
       appId: "1:293587190550:web:80c9399f82847c80e20637"
     };
-
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const auth = firebase.auth();
 
-    // ===================== IDS UNIVERSAIS =====================
-    function getUniversalIds() {
+    // ===== IDS =====
+    function getIds() {
       const url = new URL(window.location.href);
-      const qs = url.searchParams;
-
-      let storeId = qs.get('storeId');
-      let productId = qs.get('productId');
-
-      if ((!storeId || !productId) && window.location.hash) {
-        const hash = window.location.hash.replace('#', '');
-        const hs = new URLSearchParams(hash);
-        storeId = storeId || hs.get('storeId');
-        productId = productId || hs.get('productId');
-      }
-
-      storeId =
-        storeId ||
-        localStorage.getItem('currentStoreId') ||
-        localStorage.getItem('CURRENT_STORE_ID') ||
-        localStorage.getItem('storeId') ||
-        null;
-
-      productId = productId || localStorage.getItem('CURRENT_PRODUCT_ID') || null;
-
+      let storeId = url.searchParams.get('storeId');
+      let productId = url.searchParams.get('productId');
+      if (!storeId) storeId = localStorage.getItem('currentStoreId') || localStorage.getItem('CURRENT_STORE_ID');
+      if (!productId) productId = localStorage.getItem('CURRENT_PRODUCT_ID');
       return { storeId, productId };
     }
 
-    const ids = getUniversalIds();
+    const ids = getIds();
     const storeId = ids.storeId;
     const productId = ids.productId;
 
-    let categories = [];
-    let flavors = [];
-    let sizes = [];
-    let extras = [];
-
+    let categories = [], flavors = [], sizes = [], extras = [];
     let dragged = { type: null, idx: null };
 
-    // ===================== INIT =====================
-    async function init() {
-      console.log('INIT OK');
-      console.log('storeId:', storeId, 'productId:', productId);
-      console.log('AUTH OK?', !!auth.currentUser);
+    // ===== CLOSE EDITOR =====
+    function closeEditor() {
+      if (window.opener && !window.opener.closed) {
+        window.close();
+      } else if (window.parent !== window) {
+        window.parent.postMessage({ type: 'closePopup' }, '*');
+      } else {
+        history.back();
+      }
+    }
 
+    // ===== INIT =====
+    async function init() {
       if (!storeId) {
         document.getElementById('loadingState').innerHTML = `
           <div style="text-align:center;padding:40px;">
             <div style="font-size:3rem;margin-bottom:16px;">⚠️</div>
-            <div style="font-size:1.15rem;margin-bottom:10px;">Erro: StoreId não informado</div>
-            <div style="color:var(--muted);margin-bottom:18px;">URL: ${escapeHtml(window.location.href)}</div>
-            
-          </div>
-        `;
+            <div style="font-size:1.15rem;margin-bottom:10px;">Erro: Loja não identificada</div>
+            <button class="btn" onclick="closeEditor()">Voltar</button>
+          </div>`;
         return;
       }
-
       document.getElementById('storeId').value = storeId;
-
+      
       try {
-        await Promise.race([
-          loadCategories(),
-          new Promise((_, rej) => setTimeout(() => rej(new Error('timeout loadCategories')), 8000))
-        ]);
-
+        await loadCategories();
         if (productId) {
           document.getElementById('pageTitle').textContent = 'Editar Produto';
           document.getElementById('productId').value = productId;
@@ -283,7 +214,7 @@
         }
       } catch (e) {
         console.error('INIT error:', e);
-        showToast('Falha ao carregar: ' + (e.message || e));
+        showToast('Falha ao carregar');
       } finally {
         document.getElementById('loadingState').style.display = 'none';
         document.getElementById('formState').style.display = 'block';
@@ -291,289 +222,181 @@
       }
     }
 
-    // ===================== CATEGORIES (FIX) =====================
-    function normalizeCategoryItem(x) {
+    // ===== CATEGORIES =====
+    function normalizeCat(x) {
       if (!x) return '';
       if (typeof x === 'string') return x.trim();
-      if (typeof x === 'object') {
-        return String(x.name || x.title || x.label || x.value || '').trim();
-      }
+      if (typeof x === 'object') return String(x.name || x.title || x.label || '').trim();
       return String(x).trim();
     }
 
     async function loadCategories() {
       const select = document.getElementById('productCategory');
-      const keepValue = select.value;
-
       try {
-        const storeRef = db.collection('stores').doc(storeId);
-        const productsRef = db.collection('products').where('storeId', '==', storeId);
-
-        const [storeDoc, snapshot] = await Promise.all([storeRef.get(), productsRef.get()]);
-
-        const storeData = storeDoc.exists ? (storeDoc.data() || {}) : {};
-
-        // ✅ aceita "categories" ou "categorias" + aceita array de strings ou objetos
-        const rawStoreCats = Array.isArray(storeData.categories) ? storeData.categories
-                          : Array.isArray(storeData.categorias) ? storeData.categorias
-                          : [];
-
-        const savedCats = rawStoreCats
-          .map(normalizeCategoryItem)
-          .filter(Boolean);
-
-        const set = new Set(savedCats);
-
-        // fallback: pega categorias dos produtos (se existirem mesmo)
+        const [storeDoc, snapshot] = await Promise.all([
+          db.collection('stores').doc(storeId).get(),
+          db.collection('products').where('storeId', '==', storeId).get()
+        ]);
+        const storeData = storeDoc.exists ? storeDoc.data() : {};
+        const rawCats = Array.isArray(storeData.categories) ? storeData.categories : 
+                       Array.isArray(storeData.categorias) ? storeData.categorias : [];
+        const set = new Set(rawCats.map(normalizeCat).filter(Boolean));
         snapshot.docs.forEach(doc => {
-          const c = normalizeCategoryItem(doc.data()?.category);
+          const c = normalizeCat(doc.data()?.category);
           if (c) set.add(c);
         });
-
-        categories = [...set].sort((a,b)=>a.localeCompare(b,'pt-BR'));
-
+        categories = [...set].sort((a,b) => a.localeCompare(b,'pt-BR'));
         select.innerHTML = categories.length
-          ? `<option value="">Selecione...</option>` +
-            categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('')
+          ? `<option value="">Selecione...</option>` + categories.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('')
           : `<option value="">Sem categorias</option>`;
-
-        if (keepValue && categories.includes(keepValue)) select.value = keepValue;
-
       } catch (e) {
         console.error('loadCategories error:', e);
-        showToast('Erro ao carregar categorias: ' + (e.code || e.message));
-        document.getElementById('productCategory').innerHTML = `<option value="">Erro ao carregar</option>`;
+        select.innerHTML = `<option value="">Erro</option>`;
       }
     }
 
-    // ===================== LOAD PRODUCT =====================
+    // ===== LOAD PRODUCT =====
     async function loadProduct() {
       try {
         const doc = await db.collection('products').doc(productId).get();
-        if (!doc.exists) {
-          showToast('Produto não encontrado');
-          return;
-        }
-
+        if (!doc.exists) { showToast('Produto não encontrado'); return; }
         const p = doc.data() || {};
-
+        
         document.getElementById('productName').value = p.name || '';
         document.getElementById('productDescription').value = p.description || '';
-        document.getElementById('productPrice').value = (p.price ?? '');
+        document.getElementById('productPrice').value = p.price ?? '';
+        
         const cat = (p.category || '').trim();
-
-        // ✅ garante aparecer mesmo se não estiver na lista
         const select = document.getElementById('productCategory');
-        if (cat) {
-          const has = [...select.options].some(o => o.value === cat);
-          if (!has) {
-            const opt = document.createElement('option');
-            opt.value = cat;
-            opt.textContent = cat + ' (atual)';
-            select.appendChild(opt);
-          }
-          select.value = cat;
+        if (cat && ![...select.options].some(o => o.value === cat)) {
+          const opt = document.createElement('option');
+          opt.value = cat; opt.textContent = cat;
+          select.appendChild(opt);
         }
-
+        select.value = cat;
+        
         if (p.active === false) document.getElementById('activeToggle').classList.remove('active');
-
-        const imgUrl = (p.imageUrl || '').trim();
-        document.getElementById('imageUrl').value = imgUrl;
-        updateImagePreview(imgUrl);
-
-        flavors = sanitizeOptions(p.flavors || []);
-        sizes   = sanitizeOptions(p.sizes || []);
-        extras  = sanitizeOptions(p.extras || []);
-
+        document.getElementById('imageUrl').value = (p.imageUrl || '').trim();
+        updateImagePreview(p.imageUrl || '');
+        
+        flavors = sanitizeOpts(p.flavors || []);
+        sizes = sanitizeOpts(p.sizes || []);
+        extras = sanitizeOpts(p.extras || []);
       } catch (e) {
         console.error('loadProduct error:', e);
-        showToast('Erro ao carregar produto');
+        showToast('Erro ao carregar');
       }
     }
 
-    // ===================== HELPERS =====================
-    function sanitizeOptions(arr) {
+    // ===== HELPERS =====
+    function sanitizeOpts(arr) {
       if (!Array.isArray(arr)) return [];
-      return arr
-        .filter(x => x && typeof x === 'object')
-        .map((x, i) => ({
-          name: String(x.name || '').trim(),
-          price: Number(parseFloat(x.price)) || 0,
-          order: typeof x.order === 'number' ? x.order : i
-        }))
-        .filter(x => x.name)
-        .sort((a,b) => a.order - b.order);
+      return arr.filter(x => x && typeof x === 'object')
+        .map((x, i) => ({ name: String(x.name || '').trim(), price: Number(x.price) || 0, order: x.order ?? i }))
+        .filter(x => x.name).sort((a,b) => a.order - b.order);
     }
 
-    function escapeHtml(str) {
-      return String(str)
-        .replaceAll('&','&amp;')
-        .replaceAll('<','&lt;')
-        .replaceAll('>','&gt;')
-        .replaceAll('"','&quot;')
-        .replaceAll("'",'&#039;');
+    function esc(str) {
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
     }
 
-    function isValidHttpUrl(u) {
+    function isValidUrl(u) {
       if (!u) return true;
       const s = String(u).trim();
       if (!s) return true;
       if (s.startsWith('data:')) return false;
-      try {
-        const url = new URL(s);
-        return (url.protocol === 'http:' || url.protocol === 'https:');
-      } catch {
-        return false;
-      }
+      try { const url = new URL(s); return url.protocol === 'http:' || url.protocol === 'https:'; }
+      catch { return false; }
     }
 
-    // ===================== IMAGE PREVIEW =====================
     function updateImagePreview(url) {
       const box = document.getElementById('imgPreview');
       const u = String(url || '').trim();
-
-      if (!u) {
-        box.innerHTML = `<div style="color:var(--muted);font-size:.9rem;">Prévia da imagem</div>`;
-        return;
-      }
-
-      if (!isValidHttpUrl(u)) {
-        box.innerHTML = `<div style="color:var(--danger);font-size:.9rem;padding:14px;text-align:center;">
-          URL inválida (use http/https) e não use base64 (data:).
-        </div>`;
-        return;
-      }
-
-      box.innerHTML = `<img src="${escapeHtml(u)}" alt="Imagem do produto"
-        onerror="this.remove(); document.getElementById('imgPreview').innerHTML='<div style=&quot;color:var(--danger);font-size:.9rem;padding:14px;text-align:center;&quot;>Não foi possível carregar essa imagem.</div>';">`;
+      if (!u) { box.innerHTML = `<div style="color:var(--muted);">Prévia da imagem</div>`; return; }
+      if (!isValidUrl(u)) { box.innerHTML = `<div style="color:var(--danger);padding:14px;text-align:center;">URL inválida</div>`; return; }
+      box.innerHTML = `<img src="${esc(u)}" alt="Produto" onerror="this.remove();document.getElementById('imgPreview').innerHTML='<div style=color:var(--danger)>Erro ao carregar</div>';">`;
     }
 
-    // ===================== TOGGLE =====================
-    function toggleActive() {
-      document.getElementById('activeToggle').classList.toggle('active');
-    }
+    function toggleActive() { document.getElementById('activeToggle').classList.toggle('active'); }
 
-    // ===================== OPTIONS =====================
-    function getArrayByType(type) {
-      if (type === 'flavors') return flavors;
-      if (type === 'sizes') return sizes;
-      return extras;
-    }
-
-    function getListElByType(type) {
-      if (type === 'flavors') return document.getElementById('flavorsList');
-      if (type === 'sizes') return document.getElementById('sizesList');
-      return document.getElementById('extrasList');
-    }
+    // ===== OPTIONS =====
+    function getArr(type) { return type === 'flavors' ? flavors : type === 'sizes' ? sizes : extras; }
+    function getList(type) { return document.getElementById(type === 'flavors' ? 'flavorsList' : type === 'sizes' ? 'sizesList' : 'extrasList'); }
 
     function addOption(type) {
-      const nameEl  = document.getElementById(type === 'flavors' ? 'newFlavorName' : type === 'sizes' ? 'newSizeName' : 'newExtraName');
+      const nameEl = document.getElementById(type === 'flavors' ? 'newFlavorName' : type === 'sizes' ? 'newSizeName' : 'newExtraName');
       const priceEl = document.getElementById(type === 'flavors' ? 'newFlavorPrice' : type === 'sizes' ? 'newSizePrice' : 'newExtraPrice');
-
       const name = (nameEl.value || '').trim();
       const price = parseFloat(priceEl.value) || 0;
-
       if (!name) return showToast('Digite o nome');
-
-      const arr = getArrayByType(type);
+      const arr = getArr(type);
       arr.push({ name, price, order: arr.length });
-      nameEl.value = '';
-      priceEl.value = '';
+      nameEl.value = ''; priceEl.value = '';
       renderOptions(type);
     }
 
     function updateOption(type, idx, field, value) {
-      const arr = getArrayByType(type);
+      const arr = getArr(type);
       if (!arr[idx]) return;
-
       if (field === 'name') arr[idx].name = String(value || '').trim();
       if (field === 'price') arr[idx].price = parseFloat(value) || 0;
     }
 
     function removeOption(type, idx) {
-      const arr = getArrayByType(type);
+      const arr = getArr(type);
       arr.splice(idx, 1);
       arr.forEach((x, i) => x.order = i);
       renderOptions(type);
     }
 
-    function dragStart(type, idx) {
-      dragged.type = type;
-      dragged.idx = idx;
-    }
-
+    function dragStart(type, idx) { dragged.type = type; dragged.idx = idx; }
     function dropOn(type, targetIdx) {
-      if (!dragged.type || dragged.type !== type) return;
-      const arr = getArrayByType(type);
-      if (dragged.idx === null || dragged.idx === targetIdx) return;
-
+      if (!dragged.type || dragged.type !== type || dragged.idx === null || dragged.idx === targetIdx) return;
+      const arr = getArr(type);
       const [item] = arr.splice(dragged.idx, 1);
       arr.splice(targetIdx, 0, item);
       arr.forEach((x, i) => x.order = i);
-
       dragged = { type: null, idx: null };
       renderOptions(type);
     }
 
     function renderOptions(type) {
-      const arr = getArrayByType(type);
-      const el = getListElByType(type);
-
-      if (!arr.length) {
-        el.innerHTML = `<div class="empty">Nenhum item</div>`;
-        return;
-      }
-
+      const arr = getArr(type);
+      const el = getList(type);
+      if (!arr.length) { el.innerHTML = `<div class="empty">Nenhum item</div>`; return; }
       el.innerHTML = arr.map((it, idx) => `
-        <div class="opt-item" draggable="true"
-          ondragstart="dragStart('${type}', ${idx})"
-          ondragover="event.preventDefault()"
-          ondrop="dropOn('${type}', ${idx})">
+        <div class="opt-item" draggable="true" ondragstart="dragStart('${type}',${idx})" ondragover="event.preventDefault()" ondrop="dropOn('${type}',${idx})">
           <div class="drag">⋮⋮</div>
-          <input class="opt-name" type="text" value="${escapeHtml(it.name)}"
-            onchange="updateOption('${type}', ${idx}, 'name', this.value)">
-          <input class="opt-price" type="number" step="0.50" min="0" value="${it.price}"
-            onchange="updateOption('${type}', ${idx}, 'price', this.value)">
-          <button class="btn btn-danger btn-sm" onclick="removeOption('${type}', ${idx})">×</button>
-        </div>
-      `).join('');
+          <input class="opt-name" type="text" value="${esc(it.name)}" onchange="updateOption('${type}',${idx},'name',this.value)">
+          <input class="opt-price" type="number" step="0.50" min="0" value="${it.price}" onchange="updateOption('${type}',${idx},'price',this.value)">
+          <button class="btn btn-danger btn-sm" onclick="removeOption('${type}',${idx})">×</button>
+        </div>`).join('');
     }
 
-    function renderAll() {
-      renderOptions('flavors');
-      renderOptions('sizes');
-      renderOptions('extras');
-    }
+    function renderAll() { renderOptions('flavors'); renderOptions('sizes'); renderOptions('extras'); }
 
-    // ===================== SAVE =====================
+    // ===== SAVE =====
     async function saveProduct() {
       const name = (document.getElementById('productName').value || '').trim();
       const price = parseFloat(document.getElementById('productPrice').value);
       const category = (document.getElementById('productCategory').value || '').trim();
       const imageUrl = (document.getElementById('imageUrl').value || '').trim();
 
-      if (!name) return showToast('Preencha o nome do produto');
+      if (!name) return showToast('Preencha o nome');
       if (!price || price <= 0) return showToast('Preencha um preço válido');
       if (!category) return showToast('Selecione uma categoria');
-
-      if (imageUrl && !isValidHttpUrl(imageUrl)) {
-        return showToast('URL de imagem inválida (use http/https e não base64)');
-      }
-
-      const sanitizedFlavors = sanitizeOptions(flavors).map((x,i)=>({name:x.name,price:x.price,order:i}));
-      const sanitizedSizes   = sanitizeOptions(sizes).map((x,i)=>({name:x.name,price:x.price,order:i}));
-      const sanitizedExtras  = sanitizeOptions(extras).map((x,i)=>({name:x.name,price:x.price,order:i}));
+      if (imageUrl && !isValidUrl(imageUrl)) return showToast('URL de imagem inválida');
 
       const data = {
         name,
         description: (document.getElementById('productDescription').value || '').trim(),
         price,
-        category, // ✅ agora sempre salva certo
+        category,
         active: document.getElementById('activeToggle').classList.contains('active'),
         imageUrl: imageUrl || '',
-        flavors: sanitizedFlavors,
-        sizes: sanitizedSizes,
-        extras: sanitizedExtras,
+        flavors: sanitizeOpts(flavors).map((x,i) => ({name:x.name,price:x.price,order:i})),
+        sizes: sanitizeOpts(sizes).map((x,i) => ({name:x.name,price:x.price,order:i})),
+        extras: sanitizeOpts(extras).map((x,i) => ({name:x.name,price:x.price,order:i})),
         storeId,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
@@ -587,57 +410,32 @@
           await db.collection('products').add(data);
           showToast('Produto criado!');
         }
-
         if (window.opener) window.opener.postMessage({ type: 'productSaved' }, '*');
-        setTimeout(() => window.close(), 900);
+        if (window.parent !== window) window.parent.postMessage({ type: 'productSaved' }, '*');
+        setTimeout(closeEditor, 900);
       } catch (e) {
         console.error('saveProduct error:', e);
-        showToast('Erro ao salvar produto');
+        showToast('Erro ao salvar');
       }
     }
 
-    // ===================== TOAST =====================
     function showToast(msg) {
       const t = document.getElementById('toast');
-      t.textContent = msg;
-      t.classList.add('show');
+      t.textContent = msg; t.classList.add('show');
       setTimeout(() => t.classList.remove('show'), 2500);
     }
 
-    function closeEditorModal() {
-  const modal = document.getElementById('modalEditor');
-  const frame = document.getElementById('editorFrame');
-  if (!modal || !frame) return;
-
-  try { document.activeElement?.blur?.(); } catch(e){}
-
-  frame.src = 'about:blank';
-  modal.style.display = 'none';
-  modal.style.pointerEvents = 'none';
-
-  setTimeout(() => {
-    modal.style.pointerEvents = 'auto';
-  }, 50);
-}
-
-
-    // ===================== START (AUTH GATE) =====================
+    // ===== AUTH GATE =====
     async function waitAuth() {
-      return new Promise((resolve) => {
-        const unsub = auth.onAuthStateChanged((u) => {
-          unsub();
-          resolve(u);
-        });
+      return new Promise(resolve => {
+        const unsub = auth.onAuthStateChanged(u => { unsub(); resolve(u); });
       });
     }
 
     (async () => {
       const user = auth.currentUser || await waitAuth();
       if (!user) {
-        document.getElementById('loadingState').innerHTML =
-          `<div style="padding:40px;text-align:center;color:var(--muted)">
-            ⚠️ Faça login no painel antes de abrir o editor.
-          </div>`;
+        document.getElementById('loadingState').innerHTML = `<div style="padding:40px;text-align:center;color:var(--muted)">⚠️ Faça login primeiro.</div>`;
         return;
       }
       init();

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Suporte - Pedrad</title>
+    <meta name="theme-color" content="#000000">
+    <style>
+        :root {
+            --bg: #000; --card: #0a0a0a; --input: #171717;
+            --text: #fff; --muted: #737373; --border: #262626;
+            --primary: #fff; --success: #22c55e;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg); color: var(--text);
+            min-height: 100vh; padding: 20px;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        .header {
+            display: flex; align-items: center; gap: 16px;
+            margin-bottom: 32px; padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        .btn-back {
+            width: 44px; height: 44px; border-radius: 10px;
+            background: var(--input); border: 1px solid var(--border);
+            color: var(--text); font-size: 1.2rem; cursor: pointer;
+        }
+        .header h1 {
+            font-size: 1rem; font-weight: 300;
+            letter-spacing: 2px; text-transform: uppercase;
+        }
+        .support-icon {
+            font-size: 4rem; text-align: center;
+            margin: 40px 0 20px;
+        }
+        .support-title {
+            text-align: center; font-size: 1.3rem;
+            font-weight: 500; margin-bottom: 8px;
+        }
+        .support-desc {
+            text-align: center; color: var(--muted);
+            font-size: 0.9rem; margin-bottom: 40px;
+        }
+        .contact-card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 20px; margin-bottom: 12px;
+            display: flex; align-items: center; gap: 16px;
+            cursor: pointer; transition: all 0.2s;
+            text-decoration: none; color: var(--text);
+        }
+        .contact-card:hover {
+            border-color: var(--primary);
+            transform: translateX(4px);
+        }
+        .contact-icon {
+            width: 50px; height: 50px; border-radius: 12px;
+            background: var(--input); display: flex;
+            align-items: center; justify-content: center;
+            font-size: 1.5rem;
+        }
+        .contact-icon.whatsapp { background: #25D366; }
+        .contact-info { flex: 1; }
+        .contact-name { font-weight: 600; margin-bottom: 4px; }
+        .contact-number { color: var(--muted); font-size: 0.9rem; }
+        .contact-arrow { color: var(--muted); font-size: 1.2rem; }
+        .section-title {
+            font-size: 0.75rem; color: var(--muted);
+            text-transform: uppercase; letter-spacing: 1px;
+            margin: 32px 0 16px; padding-left: 4px;
+        }
+        .info-card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 16px;
+        }
+        .info-row {
+            display: flex; justify-content: space-between;
+            padding: 12px 0; border-bottom: 1px solid var(--border);
+        }
+        .info-row:last-child { border-bottom: none; }
+        .info-label { color: var(--muted); }
+        .info-value { font-weight: 500; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button class="btn-back" onclick="history.back()">←</button>
+        <h1>Suporte</h1>
+    </div>
+
+    <div class="support-icon">🎧</div>
+    <div class="support-title">Como podemos ajudar?</div>
+    <div class="support-desc">Entre em contato conosco pelo WhatsApp</div>
+
+    <a href="https://wa.me/5566999999999?text=Olá! Preciso de ajuda com o Pedrad" 
+       class="contact-card" target="_blank" rel="noopener">
+        <div class="contact-icon whatsapp">💬</div>
+        <div class="contact-info">
+            <div class="contact-name">Suporte Geral</div>
+            <div class="contact-number">(66) 99999-9999</div>
+        </div>
+        <span class="contact-arrow">›</span>
+    </a>
+
+    <a href="https://wa.me/5566988888888?text=Olá! Tenho um problema técnico no Pedrad" 
+       class="contact-card" target="_blank" rel="noopener">
+        <div class="contact-icon whatsapp">🔧</div>
+        <div class="contact-info">
+            <div class="contact-name">Suporte Técnico</div>
+            <div class="contact-number">(66) 98888-8888</div>
+        </div>
+        <span class="contact-arrow">›</span>
+    </a>
+
+    <a href="https://wa.me/5566977777777?text=Olá! Quero cadastrar minha loja no Pedrad" 
+       class="contact-card" target="_blank" rel="noopener">
+        <div class="contact-icon whatsapp">🏪</div>
+        <div class="contact-info">
+            <div class="contact-name">Cadastro de Lojas</div>
+            <div class="contact-number">(66) 97777-7777</div>
+        </div>
+        <span class="contact-arrow">›</span>
+    </a>
+
+    <div class="section-title">Horário de Atendimento</div>
+    <div class="info-card">
+        <div class="info-row">
+            <span class="info-label">Segunda a Sexta</span>
+            <span class="info-value">08:00 - 22:00</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Sábado</span>
+            <span class="info-value">09:00 - 18:00</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Domingo</span>
+            <span class="info-value">10:00 - 16:00</span>
+        </div>
+    </div>
+</body>
+</html>
