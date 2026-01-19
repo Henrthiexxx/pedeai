@@ -169,6 +169,13 @@
       color: var(--text); font-size: 1rem;
     }
     .edit-input:focus { outline: none; border-color: var(--primary); }
+
+    html, body { height: 100%; }
+body{
+  min-height: 100dvh;
+  padding-bottom: calc(90px + env(safe-area-inset-bottom));
+}
+
   </style>
 </head>
 <body>
@@ -197,7 +204,7 @@
         <input type="text" class="form-input" id="newCategoryName" 
                placeholder="Nome da categoria" maxlength="50"
                onkeypress="if(event.key==='Enter')addCategory()">
-        <button class="btn btn-primary" id="btnAdd" onclick="addCategory()">Adicionar</button>
+        <button class="btn btn-primary" id="btnAdd" onclick="addCategory()">+</button>
       </div>
     </div>
 
