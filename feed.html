@@ -294,7 +294,9 @@
       empty.style.display = 'none';
 
       grid.innerHTML = list.map(p => {
-        const img = safeText(p.imageUrl);
+        const imgData = safeText(p.imageData);
+const imgUrl = safeText(p.imageUrl);
+const img = (imgData && (imgData.startsWith('data:image/') || /^https?:\/\//.test(imgData))) ? imgData : imgUrl;
         const isActive = p.active !== false;
         const desc = safeText(p.description);
         const cat = safeText(p.category) || 'Sem categoria';
