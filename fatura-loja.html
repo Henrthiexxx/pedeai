@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Fatura - Pedrad</title>
+    <meta name="theme-color" content="#000000">
+    <style>
+        :root {
+            --primary: #ffffff;
+            --bg: #000000;
+            --bg-card: #0a0a0a;
+            --bg-input: #171717;
+            --text: #ffffff;
+            --text-muted: #737373;
+            --border: #262626;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --radius: 12px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+        .container { max-width: 700px; margin: 0 auto; padding: 20px; padding-bottom: 80px; }
+
+        .header { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+        .header h1 { font-size: 1rem; font-weight: 300; letter-spacing: 2px; text-transform: uppercase; flex: 1; }
+        .header-store { font-size: 0.75rem; color: var(--text-muted); }
+
+        /* Month Selector */
+        .month-selector { display: flex; gap: 10px; margin-bottom: 24px; overflow-x: auto; padding-bottom: 4px; }
+        .month-btn {
+            padding: 10px 18px; border-radius: 8px; border: 1px solid var(--border);
+            background: var(--bg-card); color: var(--text); font-size: 0.8rem;
+            cursor: pointer; white-space: nowrap; transition: all 0.2s; flex-shrink: 0;
+        }
+        .month-btn:hover { border-color: var(--text-muted); }
+        .month-btn.active { background: var(--primary); color: #000; border-color: var(--primary); }
+        .month-btn.locked {
+            opacity: 0.35; cursor: not-allowed; position: relative;
+        }
+        .month-btn.locked::after { content: '🔒'; margin-left: 6px; font-size: 0.7rem; }
+
+        /* Invoice Card */
+        .invoice-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius); overflow: hidden; margin-bottom: 20px;
+        }
+        .invoice-header {
+            padding: 20px 24px; border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .invoice-period { font-size: 0.85rem; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; }
+        .invoice-status {
+            padding: 5px 12px; border-radius: 6px; font-size: 0.65rem;
+            font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .status-open { background: rgba(245,158,11,0.15); color: var(--warning); }
+        .status-paid { background: rgba(34,197,94,0.15); color: var(--success); }
+
+        .invoice-body { padding: 24px; }
+
+        .invoice-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 14px 0; border-bottom: 1px solid var(--border);
+        }
+        .invoice-row:last-child { border-bottom: none; }
+        .invoice-row-label { font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+        .invoice-row-value { font-size: 0.95rem; font-weight: 500; }
+        .invoice-row-value.positive { color: var(--success); }
+        .invoice-row-value.negative { color: var(--danger); }
+        .invoice-row-value.highlight { color: var(--warning); font-size: 1.1rem; }
+
+        .invoice-divider {
+            border: none; border-top: 2px dashed var(--border); margin: 4px 0;
+        }
+
+        .invoice-total {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 20px 24px; background: var(--bg-input); border-top: 1px solid var(--border);
+        }
+        .invoice-total-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+        .invoice-total-value { font-size: 1.4rem; font-weight: 300; letter-spacing: 1px; }
+
+        /* Summary Stats */
+        .summary-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .summary-box {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 18px; text-align: center;
+        }
+        .summary-value { font-size: 1.3rem; font-weight: 300; letter-spacing: 1px; }
+        .summary-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 6px; }
+
+        /* Locked Overlay */
+        .locked-section {
+            position: relative; overflow: hidden;
+        }
+        .locked-overlay {
+            position: absolute; inset: 0; background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(4px); display: flex; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 10;
+            border-radius: var(--radius);
+        }
+        .locked-icon { font-size: 2rem; margin-bottom: 10px; }
+        .locked-text { font-size: 0.8rem; color: var(--text-muted); text-align: center; max-width: 220px; line-height: 1.5; }
+        .locked-badge {
+            margin-top: 10px; padding: 6px 14px; border-radius: 6px;
+            background: rgba(139,92,246,0.15); color: #a78bfa;
+            font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        /* Agreement Info */
+        .agreement-box {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 18px 24px; margin-bottom: 20px;
+        }
+        .agreement-title { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+        .agreement-detail { font-size: 0.85rem; color: var(--text); margin-bottom: 4px; }
+        .agreement-detail span { color: var(--text-muted); }
+
+        /* Cache indicator */
+        .cache-indicator {
+            display: flex; align-items: center; gap: 6px; font-size: 0.7rem;
+            color: var(--text-muted); margin-bottom: 16px;
+        }
+        .cache-dot { width: 6px; height: 6px; border-radius: 50%; }
+        .cache-dot.fresh { background: var(--success); }
+        .cache-dot.cached { background: var(--warning); }
+
+        .toast {
+            position: fixed; bottom: 24px; left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--bg-card); padding: 16px 28px; border-radius: 8px;
+            border: 1px solid var(--border); z-index: 300; opacity: 0;
+            transition: all 0.3s ease; font-size: 0.85rem;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+        .loading { text-align: center; padding: 60px; color: var(--text-muted); }
+        .spinner { width: 28px; height: 28px; border: 2px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Suspended Banner */
+        .suspended-banner {
+            background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
+            border-radius: var(--radius); padding: 18px 24px; margin-bottom: 20px;
+            display: none;
+        }
+        .suspended-banner.show { display: block; }
+        .suspended-banner-title { color: var(--danger); font-weight: 600; font-size: 0.9rem; margin-bottom: 6px; }
+        .suspended-banner-text { color: var(--text-muted); font-size: 0.8rem; line-height: 1.5; }
+
+        @media (max-width: 500px) {
+            .summary-row { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="toast" id="toast"></div>
+    <div class="container">
+        <div class="header">
+            <h1>📄 Minha Fatura</h1>
+            <div class="header-store" id="storeName">Carregando...</div>
+        </div>
+
+        <!-- Suspended Banner -->
+        <div class="suspended-banner" id="suspendedBanner">
+            <div class="suspended-banner-title">⚠️ Loja Suspensa</div>
+            <div class="suspended-banner-text" id="suspendedText">Sua loja está temporariamente suspensa. Você pode editar produtos e configurações, mas não pode abrir para receber pedidos. Entre em contato com o suporte para regularizar.</div>
+        </div>
+
+        <!-- Agreement -->
+        <div class="agreement-box" id="agreementBox">
+            <div class="agreement-title">📋 Seu Acordo</div>
+            <div class="agreement-detail" id="agreementFee">Carregando...</div>
+            <div class="agreement-detail"><span>Entregas não são taxadas pela plataforma</span></div>
+        </div>
+
+        <!-- Month Selector -->
+        <div class="month-selector" id="monthSelector"></div>
+
+        <!-- Cache Indicator -->
+        <div class="cache-indicator" id="cacheIndicator" style="display:none;">
+            <div class="cache-dot" id="cacheDot"></div>
+            <span id="cacheText"></span>
+        </div>
+
+        <!-- Summary -->
+        <div class="summary-row">
+            <div class="summary-box">
+                <div class="summary-value" id="totalOrders">-</div>
+                <div class="summary-label">Pedidos no mês</div>
+            </div>
+            <div class="summary-box">
+                <div class="summary-value" id="totalSales">-</div>
+                <div class="summary-label">Total Vendido</div>
+            </div>
+        </div>
+
+        <!-- Invoice -->
+        <div class="invoice-card" id="invoiceCard">
+            <div class="invoice-header">
+                <div class="invoice-period" id="invoicePeriod">-</div>
+                <div class="invoice-status status-open" id="invoiceStatus">Em aberto</div>
+            </div>
+            <div class="invoice-body" id="invoiceBody">
+                <div class="loading"><div class="spinner"></div>Calculando fatura...</div>
+            </div>
+            <div class="invoice-total">
+                <div class="invoice-total-label">Fatura da Plataforma</div>
+                <div class="invoice-total-value" id="invoiceTotal">-</div>
+            </div>
+        </div>
+
+        <!-- Locked: Detailed breakdown -->
+        <div class="locked-section" style="min-height:180px;">
+            <div class="invoice-card" style="opacity:0.3;pointer-events:none;">
+                <div class="invoice-header"><div class="invoice-period">Detalhamento por Dia</div></div>
+                <div class="invoice-body">
+                    <div class="invoice-row"><span class="invoice-row-label">01/02 — 12 pedidos</span><span class="invoice-row-value">R$ 340,00</span></div>
+                    <div class="invoice-row"><span class="invoice-row-label">02/02 — 8 pedidos</span><span class="invoice-row-value">R$ 220,00</span></div>
+                    <div class="invoice-row"><span class="invoice-row-label">03/02 — 15 pedidos</span><span class="invoice-row-value">R$ 480,00</span></div>
+                </div>
+            </div>
+            <div class="locked-overlay">
+                <div class="locked-icon">🔒</div>
+                <div class="locked-text">Detalhamento diário de vendas disponível em planos futuros</div>
+                <div class="locked-badge">Em breve</div>
+            </div>
+        </div>
+
+        <!-- Locked: Filters -->
+        <div class="locked-section" style="min-height:120px; margin-top: 20px;">
+            <div class="invoice-card" style="opacity:0.3;pointer-events:none;">
+                <div class="invoice-body">
+                    <div style="display:flex;gap:10px;">
+                        <select class="month-btn" style="padding:10px;background:var(--bg-input);color:var(--text);border:1px solid var(--border);border-radius:8px;"><option>Filtrar por Semana</option></select>
+                        <select class="month-btn" style="padding:10px;background:var(--bg-input);color:var(--text);border:1px solid var(--border);border-radius:8px;"><option>Exportar CSV</option></select>
+                        <select class="month-btn" style="padding:10px;background:var(--bg-input);color:var(--text);border:1px solid var(--border);border-radius:8px;"><option>Comparar Meses</option></select>
+                    </div>
+                </div>
+            </div>
+            <div class="locked-overlay">
+                <div class="locked-icon">🔒</div>
+                <div class="locked-text">Filtros avançados e exportação disponíveis em planos futuros</div>
+                <div class="locked-badge">Em breve</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAnIJRcUxN-0swpVnonPbJjTSK87o4CQ_g",
+            authDomain: "pedrad-814d0.firebaseapp.com",
+            projectId: "pedrad-814d0",
+            storageBucket: "pedrad-814d0.appspot.com",
+            messagingSenderId: "293587190550",
+            appId: "1:293587190550:web:80c9399f82847c80e20637"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Store ID from localStorage (set by store panel login)
+        const storeId = localStorage.getItem('storeId') || new URLSearchParams(location.search).get('storeId');
+        let storeData = null;
+        let selectedMonth = null; // { month: 0-11, year: YYYY }
+        const CACHE_KEY = `invoice_cache_${storeId}`;
+
+        // ==================== INIT ====================
+        async function init() {
+            if (!storeId) {
+                document.querySelector('.container').innerHTML = '<div class="loading" style="padding:100px 20px;">⚠️ Loja não identificada. Acesse pelo painel da loja.</div>';
+                return;
+            }
+            try {
+                const doc = await db.collection('stores').doc(storeId).get();
+                if (!doc.exists) { showToast('Loja não encontrada'); return; }
+                storeData = { id: doc.id, ...doc.data() };
+                document.getElementById('storeName').textContent = storeData.name || '';
+                renderAgreement();
+                checkSuspended();
+                buildMonthSelector();
+                await loadInvoice();
+            } catch (err) { console.error(err); showToast('Erro ao carregar'); }
+        }
+
+        // ==================== SUSPENDED CHECK ====================
+        function checkSuspended() {
+            if (storeData.suspended) {
+                const banner = document.getElementById('suspendedBanner');
+                banner.classList.add('show');
+                const reason = storeData.suspendReason || 'Fatura em aberto ou pendência administrativa.';
+                document.getElementById('suspendedText').textContent =
+                    `Sua loja está temporariamente suspensa: ${reason}. Você pode editar produtos e configurações, mas não pode abrir para receber pedidos. Entre em contato com o suporte para regularizar.`;
+            }
+        }
+
+        // ==================== AGREEMENT ====================
+        function renderAgreement() {
+            const el = document.getElementById('agreementFee');
+            if (storeData.feeType === 'fixed') {
+                el.textContent = `Taxa fixa: ${fmtCurrency(storeData.feeFixed || 0)} por pedido`;
+            } else {
+                el.textContent = `Taxa: ${storeData.feePercent || 10}% sobre vendas (excluindo entregas)`;
+            }
+        }
+
+        // ==================== MONTH SELECTOR ====================
+        function buildMonthSelector() {
+            const now = new Date();
+            const months = [];
+            // Current month
+            months.push({ month: now.getMonth(), year: now.getFullYear(), label: formatMonthLabel(now.getMonth(), now.getFullYear()), locked: false });
+            // Last month
+            const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            months.push({ month: prev.getMonth(), year: prev.getFullYear(), label: formatMonthLabel(prev.getMonth(), prev.getFullYear()), locked: false });
+            // 2 months ago (locked)
+            const prev2 = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+            months.push({ month: prev2.getMonth(), year: prev2.getFullYear(), label: formatMonthLabel(prev2.getMonth(), prev2.getFullYear()), locked: true });
+            // 3 months ago (locked)
+            const prev3 = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+            months.push({ month: prev3.getMonth(), year: prev3.getFullYear(), label: formatMonthLabel(prev3.getMonth(), prev3.getFullYear()), locked: true });
+
+            selectedMonth = months[0];
+            const container = document.getElementById('monthSelector');
+            container.innerHTML = months.map((m, i) =>
+                `<button class="month-btn ${i === 0 ? 'active' : ''} ${m.locked ? 'locked' : ''}" 
+                    onclick="${m.locked ? '' : `selectMonth(${m.month},${m.year},this)`}" 
+                    ${m.locked ? 'title="Disponível em planos futuros"' : ''}>
+                    ${m.label}
+                </button>`
+            ).join('');
+        }
+
+        function formatMonthLabel(month, year) {
+            const names = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+            return `${names[month]} ${year}`;
+        }
+
+        async function selectMonth(month, year, btn) {
+            selectedMonth = { month, year };
+            document.querySelectorAll('.month-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            await loadInvoice();
+        }
+
+        // ==================== CACHE SYSTEM ====================
+        function getCacheKey() {
+            return `${CACHE_KEY}_${selectedMonth.year}_${selectedMonth.month}`;
+        }
+
+        function getCache() {
+            try {
+                const raw = localStorage.getItem(getCacheKey());
+                if (!raw) return null;
+                return JSON.parse(raw);
+            } catch { return null; }
+        }
+
+        function setCache(data) {
+            try {
+                data.cachedAt = Date.now();
+                localStorage.setItem(getCacheKey(), JSON.stringify(data));
+            } catch {}
+        }
+
+        function showCacheStatus(fromCache) {
+            const indicator = document.getElementById('cacheIndicator');
+            const dot = document.getElementById('cacheDot');
+            const text = document.getElementById('cacheText');
+            indicator.style.display = 'flex';
+            if (fromCache) {
+                dot.className = 'cache-dot cached';
+                text.textContent = 'Dados em cache — sem alterações desde última consulta';
+            } else {
+                dot.className = 'cache-dot fresh';
+                text.textContent = `Atualizado agora — ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+            }
+        }
+
+        // ==================== LOAD INVOICE ====================
+        async function loadInvoice() {
+            const { month, year } = selectedMonth;
+            const start = new Date(year, month, 1);
+            const end = new Date(year, month + 1, 1);
+
+            // Check cache — compare store's lastOrderAt
+            const cached = getCache();
+            if (cached) {
+                const storeDoc = await db.collection('stores').doc(storeId).get();
+                const lastOrder = storeDoc.data()?.lastOrderAt?.toMillis?.() || 0;
+                if (lastOrder <= cached.cachedAt) {
+                    renderInvoice(cached);
+                    showCacheStatus(true);
+                    return;
+                }
+            }
+
+            // Query orders for this month
+            document.getElementById('invoiceBody').innerHTML = '<div class="loading"><div class="spinner"></div>Calculando...</div>';
+            try {
+                const snap = await db.collection('orders')
+                    .where('storeId', '==', storeId)
+                    .where('createdAt', '>=', start)
+                    .where('createdAt', '<', end)
+                    .get();
+
+                const orders = snap.docs.map(d => d.data());
+                const valid = orders.filter(o => o.status !== 'cancelled');
+                const orderCount = valid.length;
+                const totalSales = valid.reduce((s, o) => s + (o.total || 0), 0);
+                const deliveryEarnings = valid.reduce((s, o) => s + (o.deliveryFee || 0), 0);
+                const baseAmount = totalSales - deliveryEarnings;
+
+                let platformFee = 0;
+                if (storeData.feeType === 'fixed') {
+                    platformFee = orderCount * (storeData.feeFixed || 0);
+                } else {
+                    platformFee = baseAmount * ((storeData.feePercent || 10) / 100);
+                }
+
+                const data = { orderCount, totalSales, deliveryEarnings, baseAmount, platformFee, month, year };
+                setCache(data);
+                renderInvoice(data);
+                showCacheStatus(false);
+
+                // Update invoice doc for admin to read
+                const invoiceId = `${storeId}_${year}-${String(month + 1).padStart(2, '0')}`;
+                await db.collection('invoices').doc(invoiceId).set({
+                    storeId, storeName: storeData.name || '', month: month + 1, year,
+                    orderCount, totalSales, deliveryEarnings, baseAmount, platformFee,
+                    feeType: storeData.feeType || 'percent',
+                    feeValue: storeData.feeType === 'fixed' ? (storeData.feeFixed || 0) : (storeData.feePercent || 10),
+                    status: 'open',
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('invoiceBody').innerHTML = '<div class="loading">❌ Erro ao calcular fatura</div>';
+            }
+        }
+
+        // ==================== RENDER INVOICE ====================
+        function renderInvoice(data) {
+            const { orderCount, totalSales, deliveryEarnings, baseAmount, platformFee, month, year } = data;
+            const names = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+            document.getElementById('invoicePeriod').textContent = `${names[month]} ${year}`;
+            document.getElementById('totalOrders').textContent = orderCount;
+            document.getElementById('totalSales').textContent = fmtCurrency(totalSales);
+            document.getElementById('invoiceTotal').textContent = fmtCurrency(platformFee);
+
+            const feeLabel = storeData.feeType === 'fixed'
+                ? `${fmtCurrency(storeData.feeFixed || 0)} × ${orderCount} pedidos`
+                : `${storeData.feePercent || 10}% sobre ${fmtCurrency(baseAmount)}`;
+
+            document.getElementById('invoiceBody').innerHTML = `
+                <div class="invoice-row">
+                    <span class="invoice-row-label">💰 Total vendido</span>
+                    <span class="invoice-row-value positive">${fmtCurrency(totalSales)}</span>
+                </div>
+                <div class="invoice-row">
+                    <span class="invoice-row-label">🛵 Valor em entregas</span>
+                    <span class="invoice-row-value" style="color:var(--info);">- ${fmtCurrency(deliveryEarnings)}</span>
+                </div>
+                <hr class="invoice-divider">
+                <div class="invoice-row">
+                    <span class="invoice-row-label">📊 Base para cálculo</span>
+                    <span class="invoice-row-value">${fmtCurrency(baseAmount)}</span>
+                </div>
+                <div class="invoice-row">
+                    <span class="invoice-row-label">🏷️ Taxa da plataforma <small style="color:var(--text-muted);">(${feeLabel})</small></span>
+                    <span class="invoice-row-value highlight">${fmtCurrency(platformFee)}</span>
+                </div>
+                <div class="invoice-row">
+                    <span class="invoice-row-label">📦 Total de pedidos</span>
+                    <span class="invoice-row-value">${orderCount}</span>
+                </div>
+            `;
+
+            // Current month = open, past = check
+            const now = new Date();
+            const statusEl = document.getElementById('invoiceStatus');
+            if (month === now.getMonth() && year === now.getFullYear()) {
+                statusEl.textContent = 'Mês atual';
+                statusEl.className = 'invoice-status status-open';
+            } else {
+                statusEl.textContent = 'Em aberto';
+                statusEl.className = 'invoice-status status-open';
+            }
+        }
+
+        // ==================== UTILS ====================
+        function fmtCurrency(v) { return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0); }
+        function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
+
+        init();
+    </script>
+</body>
+</html>
