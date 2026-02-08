@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Meu Entregador - Pedrad</title>
+    <meta name="theme-color" content="#000000">
+    <style>
+        :root {
+            --primary: #ffffff;
+            --bg: #000000;
+            --bg-card: #0a0a0a;
+            --bg-input: #171717;
+            --text: #ffffff;
+            --text-muted: #737373;
+            --border: #262626;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --radius: 12px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg); color: var(--text); min-height: 100vh;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        .container { max-width: 900px; margin: 0 auto; padding: 20px; padding-bottom: 60px; }
+
+        .header {
+            display: flex; align-items: center; gap: 16px;
+            margin-bottom: 32px; padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        .header h1 { font-size: 1rem; font-weight: 300; letter-spacing: 2px; text-transform: uppercase; flex: 1; }
+
+        /* Idle Config Section */
+        .config-section {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 24px; margin-bottom: 24px;
+            transition: all 0.2s ease;
+        }
+        .config-section:hover { border-color: var(--text-muted); }
+        .config-title {
+            font-size: 0.85rem; font-weight: 500; letter-spacing: 1px;
+            margin-bottom: 20px; display: flex; align-items: center; gap: 10px;
+        }
+
+        .setting-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 0; border-bottom: 1px solid var(--border);
+        }
+        .setting-row:last-child { border-bottom: none; }
+        .setting-label { font-weight: 500; font-size: 0.9rem; }
+        .setting-desc { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+
+        .toggle {
+            width: 48px; height: 24px; background: var(--border);
+            border-radius: 12px; position: relative; cursor: pointer;
+            transition: all 0.3s ease; flex-shrink: 0;
+        }
+        .toggle.active { background: var(--success); }
+        .toggle::after {
+            content: ''; position: absolute; width: 18px; height: 18px;
+            background: var(--bg); border-radius: 50%;
+            top: 3px; left: 3px; transition: all 0.3s ease;
+        }
+        .toggle.active::after { left: 27px; background: #000; }
+
+        .config-fields {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+            margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);
+        }
+        .form-group { margin-bottom: 0; }
+        .form-label {
+            display: block; margin-bottom: 8px; font-size: 0.7rem;
+            color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;
+        }
+        .form-input {
+            width: 100%; padding: 14px; border-radius: 8px;
+            border: 1px solid var(--border); background: var(--bg-input);
+            color: var(--text); font-size: 0.95rem; transition: all 0.2s ease;
+        }
+        .form-input:focus { outline: none; border-color: var(--primary); background: #1a1a1a; }
+        .form-input:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .btn {
+            padding: 14px 20px; border-radius: 8px; border: 1px solid var(--border);
+            font-size: 0.8rem; font-weight: 500; cursor: pointer;
+            transition: all 0.2s ease; display: inline-flex;
+            align-items: center; justify-content: center; gap: 8px;
+            text-transform: uppercase; letter-spacing: 1px;
+            background: transparent; color: var(--text); white-space: nowrap;
+        }
+        .btn:hover { background: var(--primary); color: #000; border-color: var(--primary); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+        .btn-primary { background: var(--primary); color: #000; border-color: var(--primary); }
+        .btn-primary:hover { background: transparent; color: var(--primary); }
+        .btn-block { width: 100%; }
+
+        /* Drivers List */
+        .drivers-section {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 24px; margin-bottom: 24px;
+        }
+        .drivers-section:hover { border-color: var(--text-muted); }
+
+        .driver-card {
+            display: flex; align-items: center; gap: 16px;
+            padding: 16px; background: var(--bg-input);
+            border: 1px solid var(--border); border-radius: 10px;
+            margin-bottom: 12px; transition: all 0.2s ease;
+        }
+        .driver-card:last-child { margin-bottom: 0; }
+        .driver-card:hover { border-color: var(--text-muted); }
+
+        .driver-avatar {
+            width: 48px; height: 48px; border-radius: 50%;
+            background: var(--border); display: flex; align-items: center;
+            justify-content: center; font-size: 1.3rem; flex-shrink: 0;
+            overflow: hidden; border: 1px solid var(--border);
+        }
+        .driver-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+        .driver-info { flex: 1; min-width: 0; }
+        .driver-name { font-weight: 500; font-size: 0.95rem; margin-bottom: 4px; }
+        .driver-email { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; word-break: break-all; }
+        .driver-pix { font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+        .driver-pix .pix-label { color: var(--success); font-weight: 500; }
+
+        .driver-status {
+            padding: 6px 12px; border-radius: 20px; font-size: 0.65rem;
+            font-weight: 600; text-transform: uppercase; letter-spacing: 1px;
+            flex-shrink: 0;
+        }
+        .driver-status.online { background: rgba(34,197,94,0.15); color: var(--success); }
+        .driver-status.offline { background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); }
+        .driver-status.on-trip { background: rgba(245,158,11,0.15); color: var(--warning); }
+        .driver-status.cooldown { background: rgba(239,68,68,0.15); color: var(--danger); }
+
+        .empty-state {
+            text-align: center; padding: 40px 20px; color: var(--text-muted);
+        }
+        .empty-state-icon { font-size: 2.5rem; margin-bottom: 12px; }
+        .empty-state-title { font-size: 0.95rem; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+        .empty-state-text { font-size: 0.8rem; }
+
+        .idle-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 4px 10px; border-radius: 6px; font-size: 0.7rem;
+            font-weight: 500; margin-top: 6px;
+        }
+        .idle-badge.eligible { background: rgba(34,197,94,0.1); color: var(--success); }
+        .idle-badge.ineligible { background: rgba(239,68,68,0.1); color: var(--danger); }
+
+        .signal-btns {
+            display: flex; gap: 8px; margin-top: 10px;
+        }
+        .signal-btn {
+            padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);
+            font-size: 0.7rem; cursor: pointer; background: transparent;
+            color: var(--text); transition: all 0.2s; text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .signal-btn:hover { background: var(--primary); color: #000; border-color: var(--primary); }
+        .signal-btn.out { border-color: var(--warning); color: var(--warning); }
+        .signal-btn.out:hover { background: var(--warning); color: #000; }
+        .signal-btn.back { border-color: var(--success); color: var(--success); }
+        .signal-btn.back:hover { background: var(--success); color: #000; }
+
+        .toast {
+            position: fixed; bottom: 24px; left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--bg-card); padding: 16px 28px; border-radius: 8px;
+            border: 1px solid var(--border); z-index: 300; opacity: 0;
+            transition: all 0.3s ease; font-size: 0.85rem; letter-spacing: 0.5px;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+        .loading { text-align: center; padding: 40px; color: var(--text-muted); }
+        .spinner-lg {
+            width: 32px; height: 32px; border: 2px solid var(--border);
+            border-top-color: var(--primary); border-radius: 50%;
+            animation: spin 0.8s linear infinite; margin: 0 auto 12px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 600px) {
+            .config-fields { grid-template-columns: 1fr; }
+            .driver-card { flex-wrap: wrap; }
+            .signal-btns { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="toast" id="toast"></div>
+    <div class="container">
+        <div class="header">
+            <h1>🛵 Meu Entregador</h1>
+        </div>
+
+        <div id="loadingState" class="loading">
+            <div class="spinner-lg"></div>
+            <div>Carregando...</div>
+        </div>
+
+        <div id="mainContent" style="display:none;">
+            <!-- Idle Config -->
+            <div class="config-section">
+                <div class="config-title">⚡ Sistema de Entregador Ocioso</div>
+                <div class="setting-row">
+                    <div>
+                        <div class="setting-label">Ativar sistema ocioso</div>
+                        <div class="setting-desc">Permite que seus entregadores aceitem entregas do app quando ociosos</div>
+                    </div>
+                    <div class="toggle" id="idleToggle" onclick="toggleIdle()"></div>
+                </div>
+
+                <div id="idleFields" class="config-fields" style="display:none;">
+                    <div class="form-group">
+                        <label class="form-label">Cooldown (minutos)</label>
+                        <input type="number" class="form-input" id="cooldownMin" value="30" min="5" max="120" placeholder="30">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Tempo ocioso mínimo (min)</label>
+                        <input type="number" class="form-input" id="idleThreshold" value="15" min="5" max="60" placeholder="15">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Máx entregas app / janela</label>
+                        <input type="number" class="form-input" id="maxTrips" value="3" min="1" max="10" placeholder="3">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Janela (minutos)</label>
+                        <input type="number" class="form-input" id="windowMin" value="120" min="30" max="480" placeholder="120">
+                    </div>
+                </div>
+
+                <button class="btn btn-primary btn-block" style="margin-top:20px;" onclick="saveIdleConfig()">Salvar Configuração</button>
+            </div>
+
+            <!-- Drivers List -->
+            <div class="drivers-section">
+                <div class="config-title">👥 Entregadores Atribuídos</div>
+                <div id="driversList">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🛵</div>
+                        <div class="empty-state-title">Nenhum entregador</div>
+                        <div class="empty-state-text">Peça ao administrador para atribuir entregadores à sua loja</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAnIJRcUxN-0swpVnonPbJjTSK87o4CQ_g",
+            authDomain: "pedrad-814d0.firebaseapp.com",
+            projectId: "pedrad-814d0",
+            storageBucket: "pedrad-814d0.appspot.com",
+            messagingSenderId: "293587190550",
+            appId: "1:293587190550:web:80c9399f82847c80e20637"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        let currentStore = null;
+        let storeDrivers = [];
+        let unsubDrivers = null;
+
+        // ==================== AUTH & INIT ====================
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                await loadStore(user);
+            } else {
+                window.location.href = 'index.html';
+            }
+        });
+
+        async function loadStore(user) {
+            try {
+                let snap = await db.collection('stores').where('ownerEmail', '==', user.email).limit(1).get();
+                if (snap.empty) snap = await db.collection('stores').where('ownerId', '==', user.uid).limit(1).get();
+
+                if (!snap.empty) {
+                    currentStore = { id: snap.docs[0].id, ...snap.docs[0].data() };
+                    loadUI();
+                    listenDrivers();
+                } else {
+                    showToast('Loja não encontrada');
+                    setTimeout(() => window.location.href = 'index.html', 1500);
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Erro ao carregar');
+            }
+        }
+
+        // ==================== UI LOAD ====================
+        function loadUI() {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+
+            const idle = currentStore.idleConfig || {};
+            const enabled = idle.enabled === true;
+
+            const toggle = document.getElementById('idleToggle');
+            toggle.classList.toggle('active', enabled);
+            document.getElementById('idleFields').style.display = enabled ? 'grid' : 'none';
+
+            document.getElementById('cooldownMin').value = idle.cooldown_minutes || 30;
+            document.getElementById('idleThreshold').value = idle.idle_threshold_minutes || 15;
+            document.getElementById('maxTrips').value = idle.max_app_trips_per_window || 3;
+            document.getElementById('windowMin').value = idle.window_minutes || 120;
+        }
+
+        // ==================== IDLE CONFIG ====================
+        function toggleIdle() {
+            const toggle = document.getElementById('idleToggle');
+            toggle.classList.toggle('active');
+            const enabled = toggle.classList.contains('active');
+            document.getElementById('idleFields').style.display = enabled ? 'grid' : 'none';
+        }
+
+        async function saveIdleConfig() {
+            if (!currentStore) return;
+            const enabled = document.getElementById('idleToggle').classList.contains('active');
+
+            const idleConfig = {
+                enabled,
+                cooldown_minutes: parseInt(document.getElementById('cooldownMin').value) || 30,
+                idle_threshold_minutes: parseInt(document.getElementById('idleThreshold').value) || 15,
+                max_app_trips_per_window: parseInt(document.getElementById('maxTrips').value) || 3,
+                window_minutes: parseInt(document.getElementById('windowMin').value) || 120,
+                priority_mode: 'FAIR'
+            };
+
+            try {
+                await db.collection('stores').doc(currentStore.id).update({ idleConfig });
+                currentStore.idleConfig = idleConfig;
+                showToast('✓ Configuração salva!');
+            } catch (err) {
+                console.error(err);
+                showToast('✗ Erro ao salvar');
+            }
+        }
+
+        // ==================== REALTIME DRIVERS ====================
+        function listenDrivers() {
+            if (unsubDrivers) unsubDrivers();
+
+            unsubDrivers = db.collection('drivers')
+                .where('storeId', '==', currentStore.id)
+                .where('driverType', '==', 'store')
+                .onSnapshot(snap => {
+                    storeDrivers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                    renderDrivers();
+                }, err => {
+                    console.error('Driver listener error:', err);
+                });
+        }
+
+        function renderDrivers() {
+            const container = document.getElementById('driversList');
+
+            if (storeDrivers.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🛵</div>
+                        <div class="empty-state-title">Nenhum entregador</div>
+                        <div class="empty-state-text">Peça ao administrador para atribuir entregadores à sua loja</div>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = storeDrivers.map(d => {
+                const statusInfo = getDriverStatusInfo(d);
+                const pix = d.pixKey || d.pix || 'Não informado';
+                const photo = d.photoUrl
+                    ? `<img src="${d.photoUrl}" alt="${d.name}" onerror="this.parentElement.innerHTML='🛵'">`
+                    : '🛵';
+
+                const idleEnabled = currentStore.idleConfig?.enabled === true;
+                const eligible = d.appEligible !== false;
+
+                return `
+                <div class="driver-card">
+                    <div class="driver-avatar">${photo}</div>
+                    <div class="driver-info">
+                        <div class="driver-name">${d.name || 'Sem nome'}</div>
+                        <div class="driver-email">📧 ${d.email || 'Sem email'}</div>
+                        <div class="driver-pix">
+                            <span class="pix-label">PIX</span> ${pix}
+                        </div>
+                        ${idleEnabled ? `
+                        <div class="idle-badge ${eligible ? 'eligible' : 'ineligible'}">
+                            ${eligible ? '✓ Elegível p/ app' : '✗ Indisponível'}
+                        </div>
+                        <div class="signal-btns">
+                            <button class="signal-btn out" onclick="signalStoreTrip('${d.id}', 'start')" title="Motorista saiu para entrega da loja">
+                                🚀 Saiu p/ entrega
+                            </button>
+                            <button class="signal-btn back" onclick="signalStoreTrip('${d.id}', 'end')" title="Motorista voltou da entrega da loja">
+                                ✓ Voltou
+                            </button>
+                        </div>
+                        ` : ''}
+                    </div>
+                    <div class="driver-status ${statusInfo.class}">${statusInfo.label}</div>
+                </div>`;
+            }).join('');
+        }
+
+        function getDriverStatusInfo(driver) {
+            const state = driver.idleState || 'OFFLINE';
+            const map = {
+                'OFFLINE':        { label: 'Offline', class: 'offline' },
+                'STORE_IDLE':     { label: 'Ocioso', class: 'online' },
+                'STORE_ACTIVE':   { label: 'Entrega loja', class: 'on-trip' },
+                'APP_ON_TRIP':    { label: 'Entrega app', class: 'on-trip' },
+                'COOLDOWN':       { label: 'Cooldown', class: 'cooldown' }
+            };
+            return map[state] || { label: state, class: 'offline' };
+        }
+
+        // ==================== SIGNAL STORE TRIP ====================
+        async function signalStoreTrip(driverId, action) {
+            try {
+                const driver = storeDrivers.find(d => d.id === driverId);
+                if (!driver) return;
+
+                if (action === 'start') {
+                    // Store trip started → driver leaves for store delivery
+                    const cooldownMin = currentStore.idleConfig?.cooldown_minutes || 30;
+                    const cooldownUntil = new Date(Date.now() + cooldownMin * 60 * 1000);
+
+                    await db.collection('drivers').doc(driverId).update({
+                        idleState: 'STORE_ACTIVE',
+                        appEligible: false,
+                        cooldownUntil: firebase.firestore.Timestamp.fromDate(cooldownUntil)
+                    });
+
+                    // Audit log
+                    await db.collection('idleAuditLog').add({
+                        driverId,
+                        storeId: currentStore.id,
+                        event: 'STORE_TRIP_STARTED',
+                        from: driver.idleState || 'STORE_IDLE',
+                        to: 'STORE_ACTIVE',
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    showToast('🚀 Entregador saiu para entrega da loja');
+
+                } else if (action === 'end') {
+                    // Store trip ended → check cooldown
+                    const cooldownUntil = driver.cooldownUntil?.toDate?.() || null;
+                    const now = new Date();
+                    const inCooldown = cooldownUntil && cooldownUntil > now;
+
+                    await db.collection('drivers').doc(driverId).update({
+                        idleState: inCooldown ? 'COOLDOWN' : 'STORE_IDLE',
+                        appEligible: !inCooldown
+                    });
+
+                    await db.collection('idleAuditLog').add({
+                        driverId,
+                        storeId: currentStore.id,
+                        event: 'STORE_TRIP_ENDED',
+                        from: 'STORE_ACTIVE',
+                        to: inCooldown ? 'COOLDOWN' : 'STORE_IDLE',
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    showToast(inCooldown ? '⏰ Voltou — em cooldown' : '✓ Voltou — disponível para app');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('✗ Erro ao sinalizar');
+            }
+        }
+
+        // ==================== UTILS ====================
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+    </script>
+</body>
+</html>
