@@ -264,7 +264,7 @@
         const db = firebase.firestore();
 
         // Store ID from localStorage (set by store panel login)
-        const storeId = localStorage.getItem('storeId') || new URLSearchParams(location.search).get('storeId');
+        const storeId = localStorage.getItem('currentStoreId') || new URLSearchParams(location.search).get('storeId');
         let storeData = null;
         let selectedMonth = null; // { month: 0-11, year: YYYY }
         const CACHE_KEY = `invoice_cache_${storeId}`;
