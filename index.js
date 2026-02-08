@@ -248,7 +248,7 @@ function showConfirmModal(title, text, onConfirm, confirmText = 'Confirmar', can
         closeModal('confirmModal');
         if (onConfirm) onConfirm();
     };
-    openModal('confirmModal');
+    Modal('confirmModal');
 }
 
 function showAuthPage() {
@@ -265,7 +265,7 @@ function showMainApp() {
 }
 
 function disableProductButtons() {
-    const buttons = document.querySelectorAll('[onclick*="openProductModal"], [onclick*="editProduct"]');
+    const buttons = document.querySelectorAll('[onclick*="ProductModal"], [onclick*="editProduct"]');
     buttons.forEach(btn => {
         btn.disabled = true;
         btn.style.opacity = '0.5';
@@ -274,7 +274,7 @@ function disableProductButtons() {
 }
 
 function enableProductButtons() {
-    const buttons = document.querySelectorAll('[onclick*="openProductModal"], [onclick*="editProduct"]');
+    const buttons = document.querySelectorAll('[onclick*="ProductModal"], [onclick*="editProduct"]');
     buttons.forEach(btn => {
         btn.disabled = false;
         btn.style.opacity = '1';
@@ -314,7 +314,7 @@ function updateStoreUI() {
         ? `<img src="${currentStore.imageUrl}" alt="Logo">`
         : (currentStore.emoji || '🏪');
     
-    const isOpen = currentStore.open !== false;
+    const is = currentStore.open !== false;
     document.getElementById('sidebarStatus').textContent = isOpen ? '🟢 Aberto' : '🔴 Fechado';
     document.getElementById('sidebarStatus').className = 'store-status' + (isOpen ? '' : ' closed');
     document.getElementById('storeToggle').className = 'toggle' + (isOpen ? ' active' : '');
@@ -891,14 +891,37 @@ async function saveStoreInfo() {
 }
 
 async function toggleStoreStatus() {
-    const newStatus = currentStore.open === false;
-    try {
-        await db.collection('stores').doc(currentStore.id).update({ open: newStatus });
-        currentStore.open = newStatus;
-        updateStoreUI();
-        showToast(newStatus ? 'Aberta!' : 'Fechada!');
-    } catch (err) { showToast('Erro'); }
+  const storeRef = db.collection('stores').doc(currentStore.id);
+
+  try {
+    const snap = await storeRef.get();
+    if (!snap.exists) { showToast('Loja não encontrada'); return; }
+
+    const data = snap.data() || {};
+    const isOpen = data.open === true;
+    const wantsToOpen = !isOpen;
+
+    // ✅ BLOQUEIA APENAS A ABERTURA se estiver suspensa
+    if (wantsToOpen && data.suspended) {
+      if (typeof checkStoreSuspension === 'function') checkStoreSuspension(data);
+      showToast('Loja suspensa — não é possível abrir');
+      return;
+    }
+
+    await storeRef.update({ open: wantsToOpen });
+
+    // Atualiza cache local/UI
+    currentStore.open = wantsToOpen;
+    currentStore.suspended = !!data.suspended;
+
+    updateStoreUI();
+    showToast(wantsToOpen ? 'Aberta!' : 'Fechada!');
+  } catch (err) {
+    console.error(err);
+    showToast('Erro');
+  }
 }
+
 
 // ==================== SETTINGS ====================
 
