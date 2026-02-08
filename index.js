@@ -983,3 +983,43 @@ function closeProductsModal() {
 }
 
 
+function checkStoreSuspension(storeDoc) {
+    // storeDoc = dados da loja do Firestore
+    if (!storeDoc || !storeDoc.suspended) {
+        // Remove popup se existir
+        const existing = document.getElementById('suspendPopupOverlay');
+        if (existing) existing.remove();
+        return;
+    }
+
+    // Já existe?
+    if (document.getElementById('suspendPopupOverlay')) return;
+
+    const reason = storeDoc.suspendReason || 'Pendência administrativa';
+
+    const overlay = document.createElement('div');
+    overlay.id = 'suspendPopupOverlay';
+    overlay.className = 'suspend-popup-overlay';
+    overlay.innerHTML = `
+        <div class="suspend-popup">
+            <div class="suspend-popup-icon">⚠️</div>
+            <div class="suspend-popup-title">Loja Temporariamente Suspensa</div>
+            <div class="suspend-popup-text">
+                Sua loja está suspensa e não pode abrir para receber novos pedidos no momento.
+            </div>
+            <div class="suspend-popup-reason">
+                <strong>Motivo:</strong> ${reason}
+            </div>
+            <div class="suspend-popup-note">
+                ✅ Você ainda pode editar produtos, configurações e visualizar histórico.<br>
+                ❌ Não é possível abrir a loja ou receber novos pedidos.<br><br>
+                Para regularizar, entre em contato com a administração do Pedrad.
+            </div>
+            <button class="suspend-popup-btn" onclick="this.closest('.suspend-popup-overlay').remove()">
+                Entendi
+            </button>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+}
