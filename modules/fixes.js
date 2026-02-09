@@ -128,15 +128,14 @@
         const orderId = order.id.slice(-6).toUpperCase();
 
         // Se pedido aceito, agenda busca do telefone após render
-        if (isAccepted && !customerPhone && order.userId) {
-            // Usa cache se disponível
-            if (phoneCache[order.userId]) {
-                customerPhone = phoneCache[order.userId];
-            } else {
-                // Agenda busca para após o DOM ser atualizado
-                setTimeout(() => loadPhoneForOrder(order), 100);
-            }
-        }
+if (isAccepted && !customerPhone && order.userId) {
+    if (phoneCache[order.userId]) {
+        customerPhone = phoneCache[order.userId];
+    } else if (!phoneCache['_loading_' + order.userId]) {
+        phoneCache['_loading_' + order.userId] = true;
+        setTimeout(() => loadPhoneForOrder(order), 100);
+    }
+}
         
         const addr = order.address || {};
         const fullAddress = [
