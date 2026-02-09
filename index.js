@@ -314,10 +314,12 @@ function updateStoreUI() {
         ? `<img src="${currentStore.imageUrl}" alt="Logo">`
         : (currentStore.emoji || '🏪');
     
-    const is = currentStore.open !== false;
-    document.getElementById('sidebarStatus').textContent = isOpen ? '🟢 Aberto' : '🔴 Fechado';
-    document.getElementById('sidebarStatus').className = 'store-status' + (isOpen ? '' : ' closed');
-    document.getElementById('storeToggle').className = 'toggle' + (isOpen ? ' active' : '');
+const isOpen = currentStore.open !== false;
+
+document.getElementById('sidebarStatus').textContent = isOpen ? '🟢 Aberto' : '🔴 Fechado';
+document.getElementById('sidebarStatus').className = 'store-status' + (isOpen ? '' : ' closed');
+document.getElementById('storeToggle').className = 'toggle' + (isOpen ? ' active' : '');
+
     
     document.getElementById('storeName').value = currentStore.name || '';
     document.getElementById('storeCategory').value = currentStore.category || 'Hambúrgueres';
