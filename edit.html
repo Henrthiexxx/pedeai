@@ -43,9 +43,8 @@
     .opt-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
     .opt-title{font-weight:700;font-size:.95rem}
     .opt-sub{color:var(--muted);font-size:.78rem;margin-top:4px}
-.opt-item{display:grid;grid-template-columns:24px minmax(0,1fr) 110px 40px;gap:10px;align-items:center}
-.opt-name,.opt-price{min-width:0}
-
+    .opt-item{display:grid;grid-template-columns:24px minmax(0,1fr) 110px 40px;gap:10px;align-items:center}
+    .opt-name,.opt-price{min-width:0}
     .opt-add-row{display:grid;grid-template-columns:1fr 120px 60px;gap:10px;margin-top:10px}
     .empty{color:var(--muted);font-size:.9rem;text-align:center;padding:14px;border:1px dashed var(--border);border-radius:10px;background:var(--input)}
     .img-preview{width:100%;height:220px;border:1px solid var(--border);border-radius:12px;background:var(--input);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
@@ -63,8 +62,7 @@
     .img-remove{position:absolute;top:8px;right:8px;background:var(--danger);border:none;color:#fff;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center}
     @media(max-width:700px){
       .grid-2{grid-template-columns:1fr}
-     .opt-item{grid-template-columns:20px minmax(0,1fr) 86px 36px}
-
+      .opt-item{grid-template-columns:20px minmax(0,1fr) 86px 36px}
       .opt-add-row{grid-template-columns:1fr 90px 56px}
       .img-preview{height:180px}
     }
@@ -87,8 +85,8 @@
         <div class="form-group">
           <label class="form-label">Imagem do Produto</label>
           <div class="img-tabs">
-            <div class="img-tab active" id="tabUrl" onclick="switchTab('url')">🔗 Por URL</div>
-            <div class="img-tab" id="tabUpload" onclick="switchTab('upload')">📤 Upload</div>
+            <div class="img-tab active" id="tabUrl" onclick="switchTab('url')">Por URL</div>
+            <div class="img-tab" id="tabUpload" onclick="switchTab('upload')">Upload</div>
           </div>
           
           <div id="urlInput">
@@ -140,7 +138,7 @@
       </div>
 
       <div class="card">
-        <div class="opt-header"><div><div class="opt-title">🍕 Sabores (opcional)</div><div class="opt-sub">Cada sabor pode ter preço adicional</div></div></div>
+        <div class="opt-header"><div><div class="opt-title">Sabores (opcional)</div><div class="opt-sub">Cada sabor pode ter preço adicional</div></div></div>
         <div id="flavorsList"></div>
         <div class="opt-add-row">
           <input type="text" class="form-input" id="newFlavorName" placeholder="Nome do sabor">
@@ -150,7 +148,7 @@
       </div>
 
       <div class="card">
-        <div class="opt-header"><div><div class="opt-title">📏 Tamanhos (opcional)</div><div class="opt-sub">Ex: Pequena, Média, Grande</div></div></div>
+        <div class="opt-header"><div><div class="opt-title">Tamanhos (opcional)</div><div class="opt-sub">Ex: Pequena, Média, Grande</div></div></div>
         <div id="sizesList"></div>
         <div class="opt-add-row">
           <input type="text" class="form-input" id="newSizeName" placeholder="Nome do tamanho">
@@ -160,7 +158,7 @@
       </div>
 
       <div class="card">
-        <div class="opt-header"><div><div class="opt-title">➕ Extras (opcional)</div><div class="opt-sub">O cliente escolhe e soma no valor</div></div></div>
+        <div class="opt-header"><div><div class="opt-title">Extras (opcional)</div><div class="opt-sub">O cliente escolhe e soma no valor</div></div></div>
         <div id="extrasList"></div>
         <div class="opt-add-row">
           <input type="text" class="form-input" id="newExtraName" placeholder="Nome do extra">
@@ -192,11 +190,10 @@
     const db = firebase.firestore();
     const auth = firebase.auth();
 
-    const MAX_FILE_SIZE = 3 * 1024 * 1024; // 3MB
+    const MAX_FILE_SIZE = 3 * 1024 * 1024;
     const RESIZE_DIM = 600;
     let currentTab = 'url';
 
-    // ===== IDS =====
     function getIds() {
       const url = new URL(window.location.href);
       let storeId = url.searchParams.get('storeId');
@@ -213,7 +210,6 @@
     let categories = [], flavors = [], sizes = [], extras = [];
     let dragged = { type: null, idx: null };
 
-    // ===== IMAGE TAB SWITCH =====
     function switchTab(tab) {
       currentTab = tab;
       document.getElementById('tabUrl').classList.toggle('active', tab === 'url');
@@ -222,7 +218,6 @@
       document.getElementById('uploadInput').style.display = tab === 'upload' ? 'block' : 'none';
     }
 
-    // ===== IMAGE RESIZE =====
     function resizeImage(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -233,12 +228,9 @@
             canvas.width = RESIZE_DIM;
             canvas.height = RESIZE_DIM;
             const ctx = canvas.getContext('2d');
-            
-            // Calculate crop to center
             const size = Math.min(img.width, img.height);
             const x = (img.width - size) / 2;
             const y = (img.height - size) / 2;
-            
             ctx.drawImage(img, x, y, size, size, 0, 0, RESIZE_DIM, RESIZE_DIM);
             resolve(canvas.toDataURL('image/jpeg', 0.85));
           };
@@ -250,7 +242,6 @@
       });
     }
 
-    // ===== FILE HANDLING =====
     async function handleFileSelect(file) {
       if (!file) return;
       if (!file.type.startsWith('image/')) return showToast('Selecione uma imagem');
@@ -271,10 +262,7 @@
 
     function showImagePreview(src) {
       const box = document.getElementById('imgPreview');
-      box.innerHTML = `
-        <img src="${src}" alt="Produto">
-        <button class="img-remove" onclick="removeImage()" title="Remover">×</button>
-      `;
+      box.innerHTML = `<img src="${src}" alt="Produto"><button class="img-remove" onclick="removeImage()" title="Remover">×</button>`;
     }
 
     function removeImage() {
@@ -283,7 +271,6 @@
       document.getElementById('imgPreview').innerHTML = `<div style="color:var(--muted);">Prévia da imagem</div>`;
     }
 
-    // ===== DRAG & DROP =====
     const uploadArea = document.getElementById('uploadArea');
     if (uploadArea) {
       uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); });
@@ -296,25 +283,13 @@
       });
     }
 
-    // ===== CLOSE EDITOR =====
-function closeEditor() {
-  try { if (window.parent !== window) window.parent.postMessage({ type: 'closePopup' }, '*'); } catch(e){}
-  try { if (window.opener && !window.opener.closed) window.opener.postMessage({ type: 'closePopup' }, '*'); } catch(e){}
-  try { window.open('', '_self'); window.close(); } catch(e){}
-  try { window.close(); } catch(e){}
-  history.back();
-}
+    function closeEditor() {
+      window.location.href = `feed.html?storeId=${encodeURIComponent(storeId)}`;
+    }
 
-
-    // ===== INIT =====
     async function init() {
       if (!storeId) {
-        document.getElementById('loadingState').innerHTML = `
-          <div style="text-align:center;padding:40px;">
-            <div style="font-size:3rem;margin-bottom:16px;">⚠️</div>
-            <div style="font-size:1.15rem;margin-bottom:10px;">Erro: Loja não identificada</div>
-            <button class="btn" onclick="closeEditor()">Voltar</button>
-          </div>`;
+        document.getElementById('loadingState').innerHTML = `<div style="text-align:center;padding:40px;"><div style="font-size:3rem;margin-bottom:16px;">⚠️</div><div style="font-size:1.15rem;margin-bottom:10px;">Erro: Loja não identificada</div><button class="btn" onclick="closeEditor()">Voltar</button></div>`;
         return;
       }
       document.getElementById('storeId').value = storeId;
@@ -336,7 +311,6 @@ function closeEditor() {
       }
     }
 
-    // ===== CATEGORIES =====
     function normalizeCat(x) {
       if (!x) return '';
       if (typeof x === 'string') return x.trim();
@@ -352,24 +326,20 @@ function closeEditor() {
           db.collection('products').where('storeId', '==', storeId).get()
         ]);
         const storeData = storeDoc.exists ? storeDoc.data() : {};
-        const rawCats = Array.isArray(storeData.categories) ? storeData.categories : 
-                       Array.isArray(storeData.categorias) ? storeData.categorias : [];
+        const rawCats = Array.isArray(storeData.categories) ? storeData.categories : Array.isArray(storeData.categorias) ? storeData.categorias : [];
         const set = new Set(rawCats.map(normalizeCat).filter(Boolean));
         snapshot.docs.forEach(doc => {
           const c = normalizeCat(doc.data()?.category);
           if (c) set.add(c);
         });
         categories = [...set].sort((a,b) => a.localeCompare(b,'pt-BR'));
-        select.innerHTML = categories.length
-          ? `<option value="">Selecione...</option>` + categories.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('')
-          : `<option value="">Sem categorias</option>`;
+        select.innerHTML = categories.length ? `<option value="">Selecione...</option>` + categories.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('') : `<option value="">Sem categorias</option>`;
       } catch (e) {
         console.error('loadCategories error:', e);
         select.innerHTML = `<option value="">Erro</option>`;
       }
     }
 
-    // ===== LOAD PRODUCT =====
     async function loadProduct() {
       try {
         const doc = await db.collection('products').doc(productId).get();
@@ -391,7 +361,6 @@ function closeEditor() {
         
         if (p.active === false) document.getElementById('activeToggle').classList.remove('active');
         
-        // Handle both URL and base64
         const imgUrl = (p.imageUrl || '').trim();
         const imgData = (p.imageData || '').trim();
         
@@ -414,12 +383,9 @@ function closeEditor() {
       }
     }
 
-    // ===== HELPERS =====
     function sanitizeOpts(arr) {
       if (!Array.isArray(arr)) return [];
-      return arr.filter(x => x && typeof x === 'object')
-        .map((x, i) => ({ name: String(x.name || '').trim(), price: Number(x.price) || 0, order: x.order ?? i }))
-        .filter(x => x.name).sort((a,b) => a.order - b.order);
+      return arr.filter(x => x && typeof x === 'object').map((x, i) => ({ name: String(x.name || '').trim(), price: Number(x.price) || 0, order: x.order ?? i })).filter(x => x.name).sort((a,b) => a.order - b.order);
     }
 
     function esc(str) {
@@ -439,15 +405,11 @@ function closeEditor() {
       const u = String(url || '').trim();
       if (!u) { box.innerHTML = `<div style="color:var(--muted);">Prévia da imagem</div>`; return; }
       if (!isValidUrl(u)) { box.innerHTML = `<div style="color:var(--danger);padding:14px;text-align:center;">URL inválida</div>`; return; }
-      box.innerHTML = `
-        <img src="${esc(u)}" alt="Produto" onerror="this.parentElement.innerHTML='<div style=color:var(--danger)>Erro ao carregar</div>';">
-        <button class="img-remove" onclick="removeImage()" title="Remover">×</button>
-      `;
+      box.innerHTML = `<img src="${esc(u)}" alt="Produto" onerror="this.parentElement.innerHTML='<div style=color:var(--danger)>Erro ao carregar</div>';"><button class="img-remove" onclick="removeImage()" title="Remover">×</button>`;
     }
 
     function toggleActive() { document.getElementById('activeToggle').classList.toggle('active'); }
 
-    // ===== OPTIONS =====
     function getArr(type) { return type === 'flavors' ? flavors : type === 'sizes' ? sizes : extras; }
     function getList(type) { return document.getElementById(type === 'flavors' ? 'flavorsList' : type === 'sizes' ? 'sizesList' : 'extrasList'); }
 
@@ -492,18 +454,11 @@ function closeEditor() {
       const arr = getArr(type);
       const el = getList(type);
       if (!arr.length) { el.innerHTML = `<div class="empty">Nenhum item</div>`; return; }
-      el.innerHTML = arr.map((it, idx) => `
-        <div class="opt-item" draggable="true" ondragstart="dragStart('${type}',${idx})" ondragover="event.preventDefault()" ondrop="dropOn('${type}',${idx})">
-          <div class="drag">⋮⋮</div>
-          <input class="opt-name" type="text" value="${esc(it.name)}" onchange="updateOption('${type}',${idx},'name',this.value)">
-          <input class="opt-price" type="number" step="0.50" min="0" value="${it.price}" onchange="updateOption('${type}',${idx},'price',this.value)">
-          <button class="btn btn-danger btn-sm" onclick="removeOption('${type}',${idx})">×</button>
-        </div>`).join('');
+      el.innerHTML = arr.map((it, idx) => `<div class="opt-item" draggable="true" ondragstart="dragStart('${type}',${idx})" ondragover="event.preventDefault()" ondrop="dropOn('${type}',${idx})"><div class="drag">⋮⋮</div><input class="opt-name" type="text" value="${esc(it.name)}" onchange="updateOption('${type}',${idx},'name',this.value)"><input class="opt-price" type="number" step="0.50" min="0" value="${it.price}" onchange="updateOption('${type}',${idx},'price',this.value)"><button class="btn btn-danger btn-sm" onclick="removeOption('${type}',${idx})">×</button></div>`).join('');
     }
 
     function renderAll() { renderOptions('flavors'); renderOptions('sizes'); renderOptions('extras'); }
 
-    // ===== SAVE =====
     async function saveProduct() {
       const name = (document.getElementById('productName').value || '').trim();
       const price = parseFloat(document.getElementById('productPrice').value);
@@ -540,10 +495,7 @@ function closeEditor() {
           await db.collection('products').add(data);
           showToast('Produto criado!');
         }
-        if (window.opener) window.opener.postMessage({ type: 'productSaved' }, '*');
-        if (window.parent !== window) window.parent.postMessage({ type: 'productSaved' }, '*');
         setTimeout(closeEditor, 250);
-
       } catch (e) {
         console.error('saveProduct error:', e);
         showToast('Erro ao salvar');
@@ -556,7 +508,6 @@ function closeEditor() {
       setTimeout(() => t.classList.remove('show'), 2500);
     }
 
-    // ===== AUTH GATE =====
     async function waitAuth() {
       return new Promise(resolve => {
         const unsub = auth.onAuthStateChanged(u => { unsub(); resolve(u); });
