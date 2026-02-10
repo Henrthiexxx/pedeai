@@ -40,6 +40,13 @@
       border-radius:10px;color:var(--text);font-size:.95rem
     }
     .input:focus{outline:none;border-color:var(--primary)}
+    .filters{display:flex;gap:8px;flex-wrap:wrap}
+    .filter-btn{
+      padding:8px 14px;border-radius:8px;border:1px solid var(--border);
+      background:var(--input);color:var(--muted);cursor:pointer;font-size:.85rem;transition:.2s
+    }
+    .filter-btn:hover{border-color:var(--primary)}
+    .filter-btn.active{background:var(--primary);color:#000;border-color:var(--primary)}
     .grid{
       display:grid;grid-template-columns:repeat(3, 1fr);gap:14px
     }
@@ -86,6 +93,8 @@
       .grid{grid-template-columns:1fr}
       .toolbar{flex-direction:column;align-items:stretch}
       .search{flex-direction:column;align-items:stretch}
+      .filters{justify-content:stretch}
+      .filter-btn{flex:1;text-align:center}
     }
   </style>
 </head>
@@ -96,12 +105,11 @@
   <div class="container">
     <div class="header">
       <div>
-        <h1>📦 Feed de Produtos</h1>
+        <h1>Feed de Produtos</h1>
         <div class="sub" id="subInfo">Carregando loja...</div>
       </div>
       <div style="display:flex;gap:10px;align-items:center;">
         <button class="btn btn-primary" onclick="openCreate()">+ Novo Produto</button>
-       
       </div>
     </div>
 
@@ -112,6 +120,12 @@
       <div style="display:flex;gap:10px;align-items:center;">
         <button class="btn btn-ghost" onclick="refreshNow()">⟳ Atualizar</button>
       </div>
+    </div>
+
+    <div class="filters">
+      <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">Todos</button>
+      <button class="filter-btn" data-filter="active" onclick="setFilter('active')">Ativos</button>
+      <button class="filter-btn" data-filter="inactive" onclick="setFilter('inactive')">Inativos</button>
     </div>
 
     <div id="loadingState" class="loading">Carregando...</div>
@@ -127,7 +141,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
   <script>
-    // Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyAnIJRcUxN-0swpVnonPbJjTSK87o4CQ_g",
       authDomain: "pedrad-814d0.firebaseapp.com",
@@ -141,43 +154,26 @@
     const db = firebase.firestore();
     const auth = firebase.auth();
 
-    // ===================== IDS UNIVERSAIS =====================
     function getUniversalStoreId() {
       const url = new URL(window.location.href);
       const qs = url.searchParams;
-
       let storeId = qs.get('storeId');
-
       if (!storeId && window.location.hash) {
         const hash = window.location.hash.replace('#', '');
         const hs = new URLSearchParams(hash);
         storeId = hs.get('storeId');
       }
-
-      storeId =
-        storeId ||
-        localStorage.getItem('currentStoreId') ||
-        localStorage.getItem('CURRENT_STORE_ID') ||
-        localStorage.getItem('storeId') ||
-        null;
-
+      storeId = storeId || localStorage.getItem('currentStoreId') || localStorage.getItem('CURRENT_STORE_ID') || localStorage.getItem('storeId') || null;
       return storeId;
     }
 
     const storeId = getUniversalStoreId();
-
-    // ===================== STATE =====================
     let allProducts = [];
     let unsub = null;
+    let currentFilter = 'all';
 
-    // ===================== HELPERS =====================
     function escapeHtml(str) {
-      return String(str ?? '')
-        .replaceAll('&','&amp;')
-        .replaceAll('<','&lt;')
-        .replaceAll('>','&gt;')
-        .replaceAll('"','&quot;')
-        .replaceAll("'",'&#039;');
+      return String(str ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
     }
 
     function moneyBR(v) {
@@ -196,44 +192,25 @@
       return String(x || '').trim();
     }
 
-      function openEditorModal(url) {
-    const modal = document.getElementById('modalEditor');
-    const frame = document.getElementById('editorFrame');
-    frame.src = url;
-    modal.style.display = 'block';
-  }
+    function setFilter(filter) {
+      currentFilter = filter;
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.filter === filter);
+      });
+      renderProducts();
+    }
 
- function closeEditorModal() {
-  const modal = document.getElementById('modalEditor');
-  const frame = document.getElementById('editorFrame');
-  if (!modal || !frame) return;
+    function openEdit(productId) {
+      window.location.href = `productPage.html?storeId=${encodeURIComponent(storeId)}&productId=${encodeURIComponent(productId)}`;
+    }
 
-  try { document.activeElement?.blur?.(); } catch(e){}
+    function openCreate() {
+      window.location.href = `productPage.html?storeId=${encodeURIComponent(storeId)}`;
+    }
 
-  frame.src = 'about:blank';
-  modal.style.display = 'none';
-  modal.style.pointerEvents = 'none';
-
-  setTimeout(() => {
-    modal.style.pointerEvents = 'auto';
-  }, 50);
-}
-
-
-    // ===================== UI ACTIONS =====================
-  function openEdit(productId) {
-    const url = `edit.html?storeId=${encodeURIComponent(storeId)}&productId=${encodeURIComponent(productId)}`;
-    openEditorModal(url);
-  }
-
-  function openCreate() {
-    const url = `edit.html?storeId=${encodeURIComponent(storeId)}`;
-    openEditorModal(url);
-  }
     async function deleteProduct(productId, name) {
       const ok = confirm(`Excluir "${name}"?`);
       if (!ok) return;
-
       try {
         await db.collection('products').doc(productId).delete();
         showToast('Produto excluído!');
@@ -243,22 +220,14 @@
       }
     }
 
-      window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeEditorModal();
-  });
-
     async function copyProduct(p) {
       try {
         const clone = JSON.parse(JSON.stringify(p || {}));
         delete clone.id;
-
         clone.name = (safeText(clone.name) || 'Produto') + ' (cópia)';
         clone.createdAt = firebase.firestore.FieldValue.serverTimestamp();
         clone.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
-
-        // garante storeId
         clone.storeId = storeId;
-
         await db.collection('products').add(clone);
         showToast('Produto copiado!');
       } catch (e) {
@@ -274,9 +243,14 @@
 
       let list = [...allProducts];
 
-      // ordena no front (evita index no Firestore)
-      list.sort((a,b) => safeText(a.name).localeCompare(safeText(b.name), 'pt-BR'));
+      // Filtro de status
+      if (currentFilter === 'active') {
+        list = list.filter(p => p.active !== false);
+      } else if (currentFilter === 'inactive') {
+        list = list.filter(p => p.active === false);
+      }
 
+      // Busca
       if (q) {
         list = list.filter(p => {
           const name = safeText(p.name).toLowerCase();
@@ -284,6 +258,14 @@
           return name.includes(q) || cat.includes(q);
         });
       }
+
+      // Ordenação: ativos primeiro, depois alfabético
+      list.sort((a,b) => {
+        const aActive = a.active !== false;
+        const bActive = b.active !== false;
+        if (aActive !== bActive) return bActive ? 1 : -1;
+        return safeText(a.name).localeCompare(safeText(b.name), 'pt-BR');
+      });
 
       if (!list.length) {
         grid.innerHTML = '';
@@ -295,8 +277,8 @@
 
       grid.innerHTML = list.map(p => {
         const imgData = safeText(p.imageData);
-const imgUrl = safeText(p.imageUrl);
-const img = (imgData && (imgData.startsWith('data:image/') || /^https?:\/\//.test(imgData))) ? imgData : imgUrl;
+        const imgUrl = safeText(p.imageUrl);
+        const img = (imgData && (imgData.startsWith('data:image/') || /^https?:\/\//.test(imgData))) ? imgData : imgUrl;
         const isActive = p.active !== false;
         const desc = safeText(p.description);
         const cat = safeText(p.category) || 'Sem categoria';
@@ -304,11 +286,7 @@ const img = (imgData && (imgData.startsWith('data:image/') || /^https?:\/\//.tes
         return `
           <div class="card">
             <div class="img">
-              ${
-                img
-                  ? `<img src="${escapeHtml(img)}" alt="Produto" onerror="this.remove(); this.parentElement.innerHTML='<div class=ph>Sem imagem</div>';">`
-                  : `<div class="ph">Sem imagem</div>`
-              }
+              ${img ? `<img src="${escapeHtml(img)}" alt="Produto" onerror="this.remove(); this.parentElement.innerHTML='<div class=ph>Sem imagem</div>';">` : `<div class="ph">Sem imagem</div>`}
             </div>
 
             <div class="content">
@@ -322,13 +300,13 @@ const img = (imgData && (imgData.startsWith('data:image/') || /^https?:\/\//.tes
 
               <div class="badges">
                 <span class="badge ${isActive ? 'on' : 'off'}">${isActive ? 'Ativo' : 'Inativo'}</span>
-                ${desc ? `<span class="badge">📝 ${escapeHtml(desc.length > 28 ? desc.slice(0, 28) + '…' : desc)}</span>` : ''}
+                ${desc ? `<span class="badge">${escapeHtml(desc.length > 28 ? desc.slice(0, 28) + '…' : desc)}</span>` : ''}
               </div>
 
               <div class="actions">
-                <button class="btn btn-primary btn-sm" onclick="openEdit('${escapeHtml(p.id)}')">✏️ Editar</button>
-                <button class="btn btn-sm" onclick='copyProduct(${JSON.stringify(p).replaceAll("'", "\\'")})'>📄 Copiar</button>
-                <button class="btn btn-danger btn-sm" onclick="deleteProduct('${escapeHtml(p.id)}','${escapeHtml(safeText(p.name) || 'Produto')}')">🗑️ Excluir</button>
+                <button class="btn btn-primary btn-sm" onclick="openEdit('${escapeHtml(p.id)}')">Editar</button>
+                <button class="btn btn-sm" onclick='copyProduct(${JSON.stringify(p).replaceAll("'", "\\'")})'>Copiar</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteProduct('${escapeHtml(p.id)}','${escapeHtml(safeText(p.name) || 'Produto')}')">Excluir</button>
               </div>
             </div>
           </div>
@@ -336,16 +314,12 @@ const img = (imgData && (imgData.startsWith('data:image/') || /^https?:\/\//.tes
       }).join('');
     }
 
-    // ===================== DATA =====================
     async function loadStoreInfo() {
       try {
         const doc = await db.collection('stores').doc(storeId).get();
         const data = doc.exists ? (doc.data() || {}) : {};
         const storeName = safeText(data.name || data.nome || '');
-document.getElementById('subInfo').textContent = storeName
-  ? `Loja: ${storeName}`
-  : `Loja carregada`;
-
+        document.getElementById('subInfo').textContent = storeName ? `Loja: ${storeName}` : `Loja carregada`;
       } catch (e) {
         document.getElementById('subInfo').textContent = `StoreId: ${storeId}`;
       }
@@ -353,22 +327,19 @@ document.getElementById('subInfo').textContent = storeName
 
     function listenProducts() {
       if (unsub) unsub();
-
-      unsub = db.collection('products')
-        .where('storeId', '==', storeId)
-        .onSnapshot((snap) => {
-          allProducts = snap.docs.map(d => ({ id: d.id, ...(d.data() || {}) }));
-          document.getElementById('loadingState').style.display = 'none';
-          document.getElementById('listState').style.display = 'block';
-          renderProducts();
-        }, (err) => {
-          console.error('listenProducts error:', err);
-          document.getElementById('loadingState').style.display = 'none';
-          document.getElementById('listState').style.display = 'block';
-          showToast('Erro ao carregar produtos: ' + (err.code || err.message));
-          allProducts = [];
-          renderProducts();
-        });
+      unsub = db.collection('products').where('storeId', '==', storeId).onSnapshot((snap) => {
+        allProducts = snap.docs.map(d => ({ id: d.id, ...(d.data() || {}) }));
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('listState').style.display = 'block';
+        renderProducts();
+      }, (err) => {
+        console.error('listenProducts error:', err);
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('listState').style.display = 'block';
+        showToast('Erro ao carregar produtos: ' + (err.code || err.message));
+        allProducts = [];
+        renderProducts();
+      });
     }
 
     function refreshNow() {
@@ -376,7 +347,6 @@ document.getElementById('subInfo').textContent = storeName
       listenProducts();
     }
 
-    // ===================== AUTH GATE =====================
     async function waitAuth() {
       return new Promise((resolve) => {
         const unsubAuth = auth.onAuthStateChanged((u) => {
@@ -388,59 +358,19 @@ document.getElementById('subInfo').textContent = storeName
 
     (async () => {
       if (!storeId) {
-        document.getElementById('loadingState').innerHTML = `
-          <div style="text-align:center;padding:40px;color:var(--muted)">
-            ⚠️ StoreId não informado.
-          </div>
-        `;
+        document.getElementById('loadingState').innerHTML = `<div style="text-align:center;padding:40px;color:var(--muted)">⚠️ StoreId não informado.</div>`;
         return;
       }
 
       const user = auth.currentUser || await waitAuth();
       if (!user) {
-        document.getElementById('loadingState').innerHTML = `
-          <div style="text-align:center;padding:40px;color:var(--muted)">
-            ⚠️ Faça login no painel antes de abrir o feed.
-          </div>
-        `;
+        document.getElementById('loadingState').innerHTML = `<div style="text-align:center;padding:40px;color:var(--muted)">⚠️ Faça login no painel antes de abrir o feed.</div>`;
         return;
       }
 
       await loadStoreInfo();
       listenProducts();
-
-      // Atualiza automaticamente quando voltar do edit.html
-      window.addEventListener('message', (event) => {
-        if (event?.data?.type === 'productSaved') {
-          showToast('Atualizando feed...');
-          listenProducts();
-        }
-      });
     })();
   </script>
-  <!-- POPUP (MODAL) EDITOR -->
-<div id="modalEditor" style="display:none; position:fixed; inset:0; z-index:99999;">
-  <div onclick="closeEditorModal()"
-       style="position:absolute; inset:0; background:rgba(0,0,0,.65)"></div>
-
-  <div style="
-    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
-    width:min(980px, 96vw); height:min(820px, 92vh);
-    background:#0a0a0a; border:1px solid #262626; border-radius:14px;
-    overflow:hidden; box-shadow:0 25px 80px rgba(0,0,0,.6);
-    display:flex; flex-direction:column;
-  ">
-    <div style="
-      height:52px; display:flex; align-items:center; justify-content:space-between;
-      padding:0 14px; border-bottom:1px solid #262626; background:#000;
-    ">
-      <div style="font-weight:800">✏️ Editor de Produto</div>
-      
-    </div>
-
-    <iframe id="editorFrame" src="about:blank"
-      style="flex:1; width:100%; border:0; background:#000;"></iframe>
-  </div>
-</div>
 </body>
 </html>
