@@ -43,9 +43,9 @@
     .opt-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
     .opt-title{font-weight:700;font-size:.95rem}
     .opt-sub{color:var(--muted);font-size:.78rem;margin-top:4px}
-    .opt-item{display:grid;grid-template-columns:30px 1fr 120px 40px;gap:10px;align-items:center;padding:10px;background:var(--input);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;cursor:move}
-    .drag{color:var(--muted);text-align:center}
-    .opt-name,.opt-price{padding:9px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.9rem}
+.opt-item{display:grid;grid-template-columns:24px minmax(0,1fr) 110px 40px;gap:10px;align-items:center}
+.opt-name,.opt-price{min-width:0}
+
     .opt-add-row{display:grid;grid-template-columns:1fr 120px 60px;gap:10px;margin-top:10px}
     .empty{color:var(--muted);font-size:.9rem;text-align:center;padding:14px;border:1px dashed var(--border);border-radius:10px;background:var(--input)}
     .img-preview{width:100%;height:220px;border:1px solid var(--border);border-radius:12px;background:var(--input);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
@@ -63,7 +63,8 @@
     .img-remove{position:absolute;top:8px;right:8px;background:var(--danger);border:none;color:#fff;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center}
     @media(max-width:700px){
       .grid-2{grid-template-columns:1fr}
-      .opt-item{grid-template-columns:22px 1fr 90px 36px}
+     .opt-item{grid-template-columns:20px minmax(0,1fr) 86px 36px}
+
       .opt-add-row{grid-template-columns:1fr 90px 56px}
       .img-preview{height:180px}
     }
@@ -296,11 +297,14 @@
     }
 
     // ===== CLOSE EDITOR =====
-    function closeEditor() {
-      if (window.opener && !window.opener.closed) window.close();
-      else if (window.parent !== window) window.parent.postMessage({ type: 'closePopup' }, '*');
-      else history.back();
-    }
+function closeEditor() {
+  try { if (window.parent !== window) window.parent.postMessage({ type: 'closePopup' }, '*'); } catch(e){}
+  try { if (window.opener && !window.opener.closed) window.opener.postMessage({ type: 'closePopup' }, '*'); } catch(e){}
+  try { window.open('', '_self'); window.close(); } catch(e){}
+  try { window.close(); } catch(e){}
+  history.back();
+}
+
 
     // ===== INIT =====
     async function init() {
@@ -538,7 +542,8 @@
         }
         if (window.opener) window.opener.postMessage({ type: 'productSaved' }, '*');
         if (window.parent !== window) window.parent.postMessage({ type: 'productSaved' }, '*');
-        setTimeout(closeEditor, 900);
+        setTimeout(closeEditor, 250);
+
       } catch (e) {
         console.error('saveProduct error:', e);
         showToast('Erro ao salvar');
