@@ -992,12 +992,10 @@ function openProductsPage() {
   const sid = getUniversalStoreId();
   if (!sid) return showToast("StoreId não encontrado");
 
-  const modal = document.getElementById('modalProducts');
-  const frame = document.getElementById('productsFrame');
-
-  frame.src = `feed.html?storeId=${encodeURIComponent(sid)}`;
-  modal.style.display = 'block';
+  const url = `feed.html?storeId=${encodeURIComponent(sid)}`;
+  window.location.href = url; // navega pra página
 }
+
 
 
 function closeProductsModal() {
