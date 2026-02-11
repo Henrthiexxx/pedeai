@@ -134,7 +134,7 @@
 
       await loadServiceInfo(itemId);
       document.getElementById('slotsInfo').textContent = `${slots.length} selecionado(s)`;
-      await Products();
+      await LoadStoreProducts();
     }
 
     async function loadServiceInfo(itemId) {
@@ -147,15 +147,7 @@
       }
     }
 
-    async function loadServiceInfo(itemId) {
-      try {
-        const doc = await db.collection('ads_shop_items').doc(itemId).get();
-        const item = doc.data();
-        document.getElementById('serviceInfo').textContent = item.nome;
-      } catch (e) {
-        console.error(e);
-      }
-    }
+
 
 async function loadStoreProducts() {
   try {
