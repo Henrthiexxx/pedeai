@@ -91,7 +91,7 @@
     </div>
 
     <div style="display:flex;gap:12px;margin-top:20px">
-      <button class="btn" onclick="window.location.href='Step1.html'">← Voltar</button>
+      <button class="btn" onclick="window.location.href='createCampaignStep1Modified.html'">← Voltar</button>
       <button class="btn btn-primary" onclick="nextStep()" style="flex:1">Próximo: Pagamento →</button>
     </div>
   </div>
@@ -147,45 +147,42 @@
       }
     }
 
+    async function loadStoreProducts() {
+      try {
+        const userDoc = await db.collection('stores').doc(currentUser.uid).get();
+        if (!userDoc.exists) {
+          document.getElementById('productsLoading').innerHTML = 'Você não possui loja cadastrada';
+          return;
+        }
 
+        const snapshot = await db.collection('products')
+          .where('storeId', '==', currentUser.uid)
+          .where('available', '==', true)
+          .limit(20)
+          .get();
 
-async function loadStoreProducts() {
-  try {
-    const storeId = localStorage.getItem('currentStoreId') || localStorage.getItem('CURRENT_STORE_ID');
-    
-    if (!storeId) {
-      document.getElementById('productsLoading').innerHTML = 'Loja não identificada';
-      return;
+        storeProducts = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
+
+        if (storeProducts.length === 0) {
+          document.getElementById('productsLoading').innerHTML = 'Nenhum produto disponível';
+          return;
+        }
+
+        document.getElementById('productsLoading').style.display = 'none';
+        document.getElementById('productsList').style.display = 'grid';
+
+        document.getElementById('productsList').innerHTML = storeProducts.map(p => `
+          <div class="product-option" onclick="selectProduct('${p.id}')">
+            <div style="font-weight:700;margin-bottom:4px">${p.name}</div>
+            <div style="font-size:.85rem;color:var(--muted)">R$ ${p.price.toFixed(2)}</div>
+          </div>
+        `).join('');
+
+      } catch (e) {
+        console.error(e);
+        document.getElementById('productsLoading').innerHTML = 'Erro ao carregar';
+      }
     }
-
-    const snapshot = await db.collection('products')
-      .where('storeId', '==', storeId)
-      .where('active', '==', true)
-      .limit(20)
-      .get();
-
-    storeProducts = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
-
-    if (storeProducts.length === 0) {
-      document.getElementById('productsLoading').innerHTML = 'Nenhum produto disponível';
-      return;
-    }
-
-    document.getElementById('productsLoading').style.display = 'none';
-    document.getElementById('productsList').style.display = 'grid';
-
-    document.getElementById('productsList').innerHTML = storeProducts.map(p => `
-      <div class="product-option" onclick="selectProduct('${p.id}')">
-        <div style="font-weight:700;margin-bottom:4px">${p.name}</div>
-        <div style="font-size:.85rem;color:var(--muted)">R$ ${p.price.toFixed(2)}</div>
-      </div>
-    `).join('');
-
-  } catch (e) {
-    console.error(e);
-    document.getElementById('productsLoading').innerHTML = 'Erro ao carregar';
-  }
-}
 
     function selectProduct(id) {
       selectedProductId = id;
@@ -200,7 +197,7 @@ async function loadStoreProducts() {
     function handleFile(e) {
       const file = e.target.files[0];
       if (!file) return;
-      if (file.size > 2 * 1024 * 1024) return alert('Imagem muito grande (máx 2MB)');
+      if (file.size > 500 * 1024) return alert('⚠️ Imagem muito grande!\n\nMáximo: 500KB\nSua imagem: ' + (file.size / 1024).toFixed(0) + 'KB\n\nComprima ou escolha uma imagem menor.');
 
       const reader = new FileReader();
       reader.onload = (ev) => {
@@ -232,7 +229,7 @@ async function loadStoreProducts() {
       };
 
       localStorage.setItem('pedrad_campaign_data', JSON.stringify(campaignData));
-      window.location.href = 'Step3.html';
+      window.location.href = 'createCampaignStep3.html';
     }
 
     init();
