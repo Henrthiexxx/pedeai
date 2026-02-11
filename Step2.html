@@ -134,7 +134,7 @@
 
       await loadServiceInfo(itemId);
       document.getElementById('slotsInfo').textContent = `${slots.length} selecionado(s)`;
-      await loadStoreProducts();
+      await Products();
     }
 
     async function loadServiceInfo(itemId) {
@@ -159,9 +159,15 @@
 
 async function loadStoreProducts() {
   try {
-    // storeId é o próprio uid do usuário
+    const storeId = localStorage.getItem('currentStoreId') || localStorage.getItem('CURRENT_STORE_ID');
+    
+    if (!storeId) {
+      document.getElementById('productsLoading').innerHTML = 'Loja não identificada';
+      return;
+    }
+
     const snapshot = await db.collection('products')
-      .where('storeId', '==', currentUser.uid)
+      .where('storeId', '==', storeId)
       .where('active', '==', true)
       .limit(20)
       .get();
