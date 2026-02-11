@@ -147,6 +147,16 @@
       }
     }
 
+    async function loadServiceInfo(itemId) {
+      try {
+        const doc = await db.collection('ads_shop_items').doc(itemId).get();
+        const item = doc.data();
+        document.getElementById('serviceInfo').textContent = item.nome;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
     async function loadStoreProducts() {
       try {
         const userDoc = await db.collection('stores').doc(currentUser.uid).get();
