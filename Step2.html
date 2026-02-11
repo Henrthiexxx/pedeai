@@ -157,42 +157,50 @@
       }
     }
 
-    async function loadStoreProducts() {
-      try {
-        const userDoc = await db.collection('stores').doc(currentUser.uid).get();
-        if (!userDoc.exists) {
-          document.getElementById('productsLoading').innerHTML = 'Você não possui loja cadastrada';
-          return;
-        }
+async function loadStoreProducts() {
+  try {
+    // Primeiro, buscar o storeId do usuário atual
+    const storesSnapshot = await db.collection('stores')
+      .where('userId', '==', currentUser.uid)
+      .limit(1)
+      .get();
 
-        const snapshot = await db.collection('products')
-          .where('storeId', '==', currentUser.uid)
-          .where('available', '==', true)
-          .limit(20)
-          .get();
-
-        storeProducts = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
-
-        if (storeProducts.length === 0) {
-          document.getElementById('productsLoading').innerHTML = 'Nenhum produto disponível';
-          return;
-        }
-
-        document.getElementById('productsLoading').style.display = 'none';
-        document.getElementById('productsList').style.display = 'grid';
-
-        document.getElementById('productsList').innerHTML = storeProducts.map(p => `
-          <div class="product-option" onclick="selectProduct('${p.id}')">
-            <div style="font-weight:700;margin-bottom:4px">${p.name}</div>
-            <div style="font-size:.85rem;color:var(--muted)">R$ ${p.price.toFixed(2)}</div>
-          </div>
-        `).join('');
-
-      } catch (e) {
-        console.error(e);
-        document.getElementById('productsLoading').innerHTML = 'Erro ao carregar';
-      }
+    if (storesSnapshot.empty) {
+      document.getElementById('productsLoading').innerHTML = 'Você não possui loja cadastrada';
+      return;
     }
+
+    const storeId = storesSnapshot.docs[0].id;
+
+    // Agora buscar produtos com o storeId
+    const snapshot = await db.collection('products')
+      .where('storeId', '==', storeId)
+      .where('active', '==', true)
+      .limit(20)
+      .get();
+
+    storeProducts = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
+
+    if (storeProducts.length === 0) {
+      document.getElementById('productsLoading').innerHTML = 'Nenhum produto disponível';
+      return;
+    }
+
+    document.getElementById('productsLoading').style.display = 'none';
+    document.getElementById('productsList').style.display = 'grid';
+
+    document.getElementById('productsList').innerHTML = storeProducts.map(p => `
+      <div class="product-option" onclick="selectProduct('${p.id}')">
+        <div style="font-weight:700;margin-bottom:4px">${p.name}</div>
+        <div style="font-size:.85rem;color:var(--muted)">R$ ${p.price.toFixed(2)}</div>
+      </div>
+    `).join('');
+
+  } catch (e) {
+    console.error(e);
+    document.getElementById('productsLoading').innerHTML = 'Erro ao carregar';
+  }
+}
 
     function selectProduct(id) {
       selectedProductId = id;
