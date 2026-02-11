@@ -159,22 +159,9 @@
 
 async function loadStoreProducts() {
   try {
-    // Primeiro, buscar o storeId do usuário atual
-    const storesSnapshot = await db.collection('stores')
-      .where('userId', '==', currentUser.uid)
-      .limit(1)
-      .get();
-
-    if (storesSnapshot.empty) {
-      document.getElementById('productsLoading').innerHTML = 'Você não possui loja cadastrada';
-      return;
-    }
-
-    const storeId = storesSnapshot.docs[0].id;
-
-    // Agora buscar produtos com o storeId
+    // storeId é o próprio uid do usuário
     const snapshot = await db.collection('products')
-      .where('storeId', '==', storeId)
+      .where('storeId', '==', currentUser.uid)
       .where('active', '==', true)
       .limit(20)
       .get();
