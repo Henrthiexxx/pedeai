@@ -173,43 +173,42 @@
       }
     }
 
-    async function createOrder(userId) {
-      try {
-        // Criar pedido no Firestore
-        const order = {
-          userId,
-          campaignData,
-          status: 'pending',
-          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-          expiresAt: firebase.firestore.Timestamp.fromDate(new Date(Date.now() + 900000))
-        };
+async function createOrder(userId) {
+  try {
+    // Criar pedido sem a imagem (muito grande para Firestore)
+    const order = {
+      userId,
+      itemId: campaignData.itemId,
+      slots: campaignData.slots || [],
+      descricao: campaignData.criativo?.descricao || '',
+      produto: campaignData.produto || null,
+      status: 'pending',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      expiresAt: firebase.firestore.Timestamp.fromDate(new Date(Date.now() + 900000))
+    };
 
-        const orderRef = await db.collection('ads_orders').add(order);
-        orderId = orderRef.id;
+    const orderRef = await db.collection('ads_orders').add(order);
+    orderId = orderRef.id;
 
-        // PLACEHOLDER: Integração futura com Mercado Pago
-        // const mpResponse = await fetch('/api/mercadopago/create-payment', {
-        //   method: 'POST',
-        //   headers: {'Content-Type': 'application/json'},
-        //   body: JSON.stringify({orderId, amount: total})
-        // });
-        // const mpData = await mpResponse.json();
-        // pixKey = mpData.qr_code;
-        // generateQRCode(mpData.qr_code_base64);
-
-        // Por enquanto, gerar chave PIX simulada
-        pixKey = generateMockPixKey(orderId);
-        document.getElementById('pixKey').textContent = pixKey;
-        generateQRCode(pixKey);
-
-        // Listener para verificar pagamento
-        listenForPayment();
-
-      } catch (e) {
-        console.error(e);
-        alert('Erro ao criar pedido');
-      }
+    // Salvar imagem em subcoleção separada
+    if (campaignData.criativo?.imageBase64) {
+      await db.collection('ads_orders').doc(orderId).collection('assets').add({
+        imageBase64: campaignData.criativo.imageBase64,
+        type: 'creative'
+      });
     }
+
+    pixKey = generateMockPixKey(orderId);
+    document.getElementById('pixKey').textContent = pixKey;
+    generateQRCode(pixKey);
+
+    listenForPayment();
+
+  } catch (e) {
+    console.error(e);
+    alert('Erro ao criar pedido: ' + e.message);
+  }
+}
 
     function generateMockPixKey(id) {
       // Simula uma chave PIX - substituir por chave real
