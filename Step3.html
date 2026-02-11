@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pagamento - Pedrad Ads</title>
+  <style>
+    :root{--bg:#000;--card:#0a0a0a;--input:#171717;--text:#fff;--muted:#737373;--border:#262626;--primary:#00d9ff;--success:#22c55e;--radius:12px}
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);padding:20px}
+    .container{max-width:900px;margin:0 auto}
+    .header{margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid var(--primary)}
+    h1{font-size:1.5rem;font-weight:700;margin-bottom:8px}
+    .steps{display:flex;gap:12px;margin-bottom:24px}
+    .step{flex:1;padding:12px;text-align:center;border:1px solid var(--border);border-radius:10px;background:var(--input)}
+    .step.active{background:var(--primary);color:#000}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+    .summary-line{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)}
+    .summary-total{font-size:1.4rem;font-weight:800;color:var(--primary);padding-top:16px;margin-top:8px;border-top:2px solid var(--primary)}
+    .qr-container{text-align:center;padding:32px;background:var(--input);border-radius:12px;margin:20px 0}
+    .qr-box{width:280px;height:280px;margin:0 auto 20px;background:#fff;border-radius:12px;display:flex;align-items:center;justify-content:center;position:relative}
+    .qr-placeholder{color:#000;font-size:3rem}
+    .pix-key{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;display:flex;justify-content:space-between;align-items:center;margin-top:16px}
+    .pix-key-text{font-family:monospace;font-size:.9rem;word-break:break-all;flex:1;margin-right:12px}
+    .btn{padding:12px 24px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;font-size:.95rem;transition:.2s}
+    .btn:hover{background:var(--primary);color:#000}
+    .btn-primary{background:var(--primary);color:#000}
+    .btn-copy{padding:8px 16px;background:var(--input);border:1px solid var(--border);color:var(--text);border-radius:6px;cursor:pointer;font-size:.85rem}
+    .btn-copy:hover{background:var(--primary);color:#000}
+    .status-pending{color:#fbbf24;font-size:.9rem;text-align:center;margin-top:12px}
+    .payment-info{background:rgba(0,217,255,.1);border:1px solid var(--primary);border-radius:8px;padding:16px;margin-bottom:20px}
+    .payment-info h3{color:var(--primary);font-size:1rem;margin-bottom:8px}
+    .payment-info p{font-size:.85rem;line-height:1.6;color:var(--muted)}
+    .timer{font-size:1.8rem;font-weight:800;text-align:center;color:var(--primary);margin:16px 0}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Pagamento</h1>
+      <div style="color:var(--muted);font-size:.9rem">Finalize sua campanha</div>
+    </div>
+
+    <div class="steps">
+      <div class="step">1. Selecionar Horários</div>
+      <div class="step">2. Upload Criativo</div>
+      <div class="step active">3. Pagamento</div>
+    </div>
+
+    <div class="payment-info">
+      <h3>💳 Como Funciona</h3>
+      <p>1. Escaneie o QR Code ou copie a chave PIX abaixo<br>
+      2. Realize o pagamento no app do seu banco<br>
+      3. Sua campanha será ativada automaticamente após confirmação</p>
+    </div>
+
+    <div class="card">
+      <h2 style="font-size:1.1rem;margin-bottom:20px">Resumo do Pedido</h2>
+      <div id="orderSummary"></div>
+    </div>
+
+    <div class="card">
+      <h2 style="font-size:1.1rem;margin-bottom:12px">Pagamento via PIX</h2>
+      <div class="timer" id="timer">15:00</div>
+      
+      <div class="qr-container">
+        <div class="qr-box" id="qrCode">
+          <div class="qr-placeholder">📷</div>
+        </div>
+        <div style="color:var(--muted);font-size:.85rem">Escaneie o QR Code acima</div>
+        
+        <div class="pix-key">
+          <div class="pix-key-text" id="pixKey">Gerando chave PIX...</div>
+          <button class="btn-copy" onclick="copyPix()">📋 Copiar</button>
+        </div>
+      </div>
+
+      <div class="status-pending">⏳ Aguardando pagamento...</div>
+    </div>
+
+    <div style="display:flex;gap:12px;margin-top:20px">
+      <button class="btn" onclick="cancelPayment()">Cancelar</button>
+      <button class="btn btn-primary" onclick="checkPayment()" style="flex:1">Verificar Pagamento</button>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAnIJRcUxN-0swpVnonPbJjTSK87o4CQ_g",
+      authDomain: "pedrad-814d0.firebaseapp.com",
+      projectId: "pedrad-814d0",
+      storageBucket: "pedrad-814d0.appspot.com",
+      messagingSenderId: "293587190550",
+      appId: "1:293587190550:web:80c9399f82847c80e20637"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    let campaignData = null;
+    let orderId = null;
+    let pixKey = '';
+    let timerInterval = null;
+    let timeLeft = 900; // 15 minutos
+
+    async function init() {
+      const user = auth.currentUser || await new Promise(r => auth.onAuthStateChanged(u => r(u)));
+      if (!user) {
+        alert('Faça login');
+        return;
+      }
+
+      campaignData = JSON.parse(localStorage.getItem('pedrad_campaign_data'));
+      if (!campaignData) {
+        window.location.href = 'adsShop.html';
+        return;
+      }
+
+      await loadOrderSummary();
+      await createOrder(user.uid);
+      startTimer();
+    }
+
+    async function loadOrderSummary() {
+      try {
+        const itemDoc = await db.collection('ads_shop_items').doc(campaignData.itemId).get();
+        const item = itemDoc.data();
+
+        let slotsTotal = 0;
+        for (const slotId of campaignData.slots) {
+          const snapshot = await db.collection('ads_slots_availability')
+            .where('slots', 'array-contains', {slotId})
+            .limit(1)
+            .get();
+          
+          if (!snapshot.empty) {
+            const day = snapshot.docs[0].data();
+            const slot = day.slots.find(s => s.slotId === slotId);
+            if (slot) slotsTotal += slot.currentPrice;
+          }
+        }
+
+        const total = item.preco + slotsTotal;
+
+        document.getElementById('orderSummary').innerHTML = `
+          <div class="summary-line">
+            <span>Serviço: ${item.nome}</span>
+            <span>R$ ${item.preco.toFixed(2)}</span>
+          </div>
+          <div class="summary-line">
+            <span>Slots (${campaignData.slots.length})</span>
+            <span>R$ ${slotsTotal.toFixed(2)}</span>
+          </div>
+          ${campaignData.produto ? `
+            <div class="summary-line">
+              <span>Produto Vinculado</span>
+              <span>✓</span>
+            </div>
+          ` : ''}
+          <div class="summary-line summary-total">
+            <span>TOTAL</span>
+            <span>R$ ${total.toFixed(2)}</span>
+          </div>
+        `;
+
+      } catch (e) {
+        console.error(e);
+        alert('Erro ao carregar resumo');
+      }
+    }
+
+    async function createOrder(userId) {
+      try {
+        // Criar pedido no Firestore
+        const order = {
+          userId,
+          campaignData,
+          status: 'pending',
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          expiresAt: firebase.firestore.Timestamp.fromDate(new Date(Date.now() + 900000))
+        };
+
+        const orderRef = await db.collection('ads_orders').add(order);
+        orderId = orderRef.id;
+
+        // PLACEHOLDER: Integração futura com Mercado Pago
+        // const mpResponse = await fetch('/api/mercadopago/create-payment', {
+        //   method: 'POST',
+        //   headers: {'Content-Type': 'application/json'},
+        //   body: JSON.stringify({orderId, amount: total})
+        // });
+        // const mpData = await mpResponse.json();
+        // pixKey = mpData.qr_code;
+        // generateQRCode(mpData.qr_code_base64);
+
+        // Por enquanto, gerar chave PIX simulada
+        pixKey = generateMockPixKey(orderId);
+        document.getElementById('pixKey').textContent = pixKey;
+        generateQRCode(pixKey);
+
+        // Listener para verificar pagamento
+        listenForPayment();
+
+      } catch (e) {
+        console.error(e);
+        alert('Erro ao criar pedido');
+      }
+    }
+
+    function generateMockPixKey(id) {
+      // Simula uma chave PIX - substituir por chave real
+      return `00020126580014br.gov.bcb.pix0136${id}@pedrad.app520400005303986540510.005802BR5913PEDRAD ADS6008BRASILIA62070503***6304`;
+    }
+
+    function generateQRCode(text) {
+      const qrBox = document.getElementById('qrCode');
+      qrBox.innerHTML = '';
+      
+      QRCode.toCanvas(text, {
+        width: 260,
+        margin: 2,
+        color: {dark: '#000', light: '#fff'}
+      }, (err, canvas) => {
+        if (err) {
+          qrBox.innerHTML = '<div class="qr-placeholder">❌</div>';
+          return;
+        }
+        canvas.style.borderRadius = '8px';
+        qrBox.appendChild(canvas);
+      });
+    }
+
+    function copyPix() {
+      navigator.clipboard.writeText(pixKey);
+      event.target.textContent = '✓ Copiado!';
+      setTimeout(() => event.target.textContent = '📋 Copiar', 2000);
+    }
+
+    function startTimer() {
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        const mins = Math.floor(timeLeft / 60);
+        const secs = timeLeft % 60;
+        document.getElementById('timer').textContent = 
+          `${mins}:${secs.toString().padStart(2, '0')}`;
+        
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          alert('Tempo expirado');
+          cancelPayment();
+        }
+      }, 1000);
+    }
+
+    function listenForPayment() {
+      // Listener em tempo real para status do pedido
+      db.collection('ads_orders').doc(orderId).onSnapshot(doc => {
+        const data = doc.data();
+        if (data && data.status === 'paid') {
+          clearInterval(timerInterval);
+          paymentSuccess();
+        }
+      });
+    }
+
+    async function checkPayment() {
+      // Verificação manual - útil se webhook falhar
+      try {
+        const doc = await db.collection('ads_orders').doc(orderId).get();
+        const data = doc.data();
+        
+        if (data.status === 'paid') {
+          paymentSuccess();
+        } else {
+          alert('Pagamento ainda não identificado');
+        }
+      } catch (e) {
+        alert('Erro ao verificar pagamento');
+      }
+    }
+
+    function paymentSuccess() {
+      localStorage.removeItem('pedrad_selected_item');
+      localStorage.removeItem('pedrad_campaign_slots');
+      localStorage.removeItem('pedrad_campaign_data');
+      
+      alert('✓ Pagamento confirmado! Sua campanha está ativa.');
+      window.location.href = 'indexStore.html';
+    }
+
+    function cancelPayment() {
+      if (!confirm('Cancelar pagamento?')) return;
+      
+      clearInterval(timerInterval);
+      
+      if (orderId) {
+        db.collection('ads_orders').doc(orderId).update({
+          status: 'cancelled'
+        });
+      }
+      
+      window.location.href = 'adsShop.html';
+    }
+
+    init();
+  </script>
+</body>
+</html>

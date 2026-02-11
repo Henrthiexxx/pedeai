@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Selecionar Horários - Pedrad Ads</title>
+  <style>
+    :root{--bg:#000;--card:#0a0a0a;--input:#171717;--text:#fff;--muted:#737373;--border:#262626;--primary:#00d9ff;--danger:#ef4444;--success:#22c55e;--radius:12px}
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);padding:20px}
+    .container{max-width:900px;margin:0 auto}
+    .header{margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid var(--primary)}
+    h1{font-size:1.5rem;font-weight:700;margin-bottom:8px}
+    .selected-item{background:var(--input);padding:16px;border-radius:10px;margin-bottom:20px;border:1px solid var(--border)}
+    .selected-item h3{font-size:1rem;color:var(--primary);margin-bottom:8px}
+    .steps{display:flex;gap:12px;margin-bottom:24px}
+    .step{flex:1;padding:12px;text-align:center;border:1px solid var(--border);border-radius:10px;background:var(--input)}
+    .step.active{background:var(--primary);color:#000}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+    .slot-item{display:flex;justify-content:space-between;align-items:center;padding:14px;border:1px solid var(--border);border-radius:10px;margin-bottom:10px;cursor:pointer;transition:.2s}
+    .slot-item:hover{border-color:var(--primary)}
+    .slot-item.selected{background:var(--primary);color:#000;border-color:var(--primary)}
+    .slot-item.sold{opacity:.4;cursor:not-allowed;background:var(--input)}
+    .slot-info{flex:1}
+    .slot-date{font-weight:700;font-size:1rem}
+    .slot-meta{color:var(--muted);font-size:.85rem;margin-top:4px}
+    .slot-price{font-weight:800;font-size:1.1rem}
+    .price-up{color:var(--danger);font-size:.8rem}
+    .btn{padding:12px 24px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;font-size:.95rem;transition:.2s}
+    .btn:hover{background:var(--primary);color:#000}
+    .btn-primary{background:var(--primary);color:#000}
+    .summary{background:var(--input);padding:18px;border-radius:10px;margin-top:20px}
+    .summary-line{display:flex;justify-content:space-between;margin-bottom:8px}
+    .summary-total{font-size:1.2rem;font-weight:800;padding-top:12px;border-top:1px solid var(--border)}
+    .loading{text-align:center;padding:40px;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Selecionar Horários</h1>
+      <div style="color:var(--muted);font-size:.9rem">Escolha os períodos para veicular</div>
+    </div>
+
+    <div id="selectedItemInfo" class="selected-item"></div>
+
+    <div class="steps">
+      <div class="step active">1. Selecionar Horários</div>
+      <div class="step">2. Upload Criativo</div>
+      <div class="step">3. Pagamento</div>
+    </div>
+
+    <div id="loadingState" class="loading">Carregando slots disponíveis...</div>
+
+    <div id="slotsView" style="display:none;">
+      <div class="card">
+        <h2 style="font-size:1.1rem;margin-bottom:16px">Próximos 7 Dias</h2>
+        <div id="slotsList"></div>
+      </div>
+
+      <div class="summary">
+        <div class="summary-line">
+          <span>Serviço:</span>
+          <span id="servicePrice">R$ 0,00</span>
+        </div>
+        <div class="summary-line">
+          <span>Slots selecionados:</span>
+          <span id="selectedCount">0</span>
+        </div>
+        <div class="summary-line">
+          <span>Custo slots:</span>
+          <span id="slotsPrice">R$ 0,00</span>
+        </div>
+        <div class="summary-line summary-total">
+          <span>Total:</span>
+          <span id="totalPrice">R$ 0,00</span>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px;margin-top:20px">
+        <button class="btn" onclick="window.location.href='adsShop.html'">← Voltar</button>
+        <button class="btn btn-primary" onclick="nextStep()" style="flex:1">Próximo: Upload Criativo →</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAnIJRcUxN-0swpVnonPbJjTSK87o4CQ_g",
+      authDomain: "pedrad-814d0.firebaseapp.com",
+      projectId: "pedrad-814d0",
+      storageBucket: "pedrad-814d0.appspot.com",
+      messagingSenderId: "293587190550",
+      appId: "1:293587190550:web:80c9399f82847c80e20637"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    let selectedItem = null;
+    let availableSlots = [];
+    let selectedSlots = [];
+
+    async function loadSelectedItem() {
+      const itemId = localStorage.getItem('pedrad_selected_item');
+      if (!itemId) {
+        window.location.href = 'adsShop.html';
+        return;
+      }
+
+      try {
+        const doc = await db.collection('ads_shop_items').doc(itemId).get();
+        selectedItem = {id: doc.id, ...doc.data()};
+        
+        document.getElementById('selectedItemInfo').innerHTML = `
+          <h3>📦 Serviço Selecionado</h3>
+          <div style="font-weight:700;font-size:1.1rem;margin-bottom:4px">${selectedItem.nome}</div>
+          <div style="color:var(--muted);font-size:.9rem;margin-bottom:8px">${selectedItem.descricao}</div>
+          <div style="color:var(--primary);font-weight:800;font-size:1.3rem">R$ ${selectedItem.preco.toFixed(2)}</div>
+        `;
+        
+        loadSlots();
+      } catch (e) {
+        alert('Erro ao carregar serviço');
+        window.location.href = 'adsShop.html';
+      }
+    }
+
+    async function loadSlots() {
+      try {
+        const snapshot = await db.collection('ads_slots_availability')
+          .orderBy('date', 'asc')
+          .limit(7)
+          .get();
+        
+        availableSlots = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        
+        renderSlots();
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('slotsView').style.display = 'block';
+        updateSummary();
+        
+      } catch (e) {
+        console.error(e);
+        document.getElementById('loadingState').innerHTML = '<div>Erro ao carregar slots</div>';
+      }
+    }
+
+    function renderSlots() {
+      const list = document.getElementById('slotsList');
+      
+      list.innerHTML = availableSlots.map(day => {
+        const dayNames = {sunday:'Domingo',monday:'Segunda',tuesday:'Terça',wednesday:'Quarta',thursday:'Quinta',friday:'Sexta',saturday:'Sábado'};
+        const slot = day.slots[0];
+        const isAvailable = slot.status === 'available';
+        const isSelected = selectedSlots.includes(slot.slotId);
+        
+        return `
+          <div class="slot-item ${isSelected ? 'selected' : ''} ${!isAvailable ? 'sold' : ''}" 
+               onclick="${isAvailable ? `toggleSlot('${slot.slotId}')` : ''}">
+            <div class="slot-info">
+              <div class="slot-date">${dayNames[day.dayOfWeek]} ${new Date(day.date).toLocaleDateString('pt-BR')}</div>
+              <div class="slot-meta">24h | ${isAvailable ? 'Disponível' : 'ESGOTADO'}</div>
+            </div>
+            <div>
+              <div class="slot-price">R$ ${slot.currentPrice.toFixed(2)}</div>
+              ${day.totalSold > 0 ? `<div class="price-up">↑ ${(day.priceMultiplier * 100 - 100).toFixed(1)}%</div>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function toggleSlot(slotId) {
+      const idx = selectedSlots.indexOf(slotId);
+      if (idx > -1) {
+        selectedSlots.splice(idx, 1);
+      } else {
+        selectedSlots.push(slotId);
+      }
+      renderSlots();
+      updateSummary();
+    }
+
+    function updateSummary() {
+      document.getElementById('selectedCount').textContent = selectedSlots.length;
+      document.getElementById('servicePrice').textContent = `R$ ${selectedItem.preco.toFixed(2)}`;
+      
+      let slotsTotal = 0;
+      selectedSlots.forEach(slotId => {
+        const day = availableSlots.find(d => d.slots[0].slotId === slotId);
+        if (day) slotsTotal += day.slots[0].currentPrice;
+      });
+      
+      document.getElementById('slotsPrice').textContent = `R$ ${slotsTotal.toFixed(2)}`;
+      document.getElementById('totalPrice').textContent = `R$ ${(selectedItem.preco + slotsTotal).toFixed(2)}`;
+    }
+
+    function nextStep() {
+      if (selectedSlots.length === 0) return alert('Selecione pelo menos 1 slot');
+      localStorage.setItem('pedrad_campaign_slots', JSON.stringify(selectedSlots));
+      window.location.href = 'Step2.html';
+    }
+
+    (async () => {
+      const user = auth.currentUser || await new Promise(r => auth.onAuthStateChanged(u => r(u)));
+      if (!user) {
+        document.getElementById('loadingState').innerHTML = '<div>Faça login</div>';
+        return;
+      }
+      loadSelectedItem();
+    })();
+  </script>
+</body>
+</html>

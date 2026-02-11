@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pedrad Ads - Serviços</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#000;color:#fff;overflow-x:hidden}
+    .header{background:linear-gradient(135deg,#0a0a0a 0%,#1a1a2e 100%);padding:60px 20px;position:relative;overflow:hidden}
+    .header::before{content:'';position:absolute;top:0;right:0;width:50%;height:100%;background:linear-gradient(90deg,transparent,rgba(0,217,255,.1));z-index:0}
+    .header-content{max-width:1200px;margin:0 auto;position:relative;z-index:1}
+    .hero-title{font-size:3.5rem;font-weight:900;line-height:1.1;margin-bottom:16px}
+    .hero-title .accent{color:#00d9ff}
+    .hero-subtitle{font-size:1.2rem;color:#a0a0a0;margin-bottom:24px;letter-spacing:2px}
+    .hero-btn{display:inline-block;padding:14px 32px;background:#00d9ff;color:#000;text-decoration:none;border-radius:8px;font-weight:700;transition:.3s}
+    .hero-btn:hover{background:#00b8dd;transform:translateY(-2px)}
+    .container{max-width:1200px;margin:0 auto;padding:40px 20px}
+    .tabs{display:flex;gap:8px;margin-bottom:32px;border-bottom:2px solid #1a1a2e}
+    .tab{padding:12px 24px;background:transparent;border:none;color:#737373;cursor:pointer;font-size:.95rem;font-weight:600;transition:.2s;border-bottom:3px solid transparent}
+    .tab.active{color:#00d9ff;border-bottom-color:#00d9ff}
+    .tab:hover{color:#fff}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:24px}
+    .product-card{background:#0a0a0a;border:1px solid #1a1a2e;border-radius:12px;overflow:hidden;transition:.3s;cursor:pointer;position:relative}
+    .product-card:hover{transform:translateY(-8px);border-color:#00d9ff;box-shadow:0 8px 32px rgba(0,217,255,.2)}
+    .product-img{width:100%;height:220px;object-fit:cover;background:#171717}
+    .product-info{padding:20px}
+    .product-name{font-size:1.1rem;font-weight:700;margin-bottom:8px}
+    .product-desc{font-size:.85rem;color:#737373;margin-bottom:16px;line-height:1.5;height:40px;overflow:hidden}
+    .product-price{font-size:1.5rem;font-weight:800;color:#00d9ff;margin-bottom:12px}
+    .product-btn{width:100%;padding:10px;background:#00d9ff;color:#000;border:none;border-radius:8px;font-weight:700;cursor:pointer;transition:.2s}
+    .product-btn:hover{background:#00b8dd}
+    .badge{position:absolute;top:12px;right:12px;padding:4px 12px;background:#00d9ff;color:#000;font-size:.75rem;font-weight:700;border-radius:20px}
+    .features{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin:40px 0;padding:32px;background:#0a0a0a;border-radius:12px;border:1px solid #1a1a2e}
+    .feature{text-align:center}
+    .feature-icon{font-size:2rem;margin-bottom:8px}
+    .feature-title{font-weight:700;margin-bottom:4px}
+    .feature-desc{font-size:.85rem;color:#737373}
+    .section-title{font-size:1.8rem;font-weight:800;margin-bottom:24px;position:relative;display:inline-block}
+    .section-title::after{content:'';position:absolute;bottom:-8px;left:0;width:60px;height:3px;background:#00d9ff}
+    .loading{text-align:center;padding:60px;color:#737373}
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-content">
+      <div class="hero-subtitle">PEDRAD ADS</div>
+      <h1 class="hero-title">O <span class="accent">FUTURO</span> DA<br>PUBLICIDADE</h1>
+      <p style="color:#a0a0a0;margin-bottom:24px;max-width:500px">Alcance milhares de clientes com nossos serviços de marketing digital</p>
+      <a href="#servicos" class="hero-btn">VER SERVIÇOS</a>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="features">
+      <div class="feature">
+        <div class="feature-icon">🚀</div>
+        <div class="feature-title">ENTREGA RÁPIDA</div>
+        <div class="feature-desc">Campanha ativa em 24h</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🔒</div>
+        <div class="feature-title">PAGAMENTO SEGURO</div>
+        <div class="feature-desc">Transações criptografadas</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">📊</div>
+        <div class="feature-title">RELATÓRIOS</div>
+        <div class="feature-desc">Análise em tempo real</div>
+      </div>
+    </div>
+
+    <div id="servicos">
+      <h2 class="section-title">SERVIÇOS DISPONÍVEIS</h2>
+      
+      <div class="tabs">
+        <button class="tab active" onclick="filterCategory('all')">Todos</button>
+        <button class="tab" onclick="filterCategory('destaque')">Destaques</button>
+        <button class="tab" onclick="filterCategory('banner')">Banners</button>
+        <button class="tab" onclick="filterCategory('social')">Redes Sociais</button>
+      </div>
+
+      <div id="loadingState" class="loading">Carregando serviços...</div>
+      <div id="productsGrid" class="grid" style="display:none"></div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAnIJRcUxN-0swpVnonPbJjTSK87o4CQ_g",
+      authDomain: "pedrad-814d0.firebaseapp.com",
+      projectId: "pedrad-814d0",
+      storageBucket: "pedrad-814d0.appspot.com",
+      messagingSenderId: "293587190550",
+      appId: "1:293587190550:web:80c9399f82847c80e20637"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    let allProducts = [];
+    let currentCategory = 'all';
+
+    async function loadProducts() {
+      try {
+        const snapshot = await db.collection('ads_shop_items')
+          .where('ativo', '==', true)
+          .orderBy('createdAt', 'desc')
+          .get();
+        
+        allProducts = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        
+        renderProducts();
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('productsGrid').style.display = 'grid';
+        
+      } catch (e) {
+        console.error(e);
+        document.getElementById('loadingState').innerHTML = 'Erro ao carregar';
+      }
+    }
+
+    function renderProducts() {
+      const filtered = currentCategory === 'all' 
+        ? allProducts 
+        : allProducts.filter(p => p.categoria === currentCategory);
+      
+      const grid = document.getElementById('productsGrid');
+      grid.innerHTML = filtered.map(p => `
+        <div class="product-card" onclick="selectProduct('${p.id}')">
+          ${p.destaque ? '<div class="badge">DESTAQUE</div>' : ''}
+          <img class="product-img" src="${p.imageUrl || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22220%22%3E%3Crect fill=%22%23171717%22 width=%22300%22 height=%22220%22/%3E%3C/svg%3E'}" alt="${p.nome}">
+          <div class="product-info">
+            <div class="product-name">${p.nome}</div>
+            <div class="product-desc">${p.descricao}</div>
+            <div class="product-price">R$ ${p.preco.toFixed(2)}</div>
+            <button class="product-btn">CONTRATAR</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function filterCategory(cat) {
+      currentCategory = cat;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      event.target.classList.add('active');
+      renderProducts();
+    }
+
+    function selectProduct(id) {
+      localStorage.setItem('pedrad_selected_item', id);
+      window.location.href = 'Step1.html';
+    }
+
+    (async () => {
+      const user = auth.currentUser || await new Promise(r => auth.onAuthStateChanged(u => r(u)));
+      if (!user) {
+        alert('Faça login primeiro');
+        window.location.href = 'login.html';
+        return;
+      }
+      loadProducts();
+    })();
+  </script>
+</body>
+</html>
