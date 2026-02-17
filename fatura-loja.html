@@ -382,26 +382,23 @@
         }
 
         // ==================== LOAD INVOICE ====================
+// ==================== LOAD INVOICE ====================
 async function loadInvoice() {
   const { month, year } = selectedMonth;
   const start = new Date(year, month, 1);
   const end = new Date(year, month + 1, 1);
 
-  // Cache: só usa se lastOrderAt existir e não houver pedidos novos
   const cached = getCache();
   if (cached) {
     try {
       const storeDoc = await db.collection('stores').doc(storeId).get();
       const lastOrderAt = storeDoc.data()?.lastOrderAt?.toMillis?.() || null;
-
       if (lastOrderAt && lastOrderAt <= cached.cachedAt) {
         renderInvoice(cached);
         showCacheStatus(true);
         return;
       }
-    } catch (e) {
-      // Se falhar a checagem, segue recalculando normalmente
-    }
+    } catch {}
   }
 
   document.getElementById('invoiceBody').innerHTML =
@@ -423,11 +420,8 @@ async function loadInvoice() {
     const baseAmount = totalSales - deliveryEarnings;
 
     let platformFee = 0;
-    if (storeData.feeType === 'fixed') {
-      platformFee = orderCount * (storeData.feeFixed || 0);
-    } else {
-      platformFee = baseAmount * ((storeData.feePercent || 10) / 100);
-    }
+    if (storeData.feeType === 'fixed') platformFee = orderCount * (storeData.feeFixed || 0);
+    else platformFee = baseAmount * ((storeData.feePercent || 10) / 100);
 
     const data = { orderCount, totalSales, deliveryEarnings, baseAmount, platformFee, month, year };
     setCache(data);
@@ -436,19 +430,11 @@ async function loadInvoice() {
 
     const invoiceId = `${storeId}_${year}-${String(month + 1).padStart(2, '0')}`;
     await db.collection('invoices').doc(invoiceId).set({
-      storeId,
-      storeName: storeData.name || '',
-      month: month + 1,
-      year,
-      orderCount,
-      totalSales,
-      deliveryEarnings,
-      baseAmount,
-      platformFee,
+      storeId, storeName: storeData.name || '',
+      month: month + 1, year,
+      orderCount, totalSales, deliveryEarnings, baseAmount, platformFee,
       feeType: storeData.feeType || 'percent',
-      feeValue: storeData.feeType === 'fixed'
-        ? (storeData.feeFixed || 0)
-        : (storeData.feePercent || 10),
+      feeValue: storeData.feeType === 'fixed' ? (storeData.feeFixed || 0) : (storeData.feePercent || 10),
       status: 'open',
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
@@ -459,50 +445,6 @@ async function loadInvoice() {
       '<div class="loading">❌ Erro ao calcular fatura</div>';
   }
 }
-            // Query orders for this month
-            document.getElementById('invoiceBody').innerHTML = '<div class="loading"><div class="spinner"></div>Calculando...</div>';
-            try {
-                const snap = await db.collection('orders')
-                    .where('storeId', '==', storeId)
-                    .where('createdAt', '>=', start)
-                    .where('createdAt', '<', end)
-                    .get();
-
-                const orders = snap.docs.map(d => d.data());
-                const valid = orders.filter(o => o.status !== 'cancelled');
-                const orderCount = valid.length;
-                const totalSales = valid.reduce((s, o) => s + (o.total || 0), 0);
-                const deliveryEarnings = valid.reduce((s, o) => s + (o.deliveryFee || 0), 0);
-                const baseAmount = totalSales - deliveryEarnings;
-
-                let platformFee = 0;
-                if (storeData.feeType === 'fixed') {
-                    platformFee = orderCount * (storeData.feeFixed || 0);
-                } else {
-                    platformFee = baseAmount * ((storeData.feePercent || 10) / 100);
-                }
-
-                const data = { orderCount, totalSales, deliveryEarnings, baseAmount, platformFee, month, year };
-                setCache(data);
-                renderInvoice(data);
-                showCacheStatus(false);
-
-                // Update invoice doc for admin to read
-                const invoiceId = `${storeId}_${year}-${String(month + 1).padStart(2, '0')}`;
-                await db.collection('invoices').doc(invoiceId).set({
-                    storeId, storeName: storeData.name || '', month: month + 1, year,
-                    orderCount, totalSales, deliveryEarnings, baseAmount, platformFee,
-                    feeType: storeData.feeType || 'percent',
-                    feeValue: storeData.feeType === 'fixed' ? (storeData.feeFixed || 0) : (storeData.feePercent || 10),
-                    status: 'open',
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                }, { merge: true });
-
-            } catch (err) {
-                console.error(err);
-                document.getElementById('invoiceBody').innerHTML = '<div class="loading">❌ Erro ao calcular fatura</div>';
-            }
-        }
 
         // ==================== RENDER INVOICE ====================
         function renderInvoice(data) {
