@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Pedra Delivery- Painel da Loja</title>
-    <meta name="theme-color" content="#6366f1">
+    <title>Pedra Delivery - Painel da Loja</title>
+    <meta name="theme-color" content="#000000">
     <link rel="stylesheet" href="index.css">
 </head>
 <body>
@@ -65,31 +65,20 @@
                 <div class="nav-section">
                     <div class="nav-section-title">Principal</div>
                     <div class="nav-item active" onclick="showPage('dashboard')"><span>📊</span> Painel Central</div>
-                    <div class="nav-item" onclick="showPage('orders')"><span>📦</span> Pedidos <span class="nav-badge" id="pendingBadge" style="display:none;">0</span></div>
+                    <div class="nav-item" onclick="showPage('history')"><span>📋</span> Histórico <span class="nav-badge" id="historyBadge" style="display:none;">0</span></div>
                 </div>
                 <div class="nav-section">
                     <div class="nav-section-title">Cardápio</div>
                     <div class="nav-item" onclick="openProductsPage()"><span>🍽️</span> Produtos</div>
-                    
-<div class="nav-item" onclick="location.href='batch-editor.html'"><span>🧾</span> Cadastro em Lote</div>
-
-
-
-                   <div class="nav-item" onclick="openPopup('categories')"><span>📁</span> Categorias</div>
+                    <div class="nav-item" onclick="location.href='batch-editor.html'"><span>🧾</span> Cadastro em Lote</div>
+                    <div class="nav-item" onclick="openPopup('categories')"><span>📁</span> Categorias</div>
                     <div class="nav-item" onclick="openPopup('meu-entregador')"><span>🛵</span> Meu Entregador</div>
                     <div class="nav-item" onclick="openPopup('fatura-loja.html')"><span>📄</span> Minha Fatura</div>
-                    <div class="nav-item" onclick="location.href='AdsShop.html'">
-  <span>🛠️</span> Serviços
-</div>
-
-
+                    <div class="nav-item" onclick="location.href='AdsShop.html'"><span>🛠️</span> Serviços</div>
+                </div>
                 <div class="nav-section">
                     <div class="nav-section-title">Configurações</div>
-                 
-</div>
-
                     <div class="nav-item" onclick="openConfigPopup()"><span>⚙️</span> Configurações</div>
-
                     <div class="nav-item" onclick="handleLogout()"><span>🚪</span> Sair</div>
                 </div>
             </nav>
@@ -100,7 +89,7 @@
             <header class="topbar">
                 <div style="display: flex; align-items: center; gap: 16px;">
                     <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
-                    <h1 class="topbar-title" id="pageTitle">Dashboard</h1>
+                    <h1 class="topbar-title" id="pageTitle">Painel Central</h1>
                 </div>
                 <div class="topbar-actions">
                     <button class="btn btn-sm" id="notifBtn" onclick="requestNotificationPermission()" title="Ativar notificações">🔔</button>
@@ -108,31 +97,53 @@
                 </div>
             </header>
             
-            <!-- Dashboard -->
+            <!-- ========== DASHBOARD (Hub Central) ========== -->
             <div id="dashboardPage" class="page active">
-                <div class="stats-grid">
-                    <div class="stat-card"><div class="stat-icon warning">📦</div><div class="stat-value" id="statPending">0</div><div class="stat-label">Pedidos pendentes</div></div>
-                    <div class="stat-card"><div class="stat-icon primary">📋</div><div class="stat-value" id="statToday">0</div><div class="stat-label">Pedidos hoje</div></div>
-                    <div class="stat-card"><div class="stat-icon success">💰</div><div class="stat-value" id="statRevenue">R$ 0</div><div class="stat-label">Faturamento hoje</div></div>
-                    <div class="stat-card"><div class="stat-icon danger">🍽️</div><div class="stat-value" id="statProducts">0</div><div class="stat-label">Produtos ativos</div></div>
+                
+                <!-- Stats Row -->
+                <div class="dash-stats">
+                    <div class="dash-stat-item">
+                        <div class="dash-stat-number" id="statPending">0</div>
+                        <div class="dash-stat-label">Pendentes</div>
+                    </div>
+                    <div class="dash-stat-item">
+                        <div class="dash-stat-number" id="statActive">0</div>
+                        <div class="dash-stat-label">Em andamento</div>
+                    </div>
+                    <div class="dash-stat-item">
+                        <div class="dash-stat-number" id="statToday">0</div>
+                        <div class="dash-stat-label">Hoje</div>
+                    </div>
+                    <div class="dash-stat-item">
+                        <div class="dash-stat-number" id="statRevenue">R$ 0</div>
+                        <div class="dash-stat-label">Faturamento</div>
+                    </div>
                 </div>
-                <div class="card">
-                    <div class="card-header"><div class="card-title">📦 Pedidos Recentes</div><button class="btn btn-secondary btn-sm" onclick="showPage('orders')">Ver todos</button></div>
-                    <div id="recentOrders"></div>
+
+                <!-- Active Orders -->
+                <div class="dash-section-title" id="activeOrdersTitle">
+                    <span>Pedidos Ativos</span>
+                    <span class="dash-section-count" id="activeCount">0</span>
+                </div>
+                <div id="activeOrdersList"></div>
+
+                <!-- Quick link to history -->
+                <div class="dash-history-link" onclick="showPage('history')">
+                    📋 Ver histórico completo da semana →
                 </div>
             </div>
             
-            <!-- Orders -->
-            <div id="ordersPage" class="page">
-                <div class="orders-filters">
-                    <div class="filter-chip active" onclick="filterOrders('all')">Todos</div>
-                    <div class="filter-chip" onclick="filterOrders('pending')">🟡 Pendentes</div>
-                    <div class="filter-chip" onclick="filterOrders('preparing')">🔵 Preparando</div>
-                    <div class="filter-chip" onclick="filterOrders('ready')">🟣 Pronto</div>
-                    <div class="filter-chip" onclick="filterOrders('delivering')">🟢 Entregando</div>
-                    <div class="filter-chip" onclick="filterOrders('delivered')">✅ Entregues</div>
+            <!-- ========== HISTORY (Últimos 7 dias) ========== -->
+            <div id="historyPage" class="page">
+                <div class="history-controls">
+                    <input type="text" class="form-input" style="max-width: 260px;" placeholder="🔍 Buscar pedido..." id="historySearch" oninput="renderHistory()">
+                    <div class="history-filters">
+                        <div class="filter-chip active" onclick="setHistoryFilter('all', this)">Todos</div>
+                        <div class="filter-chip" onclick="setHistoryFilter('delivered', this)">✅ Entregues</div>
+                        <div class="filter-chip" onclick="setHistoryFilter('cancelled', this)">❌ Cancelados</div>
+                    </div>
                 </div>
-                <div id="ordersList"></div>
+                <div id="historyList"></div>
             </div>
             
             <!-- Products -->
@@ -246,8 +257,6 @@
         </main>
     </div>
     
-
-    
     <!-- Category Modal -->
     <div class="modal" id="categoryModal">
         <div class="modal-content">
@@ -286,74 +295,71 @@
     <!-- App -->
     <script src="modules/fcm.js"></script>
     <script src="index.js"></script>
-    <div id="modalProducts" style="display:none; position:fixed; inset:0; z-index:99999;">
-  <div onclick="closeProductsModal()" ontouchstart="closeProductsModal(); return false;"
-       style="position:absolute; inset:0; background:rgba(0,0,0,.65)"></div>
 
-  <div style="
-    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
-    width:min(1100px, 96vw); height:min(860px, 92vh);
-    background:#0a0a0a; border:1px solid #262626; border-radius:14px;
-    overflow:hidden; box-shadow:0 25px 80px rgba(0,0,0,.6);
-    display:flex; flex-direction:column;">
-    
-    <div style="height:52px; display:flex; align-items:center; justify-content:space-between;
-      padding:0 14px; border-bottom:1px solid #262626; background:#000;">
-      <div style="font-weight:800">🍽️ Produtos</div>
-      <button class="btn" type="button" onclick="closeProductsModal()"
-        ontouchstart="closeProductsModal(); return false;">✕ Fechar</button>
+    <div id="modalProducts" style="display:none; position:fixed; inset:0; z-index:99999;">
+        <div onclick="closeProductsModal()" ontouchstart="closeProductsModal(); return false;"
+             style="position:absolute; inset:0; background:rgba(0,0,0,.65)"></div>
+        <div style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+            width:min(1100px, 96vw); height:min(860px, 92vh);
+            background:#0a0a0a; border:1px solid #262626; border-radius:14px;
+            overflow:hidden; box-shadow:0 25px 80px rgba(0,0,0,.6);
+            display:flex; flex-direction:column;">
+            <div style="height:52px; display:flex; align-items:center; justify-content:space-between;
+                padding:0 14px; border-bottom:1px solid #262626; background:#000;">
+                <div style="font-weight:800">🍽️ Produtos</div>
+                <button class="btn" type="button" onclick="closeProductsModal()"
+                    ontouchstart="closeProductsModal(); return false;">✕ Fechar</button>
+            </div>
+            <iframe id="productsFrame" src="about:blank"
+                style="flex:1; width:100%; border:0; background:#000;"></iframe>
+        </div>
     </div>
 
-    <iframe id="productsFrame" src="about:blank"
-      style="flex:1; width:100%; border:0; background:#000;"></iframe>
-  </div>
-</div>
-<div id="configModal" class="modal">
-  <div class="modalBox">
-    <button class="modalClose" onclick="closeConfigPopup()">✕</button>
-    <iframe id="configFrame" src="config.html"></iframe>
-  </div>
-</div>
+    <div id="configModal" class="modal">
+        <div class="modalBox">
+            <button class="modalClose" onclick="closeConfigPopup()">✕</button>
+            <iframe id="configFrame" src="config.html"></iframe>
+        </div>
+    </div>
 
-<script src="modules/popup-system.js"></script>
-<script src="modules/fixes.js"></script>
-<script src="modules/billing-system.js"></script>
-<script src="modules/fixes.js"></script>
-<script>
-function openConfigPopup(){
-  document.getElementById('configModal').classList.add('show');
-}
-function closeConfigPopup(){
-  document.getElementById('configModal').classList.remove('show');
-}
-window.addEventListener('message',(e)=>{
-  if(e.data==='closeConfig') closeConfigPopup();
-});
-</script>
-<div id="appPopup" class="modal">
-  <div class="modalBox">
-    <button class="modalClose" onclick="closePopup()">✕</button>
-    <iframe id="popupFrame"></iframe>
-  </div>
-</div>
-<script>
-function openPopup(page){
-  const modal = document.getElementById('appPopup');
-  const frame = document.getElementById('popupFrame');
-  frame.src = page;
-  modal.classList.add('show');
-}
-function closePopup(){
-  document.getElementById('appPopup').classList.remove('show');
-  document.getElementById('popupFrame').src = '';
-}
+    <script src="modules/popup-system.js"></script>
+    <script src="modules/fixes.js"></script>
+    <script src="modules/billing-system.js"></script>
 
-/* permite fechar de dentro do iframe */
-window.addEventListener('message', (e)=>{
-  if(e.data === 'closePopup') closePopup();
-});
-</script>
-<script src="batch-editor.js"></script>
+    <script>
+    function openConfigPopup(){
+        document.getElementById('configModal').classList.add('show');
+    }
+    function closeConfigPopup(){
+        document.getElementById('configModal').classList.remove('show');
+    }
+    window.addEventListener('message',(e)=>{
+        if(e.data==='closeConfig') closeConfigPopup();
+    });
+    </script>
 
+    <div id="appPopup" class="modal">
+        <div class="modalBox">
+            <button class="modalClose" onclick="closePopup()">✕</button>
+            <iframe id="popupFrame"></iframe>
+        </div>
+    </div>
+
+    <script>
+    function openPopup(page){
+        const modal = document.getElementById('appPopup');
+        const frame = document.getElementById('popupFrame');
+        frame.src = page;
+        modal.classList.add('show');
+    }
+    function closePopup(){
+        document.getElementById('appPopup').classList.remove('show');
+        document.getElementById('popupFrame').src = '';
+    }
+    window.addEventListener('message', (e)=>{
+        if(e.data === 'closePopup') closePopup();
+    });
+    </script>
+    <script src="batch-editor.js"></script>
 </body>
 </html>
