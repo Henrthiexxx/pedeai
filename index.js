@@ -427,86 +427,99 @@ function renderActiveOrderCard(order) {
     const customerName = order.userName || order.customerName || 'Cliente';
 
     const addr = order.address || {};
-    const fullAddress = [addr.street, addr.number ? `nº ${addr.number}` : '', addr.complement, addr.neighborhood].filter(Boolean).join(', ');
+    const fullAddress = [addr.street, addr.number ? 'nº ' + addr.number : '', addr.complement, addr.neighborhood].filter(Boolean).join(', ');
     const reference = addr.reference || '';
 
     const paymentLabels = { pix: '💠 PIX', credit: '💳 Crédito', debit: '💳 Débito', cash: '💵 Dinheiro', picpay: '💚 PicPay', food_voucher: '🎫 Vale Alimentação' };
     const paymentMethod = paymentLabels[order.paymentMethod] || order.paymentMethod || '—';
-    const needChange = order.needChange && order.changeFor ? `Troco p/ ${formatCurrency(order.changeFor)}` : '';
+    const needChange = order.needChange && order.changeFor ? 'Troco p/ ' + formatCurrency(order.changeFor) : '';
 
     const deliveryFee = order.deliveryFee || 0;
     const subtotal = (order.total || 0) - deliveryFee;
     const notes = order.notes || order.observation || '';
 
-    return `<div class="active-order ${isPending ? 'is-pending' : ''}">
-        <div class="ao-header" onclick="toggleActiveOrder('${order.id}')">
-            <div class="ao-left">
-                <div class="ao-id">#${order.id.slice(-6).toUpperCase()}</div>
-                <div class="ao-meta">
-                    <span>${customerName}</span>
-                    <span>•</span>
-                    <span>${timeStr}</span>
-                    <span>•</span>
-                    <span>${formatCurrency(order.total)}</span>
-                </div>
-            </div>
-            <span class="ao-status ao-status-${order.status}">${getStatusLabel(order.status)}</span>
-        </div>
-        <div class="ao-body" id="ao-${order.id}">
-            <div class="ao-body-inner">
-                <!-- Delivery / Pickup -->
-                <div class="ao-section">
-                    <div class="ao-section-label">${order.deliveryMode === 'pickup' ? '🏃 Retirada' : '🛵 Entrega'}</div>
-                    ${order.deliveryMode !== 'pickup'
-                        ? `<div class="ao-address"><strong>${fullAddress || 'Não informado'}</strong>${reference ? `<br>📍 ${reference}` : ''}</div>`
-                        : `<div class="ao-pickup">Cliente retira no local</div>`}
-                </div>
+    // Phone: tenta todos os campos possíveis
+    const rawPhone = order.userPhone || order.phone || order.customerPhone || '';
+    const cleanPhone = rawPhone.replace(/\D/g, '');
+    const showWhatsApp = ['confirmed','preparing','ready','delivering'].includes(order.status) && cleanPhone.length >= 10;
+    const waUrl = 'https://wa.me/55' + cleanPhone;
 
-                ${['confirmed','preparing','ready','delivering'].includes(order.status) && (order.userPhone || order.phone) ? `
-                <div class="ao-section" style="padding:8px 0">
-                    <a href="https://wa.me/55${(order.userPhone || order.phone).replace(/\D/g, '')}" target="_blank" rel="noopener"
-                       style="display:flex;align-items:center;gap:10px;background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.25);border-radius:10px;padding:10px 14px;text-decoration:none;color:#25D366;font-size:0.82rem;font-weight:500;transition:background 0.2s">
-                        💬 WhatsApp do cliente
-                    </a>
-                </div>` : ''}
+    // Items HTML (construído fora do template pra evitar problemas de escape)
+    const itemsHtml = (order.items || []).map(function(i) {
+        const addons = sanitizeAddons(i.addons || []);
+        const addonTotal = addons.reduce(function(s, a) { return s + (a.price || 0); }, 0);
+        const itemTotal = (i.price + addonTotal) * i.qty;
+        var desc = i.description || i.descricao || '';
+        var addonsStr = addons.length ? '<div class="ao-item-addons">' + addons.map(function(a){ return a.name; }).join(', ') + '</div>' : '';
+        var descStr = desc ? '<div class="ao-item-addons">' + desc + '</div>' : '';
+        var obsStr = i.observation ? '<div class="ao-item-obs">Obs: ' + i.observation + '</div>' : '';
+        return '<div class="ao-item">'
+            + '<span class="ao-item-qty">' + i.qty + 'x</span>'
+            + '<div class="ao-item-info">'
+            + '<div class="ao-item-name">' + i.name + '</div>'
+            + descStr
+            + addonsStr
+            + obsStr
+            + '</div>'
+            + '<span class="ao-item-price">' + formatCurrency(itemTotal) + '</span>'
+            + '</div>';
+    }).join('');
 
-                <!-- Items -->
-                <div class="ao-section">
-                    <div class="ao-section-label">🛒 Itens</div>
-                    ${(order.items || []).map(i => {
-                        const addons = sanitizeAddons(i.addons || []);
-                        const addonTotal = addons.reduce((s, a) => s + (a.price || 0), 0);
-                        const itemTotal = (i.price + addonTotal) * i.qty;
-                        return `<div class="ao-item">
-                            <span class="ao-item-qty">${i.qty}x</span>
-                            <div class="ao-item-info">
-                                <div class="ao-item-name">${i.name}</div>
-                                ${addons.length ? `<div class="ao-item-addons">${addons.map(a => a.name).join(', ')}</div>` : ''}
-                                ${i.observation ? `<div class="ao-item-obs">Obs: ${i.observation}</div>` : ''}
-                            </div>
-                            <span class="ao-item-price">${formatCurrency(itemTotal)}</span>
-                        </div>`;
-                    }).join('')}
-                </div>
+    // WhatsApp HTML
+    const waHtml = showWhatsApp
+        ? '<div class="ao-section" style="padding:8px 0">'
+          + '<a href="' + waUrl + '" target="_blank" rel="noopener" '
+          + 'style="display:flex;align-items:center;gap:10px;background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.25);border-radius:10px;padding:10px 14px;text-decoration:none;color:#25D366;font-size:0.82rem;font-weight:500">'
+          + '💬 WhatsApp do cliente</a></div>'
+        : '';
 
-                ${notes ? `<div class="ao-section"><div class="ao-section-label">📝 Obs</div><div class="ao-notes">${notes}</div></div>` : ''}
+    return '<div class="active-order ' + (isPending ? 'is-pending' : '') + '">'
+        + '<div class="ao-header" onclick="toggleActiveOrder(\'' + order.id + '\')">'
+        + '<div class="ao-left">'
+        + '<div class="ao-id">#' + order.id.slice(-6).toUpperCase() + '</div>'
+        + '<div class="ao-meta">'
+        + '<span>' + customerName + '</span><span>•</span>'
+        + '<span>' + timeStr + '</span><span>•</span>'
+        + '<span>' + formatCurrency(order.total) + '</span>'
+        + '</div></div>'
+        + '<span class="ao-status ao-status-' + order.status + '">' + getStatusLabel(order.status) + '</span>'
+        + '</div>'
+        + '<div class="ao-body" id="ao-' + order.id + '">'
+        + '<div class="ao-body-inner">'
 
-                <!-- Totals -->
-                <div class="ao-section">
-                    <div class="ao-section-label">💰 Pagamento — ${paymentMethod}</div>
-                    ${needChange ? `<div style="font-size:0.78rem;color:var(--accent-orange);margin-bottom:6px">${needChange}</div>` : ''}
-                    <div class="ao-totals">
-                        <div class="ao-total-row"><span>Subtotal</span><span>${formatCurrency(subtotal)}</span></div>
-                        ${deliveryFee > 0 ? `<div class="ao-total-row"><span>Entrega</span><span>${formatCurrency(deliveryFee)}</span></div>` : ''}
-                        <div class="ao-total-row final"><span>Total</span><span>${formatCurrency(order.total)}</span></div>
-                    </div>
-                </div>
+        // Entrega/Retirada
+        + '<div class="ao-section">'
+        + '<div class="ao-section-label">' + (order.deliveryMode === 'pickup' ? '🏃 Retirada' : '🛵 Entrega') + '</div>'
+        + (order.deliveryMode !== 'pickup'
+            ? '<div class="ao-address"><strong>' + (fullAddress || 'Não informado') + '</strong>' + (reference ? '<br>📍 ' + reference : '') + '</div>'
+            : '<div class="ao-pickup">Cliente retira no local</div>')
+        + '</div>'
 
-                <!-- Actions -->
-                <div class="ao-actions">${getOrderActions(order)}</div>
-            </div>
-        </div>
-    </div>`;
+        // WhatsApp
+        + waHtml
+
+        // Itens
+        + '<div class="ao-section">'
+        + '<div class="ao-section-label">🛒 Itens</div>'
+        + itemsHtml
+        + '</div>'
+
+        // Obs
+        + (notes ? '<div class="ao-section"><div class="ao-section-label">📝 Obs</div><div class="ao-notes">' + notes + '</div></div>' : '')
+
+        // Totais
+        + '<div class="ao-section">'
+        + '<div class="ao-section-label">💰 Pagamento — ' + paymentMethod + '</div>'
+        + (needChange ? '<div style="font-size:0.78rem;color:var(--accent-orange);margin-bottom:6px">' + needChange + '</div>' : '')
+        + '<div class="ao-totals">'
+        + '<div class="ao-total-row"><span>Subtotal</span><span>' + formatCurrency(subtotal) + '</span></div>'
+        + (deliveryFee > 0 ? '<div class="ao-total-row"><span>Entrega</span><span>' + formatCurrency(deliveryFee) + '</span></div>' : '')
+        + '<div class="ao-total-row final"><span>Total</span><span>' + formatCurrency(order.total) + '</span></div>'
+        + '</div></div>'
+
+        // Ações
+        + '<div class="ao-actions">' + getOrderActions(order) + '</div>'
+        + '</div></div></div>';
 }
 
 function toggleActiveOrder(orderId) {
