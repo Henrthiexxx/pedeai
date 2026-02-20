@@ -464,7 +464,7 @@ function renderActiveOrderCard(order) {
 
                 ${['confirmed','preparing','ready','delivering'].includes(order.status) && (order.userPhone || order.phone) ? `
                 <div class="ao-section" style="padding:8px 0">
-                    <a href="https://wa.me/55${(order.userPhone || order.phone).replace(/\\D/g, '')}" target="_blank" rel="noopener"
+                    <a href="https://wa.me/55${(order.userPhone || order.phone).replace(/\D/g, '')}" target="_blank" rel="noopener"
                        style="display:flex;align-items:center;gap:10px;background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.25);border-radius:10px;padding:10px 14px;text-decoration:none;color:#25D366;font-size:0.82rem;font-weight:500;transition:background 0.2s">
                         💬 WhatsApp do cliente
                     </a>
