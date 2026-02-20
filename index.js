@@ -9,6 +9,25 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
+// coloque logo após firebase.initializeApp(...)
+firebase.firestore().settings({
+  experimentalAutoDetectLongPolling: true,
+  useFetchStreams: false
+});
+
+let unsubOrders = null;
+
+function watchOrders(storeId){
+  if (unsubOrders) unsubOrders();
+
+  unsubOrders = firebase.firestore().collection("orders")
+    .where("storeId","==",storeId)
+    .where("status","in",["accepted","preparing","ready","delivering"]) // sem pending
+    .onSnapshot(snap=>{
+      const orders = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+      renderOrders(orders); // sua função de UI
+    }, console.error);
+}
 const auth = firebase.auth();
 const db = firebase.firestore();
 
