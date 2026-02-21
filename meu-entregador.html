@@ -415,7 +415,7 @@
                     ? `<img src="${d.photoUrl}" onerror="this.parentElement.innerHTML='🛵'">`
                     : '🛵';
 
-                const online = d.status === 'online' || d.available === true;
+               const online = d.online === true || d.status === 'online' || d.available === true;
                 const busy = d.currentOrderId || d.idleState === 'STORE_ACTIVE' || d.idleState === 'APP_ON_TRIP';
                 const statusCls = busy ? 'busy' : (online ? 'online' : 'offline');
                 const statusTxt = busy ? 'Em entrega' : (online ? 'Online' : 'Offline');
