@@ -17,7 +17,6 @@
             --danger: #ef4444;
             --success: #22c55e;
             --warning: #f59e0b;
-            --blue: #3b82f6;
             --radius: 10px;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -25,6 +24,7 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: var(--bg); color: var(--text);
             padding: 16px; max-width: 600px; margin: 0 auto;
+            min-height: 100vh;
         }
 
         /* ── Header ── */
@@ -49,65 +49,58 @@
             margin-bottom: 14px;
         }
 
-        /* ── Toggle Row ── */
-        .toggle-row {
-            display: flex; align-items: center; justify-content: space-between;
-            gap: 12px;
+        /* ── Token Input ── */
+        .token-row {
+            display: flex; gap: 8px; align-items: stretch;
         }
-        .toggle-row + .toggle-row { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
-        .toggle-label { font-size: 0.85rem; font-weight: 500; }
-        .toggle-desc { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
-
-        .toggle {
-            width: 44px; height: 22px; background: var(--border);
-            border-radius: 11px; position: relative; cursor: pointer;
-            transition: background 0.3s; flex-shrink: 0;
-        }
-        .toggle.active { background: var(--success); }
-        .toggle::after {
-            content: ''; position: absolute; width: 16px; height: 16px;
-            background: #000; border-radius: 50%;
-            top: 3px; left: 3px; transition: left 0.3s;
-        }
-        .toggle.active::after { left: 25px; }
-
-        /* ── Cooldown field ── */
-        .cooldown-row {
-            display: flex; align-items: center; gap: 10px;
-            margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border);
-        }
-        .cooldown-row label {
-            font-size: 0.75rem; color: var(--text-muted); flex: 1;
-        }
-        .cooldown-input {
-            width: 70px; padding: 8px 10px; border-radius: 6px;
+        .token-input {
+            flex: 1; padding: 12px 14px; border-radius: 8px;
             border: 1px solid var(--border); background: var(--bg-input);
-            color: var(--text); font-size: 0.85rem; text-align: center;
+            color: var(--text); font-size: 0.95rem; font-family: 'SF Mono', 'Fira Code', monospace;
+            letter-spacing: 2px; text-transform: uppercase;
         }
-        .cooldown-input:focus { outline: none; border-color: var(--text-muted); }
-        .cooldown-unit { font-size: 0.75rem; color: var(--text-muted); }
+        .token-input:focus { outline: none; border-color: var(--text-muted); }
+        .token-input::placeholder { letter-spacing: 0; text-transform: none; font-family: inherit; color: #404040; }
 
-        .save-btn {
-            width: 100%; padding: 12px; margin-top: 14px;
-            border-radius: 8px; border: 1px solid var(--primary);
-            background: var(--primary); color: #000;
-            font-size: 0.75rem; font-weight: 600; cursor: pointer;
-            text-transform: uppercase; letter-spacing: 1px;
-            transition: opacity 0.2s;
+        .token-btn {
+            padding: 12px 18px; border-radius: 8px;
+            border: 1px solid var(--primary); background: var(--primary);
+            color: #000; font-size: 0.75rem; font-weight: 700;
+            cursor: pointer; text-transform: uppercase; letter-spacing: 1px;
+            white-space: nowrap; transition: all 0.15s;
         }
-        .save-btn:active { opacity: 0.7; }
+        .token-btn:active { opacity: 0.7; transform: scale(0.97); }
+        .token-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+        .token-hint {
+            margin-top: 10px; font-size: 0.7rem; color: var(--text-muted);
+            line-height: 1.5; padding: 10px 12px;
+            background: rgba(255,255,255,0.02); border-radius: 6px;
+            border-left: 2px solid var(--border);
+        }
+
+        /* ── Info Banner ── */
+        .info-banner {
+            display: flex; align-items: flex-start; gap: 10px;
+            padding: 12px; border-radius: 8px; margin-bottom: 12px;
+            background: rgba(59,130,246,0.06); border: 1px solid rgba(59,130,246,0.15);
+        }
+        .info-banner .icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+        .info-banner .text { font-size: 0.72rem; color: var(--text-muted); line-height: 1.5; }
+        .info-banner .text b { color: var(--text); font-weight: 600; }
 
         /* ── Driver List ── */
         .driver-item {
-            display: flex; align-items: flex-start; gap: 12px;
+            display: flex; align-items: center; gap: 12px;
             padding: 14px; background: var(--bg-input);
             border: 1px solid var(--border); border-radius: 8px;
-            margin-bottom: 8px;
+            margin-bottom: 8px; transition: border-color 0.2s;
         }
         .driver-item:last-child { margin-bottom: 0; }
+        .driver-item:hover { border-color: #333; }
 
         .d-avatar {
-            width: 40px; height: 40px; border-radius: 50%;
+            width: 42px; height: 42px; border-radius: 50%;
             background: var(--border); display: flex; align-items: center;
             justify-content: center; font-size: 1.1rem; flex-shrink: 0;
             overflow: hidden;
@@ -115,41 +108,80 @@
         .d-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
         .d-body { flex: 1; min-width: 0; }
-        .d-name { font-size: 0.85rem; font-weight: 500; margin-bottom: 3px; }
-        .d-meta { font-size: 0.72rem; color: var(--text-muted); margin-bottom: 2px; word-break: break-all; }
-        .d-pix { font-size: 0.72rem; color: var(--text-muted); }
-        .d-pix b { color: var(--success); font-weight: 600; }
+        .d-name { font-size: 0.88rem; font-weight: 600; margin-bottom: 2px; }
+        .d-meta { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 1px; }
+        .d-token { font-size: 0.65rem; color: #525252; font-family: monospace; letter-spacing: 1px; }
 
         .d-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
 
-        .status-pill {
-            padding: 4px 8px; border-radius: 10px; font-size: 0.6rem;
-            font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
-            white-space: nowrap;
+        .status-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            display: inline-block; margin-right: 5px;
         }
-        .status-pill.online { background: rgba(34,197,94,0.12); color: var(--success); }
-        .status-pill.offline { background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); }
-        .status-pill.on-trip { background: rgba(245,158,11,0.12); color: var(--warning); }
-        .status-pill.cooldown { background: rgba(239,68,68,0.12); color: var(--danger); }
+        .status-dot.online { background: var(--success); box-shadow: 0 0 6px rgba(34,197,94,0.4); }
+        .status-dot.offline { background: #404040; }
+        .status-dot.busy { background: var(--warning); box-shadow: 0 0 6px rgba(245,158,11,0.3); }
 
-        .signal-row { display: flex; gap: 4px; margin-top: 6px; }
-        .sig-btn {
-            padding: 5px 8px; border-radius: 5px; border: 1px solid var(--border);
-            font-size: 0.6rem; cursor: pointer; background: transparent;
-            color: var(--text); transition: all 0.15s; text-transform: uppercase;
-            letter-spacing: 0.3px; white-space: nowrap;
+        .status-label {
+            font-size: 0.65rem; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 0.5px;
         }
-        .sig-btn:active { transform: scale(0.95); }
-        .sig-btn.out { border-color: var(--warning); color: var(--warning); }
-        .sig-btn.back { border-color: var(--success); color: var(--success); }
+
+        .remove-btn {
+            padding: 5px 10px; border-radius: 6px;
+            border: 1px solid rgba(239,68,68,0.25); background: rgba(239,68,68,0.08);
+            color: var(--danger); font-size: 0.6rem; cursor: pointer;
+            text-transform: uppercase; letter-spacing: 0.5px;
+            transition: all 0.15s; font-weight: 600;
+        }
+        .remove-btn:hover { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.4); }
+        .remove-btn:active { transform: scale(0.95); }
+
+        /* ── Count Badge ── */
+        .driver-count {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 0.7rem; color: var(--text-muted);
+        }
+        .driver-count .num {
+            background: rgba(255,255,255,0.08); border: 1px solid var(--border);
+            border-radius: 6px; padding: 2px 8px; font-weight: 700;
+            font-size: 0.75rem; color: var(--text);
+        }
 
         /* ── Empty ── */
         .empty {
             text-align: center; padding: 32px 16px; color: var(--text-muted);
         }
-        .empty-icon { font-size: 2rem; margin-bottom: 8px; }
+        .empty-icon { font-size: 2rem; margin-bottom: 8px; opacity: 0.5; }
         .empty-title { font-size: 0.85rem; color: var(--text); margin-bottom: 4px; }
-        .empty-sub { font-size: 0.72rem; }
+        .empty-sub { font-size: 0.72rem; line-height: 1.5; }
+
+        /* ── Confirm Popup ── */
+        .confirm-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+            z-index: 999; display: none; align-items: center;
+            justify-content: center; padding: 20px;
+        }
+        .confirm-overlay.show { display: flex; }
+        .confirm-box {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 14px; max-width: 340px; width: 100%;
+            overflow: hidden;
+        }
+        .confirm-body { padding: 24px; text-align: center; }
+        .confirm-title { font-size: 0.95rem; font-weight: 600; margin-bottom: 8px; }
+        .confirm-text { font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; }
+        .confirm-actions {
+            display: flex; border-top: 1px solid var(--border);
+        }
+        .confirm-actions button {
+            flex: 1; padding: 14px; border: none; background: transparent;
+            font-size: 0.85rem; cursor: pointer; transition: background 0.15s;
+        }
+        .confirm-cancel { color: var(--text-muted); }
+        .confirm-cancel:hover { background: rgba(255,255,255,0.03); }
+        .confirm-danger { color: var(--danger); font-weight: 600; border-left: 1px solid var(--border) !important; }
+        .confirm-danger:hover { background: rgba(239,68,68,0.08); }
 
         /* ── Toast ── */
         .toast {
@@ -157,12 +189,17 @@
             transform: translateX(-50%) translateY(80px);
             background: var(--bg-card); padding: 12px 24px; border-radius: 8px;
             border: 1px solid var(--border); z-index: 300; opacity: 0;
-            transition: all 0.3s; font-size: 0.8rem;
+            transition: all 0.3s; font-size: 0.82rem; max-width: 90vw;
+            text-align: center;
         }
         .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
         .loading { text-align: center; padding: 40px; color: var(--text-muted); }
-        .spinner { width: 24px; height: 24px; border: 2px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 8px; }
+        .spinner {
+            width: 24px; height: 24px; border: 2px solid var(--border);
+            border-top-color: var(--primary); border-radius: 50%;
+            animation: spin 0.7s linear infinite; margin: 0 auto 8px;
+        }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
@@ -170,7 +207,7 @@
     <div class="toast" id="toast"></div>
 
     <div class="page-header">
-        <h1>🛵 Meu Entregador</h1>
+        <h1>🛵 Meus Entregadores</h1>
     </div>
 
     <div id="loadingState" class="loading">
@@ -180,47 +217,57 @@
 
     <div id="mainContent" style="display:none;">
 
-        <!-- ── Controls Card ── -->
-        <div class="card">
-            <div class="card-title">Controle de Disponibilidade</div>
-
-            <!-- Toggle 1: Manual release NOW -->
-            <div class="toggle-row">
-                <div>
-                    <div class="toggle-label">Liberar para outras entregas</div>
-                    <div class="toggle-desc">Libera imediatamente seu entregador para pedidos de outras lojas</div>
-                </div>
-                <div class="toggle" id="manualReleaseToggle" onclick="toggleManualRelease()"></div>
+        <!-- Info -->
+        <div class="info-banner">
+            <div class="icon">ℹ️</div>
+            <div class="text">
+                <b>Como funciona:</b> Peça ao entregador o <b>token</b> dele (visível no app do entregador).
+                Cole aqui para vincular. Pedidos da sua loja irão <b>apenas</b> para entregadores vinculados.
+                Sem nenhum vínculo, os pedidos vão para todos os entregadores livres da plataforma.
             </div>
-
-            <!-- Toggle 2: Auto idle system -->
-            <div class="toggle-row">
-                <div>
-                    <div class="toggle-label">Modo automático (ocioso)</div>
-                    <div class="toggle-desc">Libera automaticamente quando o entregador ficar sem pedidos por um tempo</div>
-                </div>
-                <div class="toggle" id="idleToggle" onclick="toggleIdle()"></div>
-            </div>
-
-            <!-- Cooldown -->
-            <div class="cooldown-row">
-                <label>Cooldown após entrega de outra loja</label>
-                <input type="number" class="cooldown-input" id="cooldownMin" value="15" min="5" max="60">
-                <span class="cooldown-unit">min</span>
-            </div>
-
-            <button class="save-btn" onclick="saveConfig()">Salvar</button>
         </div>
 
-        <!-- ── Drivers Card ── -->
+        <!-- Token Input -->
         <div class="card">
-            <div class="card-title">Entregadores Atribuídos</div>
+            <div class="card-title">Vincular Entregador</div>
+            <div class="token-row">
+                <input type="text" class="token-input" id="tokenInput"
+                    placeholder="Cole o token aqui" maxlength="20"
+                    autocomplete="off" spellcheck="false">
+                <button class="token-btn" id="linkBtn" onclick="linkDriver()">Vincular</button>
+            </div>
+            <div class="token-hint">
+                O entregador encontra o token no app dele, em <b>Meu Perfil</b>.
+                Cada token é único e identifica um entregador.
+            </div>
+        </div>
+
+        <!-- Driver List -->
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                <div class="card-title" style="margin-bottom:0;">Entregadores Vinculados</div>
+                <div class="driver-count"><span class="num" id="driverCount">0</span></div>
+            </div>
             <div id="driversList">
                 <div class="empty">
                     <div class="empty-icon">🛵</div>
-                    <div class="empty-title">Nenhum entregador</div>
-                    <div class="empty-sub">Peça ao administrador para atribuir</div>
+                    <div class="empty-title">Nenhum entregador vinculado</div>
+                    <div class="empty-sub">Insira um token acima para vincular.<br>Enquanto não houver vínculo, pedidos irão para todos os entregadores livres.</div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Remove -->
+    <div class="confirm-overlay" id="confirmOverlay">
+        <div class="confirm-box">
+            <div class="confirm-body">
+                <div class="confirm-title">Desvincular entregador?</div>
+                <div class="confirm-text" id="confirmText">Este entregador não receberá mais pedidos da sua loja.</div>
+            </div>
+            <div class="confirm-actions">
+                <button class="confirm-cancel" onclick="closeConfirm()">Cancelar</button>
+                <button class="confirm-danger" id="confirmBtn" onclick="confirmRemove()">Desvincular</button>
             </div>
         </div>
     </div>
@@ -242,15 +289,16 @@
         const db = firebase.firestore();
 
         let currentStore = null;
-        let storeDrivers = [];
+        let linkedDrivers = [];
         let unsubDrivers = null;
+        let pendingRemoveId = null;
 
         // ==================== AUTH ====================
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 await loadStore(user);
             } else {
-                window.location.href = 'index.html';
+                showToast('Faça login primeiro');
             }
         });
 
@@ -261,7 +309,8 @@
 
                 if (!snap.empty) {
                     currentStore = { id: snap.docs[0].id, ...snap.docs[0].data() };
-                    loadUI();
+                    document.getElementById('loadingState').style.display = 'none';
+                    document.getElementById('mainContent').style.display = 'block';
                     listenDrivers();
                 } else {
                     showToast('Loja não encontrada');
@@ -272,209 +321,182 @@
             }
         }
 
-        // ==================== UI ====================
-        function loadUI() {
-            document.getElementById('loadingState').style.display = 'none';
-            document.getElementById('mainContent').style.display = 'block';
+        // ==================== LINK DRIVER BY TOKEN ====================
+        async function linkDriver() {
+            const input = document.getElementById('tokenInput');
+            const btn = document.getElementById('linkBtn');
+            const token = (input.value || '').trim().toUpperCase();
 
-            const idle = currentStore.idleConfig || {};
+            if (!token) { showToast('Digite um token'); return; }
+            if (token.length < 4) { showToast('Token muito curto'); return; }
+            if (!currentStore) { showToast('Loja não carregada'); return; }
 
-            // Idle toggle
-            const idleToggle = document.getElementById('idleToggle');
-            idleToggle.classList.toggle('active', idle.enabled === true);
-
-            // Cooldown
-            document.getElementById('cooldownMin').value = idle.cooldown_minutes || 15;
-
-            // Manual release reflects current driver appEligible (loaded when drivers arrive)
-        }
-
-        function syncManualToggle() {
-            // If ANY driver of this store has appEligible AND is not in auto-idle state → manual is on
-            const toggle = document.getElementById('manualReleaseToggle');
-            const manuallyReleased = storeDrivers.some(d =>
-                d.appEligible === true && d.idleState !== 'STORE_IDLE'
-            );
-            toggle.classList.toggle('active', manuallyReleased);
-        }
-
-        // ==================== TOGGLES ====================
-        function toggleIdle() {
-            document.getElementById('idleToggle').classList.toggle('active');
-        }
-
-        async function toggleManualRelease() {
-            if (storeDrivers.length === 0) {
-                showToast('Nenhum entregador atribuído');
+            // Checa se já está vinculado
+            const alreadyLinked = linkedDrivers.find(d => (d.token || '').toUpperCase() === token);
+            if (alreadyLinked) {
+                showToast('Este entregador já está vinculado');
+                input.value = '';
                 return;
             }
 
-            const toggle = document.getElementById('manualReleaseToggle');
-            const wasActive = toggle.classList.contains('active');
-            const newState = !wasActive;
-            toggle.classList.toggle('active', newState);
+            btn.disabled = true;
+            btn.textContent = '...';
 
-            // Update ALL store drivers' appEligible immediately
             try {
-                const batch = db.batch();
-                storeDrivers.forEach(d => {
-                    // Only toggle if driver is online (not OFFLINE)
-                    if (d.idleState !== 'OFFLINE') {
-                        const ref = db.collection('drivers').doc(d.id);
-                        batch.update(ref, { appEligible: newState });
-                    }
+                // Busca driver pelo token
+                const snap = await db.collection('drivers')
+                    .where('token', '==', token)
+                    .limit(1)
+                    .get();
+
+                if (snap.empty) {
+                    showToast('Token não encontrado');
+                    btn.disabled = false;
+                    btn.textContent = 'Vincular';
+                    return;
+                }
+
+                const driverDoc = snap.docs[0];
+                const driverData = driverDoc.data();
+
+                // Checa se já pertence a outra loja
+                const existingStoreIds = driverData.linkedStores || [];
+                if (existingStoreIds.includes(currentStore.id)) {
+                    showToast('Já vinculado à sua loja');
+                    input.value = '';
+                    btn.disabled = false;
+                    btn.textContent = 'Vincular';
+                    return;
+                }
+
+                // Adiciona storeId ao array linkedStores do driver
+                await db.collection('drivers').doc(driverDoc.id).update({
+                    linkedStores: firebase.firestore.FieldValue.arrayUnion(currentStore.id)
                 });
-                await batch.commit();
-                showToast(newState ? '✓ Entregador liberado para outras lojas' : '✓ Entregador restrito à sua loja');
+
+                input.value = '';
+                showToast('✓ ' + (driverData.name || 'Entregador') + ' vinculado!');
+
             } catch (err) {
                 console.error(err);
-                toggle.classList.toggle('active', wasActive); // rollback
-                showToast('Erro ao atualizar');
+                showToast('Erro ao vincular');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Vincular';
             }
         }
 
-        async function saveConfig() {
-            if (!currentStore) return;
-            const enabled = document.getElementById('idleToggle').classList.contains('active');
-            const cooldown = parseInt(document.getElementById('cooldownMin').value) || 15;
+        // Enter key
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('tokenInput').addEventListener('keydown', e => {
+                if (e.key === 'Enter') linkDriver();
+            });
+        });
 
-            const idleConfig = {
-                ...(currentStore.idleConfig || {}),
-                enabled,
-                cooldown_minutes: Math.max(5, Math.min(60, cooldown))
-            };
-
-            try {
-                await db.collection('stores').doc(currentStore.id).update({ idleConfig });
-                currentStore.idleConfig = idleConfig;
-                showToast('✓ Configuração salva');
-            } catch (err) {
-                console.error(err);
-                showToast('Erro ao salvar');
-            }
-        }
-
-        // ==================== DRIVERS LISTENER ====================
+        // ==================== LISTEN LINKED DRIVERS ====================
         function listenDrivers() {
             if (unsubDrivers) unsubDrivers();
 
             unsubDrivers = db.collection('drivers')
-                .where('storeId', '==', currentStore.id)
-                .where('driverType', '==', 'store')
+                .where('linkedStores', 'array-contains', currentStore.id)
                 .onSnapshot(snap => {
-                    storeDrivers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                    linkedDrivers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                     renderDrivers();
-                    syncManualToggle();
+                }, err => {
+                    console.error('Listener error:', err);
+                    // Fallback: tenta reconectar
+                    setTimeout(() => {
+                        if (currentStore) listenDrivers();
+                    }, 5000);
                 });
         }
 
+        // ==================== RENDER ====================
         function renderDrivers() {
             const container = document.getElementById('driversList');
+            document.getElementById('driverCount').textContent = linkedDrivers.length;
 
-            if (storeDrivers.length === 0) {
+            if (linkedDrivers.length === 0) {
                 container.innerHTML = `<div class="empty">
                     <div class="empty-icon">🛵</div>
-                    <div class="empty-title">Nenhum entregador</div>
-                    <div class="empty-sub">Peça ao administrador para atribuir</div>
+                    <div class="empty-title">Nenhum entregador vinculado</div>
+                    <div class="empty-sub">Insira um token acima para vincular.<br>Enquanto não houver vínculo, pedidos irão para todos os entregadores livres.</div>
                 </div>`;
                 return;
             }
 
-            container.innerHTML = storeDrivers.map(d => {
-                const st = getStatusInfo(d);
-                const pix = d.pixKey || d.pix || '—';
+            container.innerHTML = linkedDrivers.map(d => {
                 const photo = d.photoUrl
                     ? `<img src="${d.photoUrl}" onerror="this.parentElement.innerHTML='🛵'">`
                     : '🛵';
+
+                const online = d.status === 'online' || d.available === true;
+                const busy = d.currentOrderId || d.idleState === 'STORE_ACTIVE' || d.idleState === 'APP_ON_TRIP';
+                const statusCls = busy ? 'busy' : (online ? 'online' : 'offline');
+                const statusTxt = busy ? 'Em entrega' : (online ? 'Online' : 'Offline');
+
+                const tokenDisplay = (d.token || '').toUpperCase();
+                const phone = d.phone || '';
 
                 return `
                 <div class="driver-item">
                     <div class="d-avatar">${photo}</div>
                     <div class="d-body">
-                        <div class="d-name">${d.name || 'Sem nome'}</div>
-                        <div class="d-meta">${d.email || ''}</div>
-                        <div class="d-meta">${d.phone || ''}</div>
-                        <div class="d-pix"><b>PIX</b> ${pix}</div>
+                        <div class="d-name">${esc(d.name || 'Sem nome')}</div>
+                        ${phone ? `<div class="d-meta">📱 ${esc(phone)}</div>` : ''}
+                        <div class="d-token">TOKEN: ${esc(tokenDisplay)}</div>
                     </div>
                     <div class="d-right">
-                        <span class="status-pill ${st.cls}">${st.label}</span>
-                        ${d.idleState !== 'OFFLINE' ? `
-                        <div class="signal-row">
-                            <button class="sig-btn out" onclick="signal('${d.id}','start')">🚀 Saiu</button>
-                            <button class="sig-btn back" onclick="signal('${d.id}','end')">✓ Voltou</button>
-                        </div>` : ''}
+                        <div class="status-label">
+                            <span class="status-dot ${statusCls}"></span>${statusTxt}
+                        </div>
+                        <button class="remove-btn" onclick="askRemove('${d.id}', '${esc(d.name || 'Entregador')}')">Desvincular</button>
                     </div>
                 </div>`;
             }).join('');
         }
 
-        function getStatusInfo(d) {
-            const s = d.idleState || 'OFFLINE';
-            const map = {
-                'OFFLINE':      { label: 'Offline',       cls: 'offline' },
-                'STORE_IDLE':   { label: 'Ocioso',        cls: 'online' },
-                'STORE_ACTIVE': { label: 'Entrega loja',  cls: 'on-trip' },
-                'APP_ON_TRIP':  { label: 'Entrega app',   cls: 'on-trip' },
-                'COOLDOWN':     { label: 'Cooldown',      cls: 'cooldown' }
-            };
-            return map[s] || { label: s, cls: 'offline' };
+        // ==================== REMOVE DRIVER ====================
+        function askRemove(driverId, driverName) {
+            pendingRemoveId = driverId;
+            document.getElementById('confirmText').textContent =
+                `"${driverName}" não receberá mais pedidos da sua loja.`;
+            document.getElementById('confirmOverlay').classList.add('show');
         }
 
-        // ==================== SIGNAL STORE TRIP ====================
-        async function signal(driverId, action) {
-            const driver = storeDrivers.find(d => d.id === driverId);
-            if (!driver) return;
+        function closeConfirm() {
+            document.getElementById('confirmOverlay').classList.remove('show');
+            pendingRemoveId = null;
+        }
+
+        async function confirmRemove() {
+            if (!pendingRemoveId || !currentStore) return;
+            const driverId = pendingRemoveId;
+            closeConfirm();
 
             try {
-                if (action === 'start') {
-                    const cooldownMin = currentStore.idleConfig?.cooldown_minutes || 15;
-                    const cooldownUntil = new Date(Date.now() + cooldownMin * 60 * 1000);
-
-                    await db.collection('drivers').doc(driverId).update({
-                        idleState: 'STORE_ACTIVE',
-                        appEligible: false,
-                        cooldownUntil: firebase.firestore.Timestamp.fromDate(cooldownUntil)
-                    });
-
-                    await db.collection('idleAuditLog').add({
-                        driverId, storeId: currentStore.id,
-                        event: 'STORE_TRIP_STARTED',
-                        from: driver.idleState || 'STORE_IDLE', to: 'STORE_ACTIVE',
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-
-                    showToast('🚀 Saiu para entrega da loja');
-
-                } else {
-                    const cooldownUntil = driver.cooldownUntil?.toDate?.() || null;
-                    const inCooldown = cooldownUntil && cooldownUntil > new Date();
-
-                    await db.collection('drivers').doc(driverId).update({
-                        idleState: inCooldown ? 'COOLDOWN' : 'STORE_IDLE',
-                        appEligible: !inCooldown
-                    });
-
-                    await db.collection('idleAuditLog').add({
-                        driverId, storeId: currentStore.id,
-                        event: 'STORE_TRIP_ENDED',
-                        from: 'STORE_ACTIVE', to: inCooldown ? 'COOLDOWN' : 'STORE_IDLE',
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-
-                    showToast(inCooldown ? '⏰ Cooldown ativo' : '✓ Disponível');
-                }
+                await db.collection('drivers').doc(driverId).update({
+                    linkedStores: firebase.firestore.FieldValue.arrayRemove(currentStore.id)
+                });
+                showToast('✓ Entregador desvinculado');
             } catch (err) {
                 console.error(err);
-                showToast('Erro');
+                showToast('Erro ao desvincular');
             }
         }
 
         // ==================== UTILS ====================
+        function esc(str) {
+            return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+        }
+
         function showToast(msg) {
             const t = document.getElementById('toast');
             t.textContent = msg;
             t.classList.add('show');
-            setTimeout(() => t.classList.remove('show'), 2500);
+            clearTimeout(window._tt);
+            window._tt = setTimeout(() => t.classList.remove('show'), 2800);
         }
     </script>
 </body>
