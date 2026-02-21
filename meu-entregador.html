@@ -317,7 +317,7 @@
             if (!currentStore) { showToast('Loja não carregada'); return; }
 
             // Checa se já está vinculado
-            const alreadyLinked = linkedDrivers.find(d => (d.token || '').toUpperCase() === token);
+            const alreadyLinked = linkedDrivers.find(d => (d.driverToken || '').toUpperCase() === token);
             if (alreadyLinked) {
                 showToast('Este entregador já está vinculado');
                 input.value = '';
@@ -330,7 +330,7 @@
             try {
                 // Busca driver pelo token
                 const snap = await db.collection('drivers')
-                    .where('token', '==', token)
+                    .where('driverToken', '==', token)
                     .limit(1)
                     .get();
 
@@ -420,7 +420,7 @@
                 const statusCls = busy ? 'busy' : (online ? 'online' : 'offline');
                 const statusTxt = busy ? 'Em entrega' : (online ? 'Online' : 'Offline');
 
-                const tokenDisplay = (d.token || '').toUpperCase();
+                const tokenDisplay = (d.driverToken || '').toUpperCase();
                 const phone = d.phone || '';
 
                 return `
