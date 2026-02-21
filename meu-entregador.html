@@ -273,7 +273,6 @@
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script>
         const firebaseConfig = {
@@ -285,7 +284,6 @@
             appId: "1:293587190550:web:80c9399f82847c80e20637"
         };
         firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
         const db = firebase.firestore();
 
         let currentStore = null;
@@ -293,32 +291,19 @@
         let unsubDrivers = null;
         let pendingRemoveId = null;
 
-        // ==================== AUTH ====================
-        auth.onAuthStateChanged(async (user) => {
-            if (user) {
-                await loadStore(user);
-            } else {
-                showToast('Faça login primeiro');
-            }
-        });
+        // ==================== INIT (localStorage, sem Auth) ====================
+        const currentStoreId = localStorage.getItem('currentStoreId')
+            || localStorage.getItem('CURRENT_STORE_ID')
+            || localStorage.getItem('storeId');
 
-        async function loadStore(user) {
-            try {
-                let snap = await db.collection('stores').where('ownerEmail', '==', user.email).limit(1).get();
-                if (snap.empty) snap = await db.collection('stores').where('ownerId', '==', user.uid).limit(1).get();
-
-                if (!snap.empty) {
-                    currentStore = { id: snap.docs[0].id, ...snap.docs[0].data() };
-                    document.getElementById('loadingState').style.display = 'none';
-                    document.getElementById('mainContent').style.display = 'block';
-                    listenDrivers();
-                } else {
-                    showToast('Loja não encontrada');
-                }
-            } catch (err) {
-                console.error(err);
-                showToast('Erro ao carregar');
-            }
+        if (!currentStoreId) {
+            document.getElementById('loadingState').innerHTML =
+                '<div style="color:#ef4444;font-size:0.85rem;">Loja não encontrada.<br>Feche e reabra o painel.</div>';
+        } else {
+            currentStore = { id: currentStoreId };
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+            listenDrivers();
         }
 
         // ==================== LINK DRIVER BY TOKEN ====================
