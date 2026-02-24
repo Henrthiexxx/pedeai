@@ -54,7 +54,7 @@
             display: flex; gap: 8px; align-items: stretch;
         }
         .token-input {
-            flex: 1; padding: 12px 14px; border-radius: 8px;
+            flex: 1; min-width: 0; padding: 12px 14px; border-radius: 8px;
             border: 1px solid var(--border); background: var(--bg-input);
             color: var(--text); font-size: 0.95rem; font-family: 'SF Mono', 'Fira Code', monospace;
             letter-spacing: 2px; text-transform: uppercase;
@@ -63,6 +63,7 @@
         .token-input::placeholder { letter-spacing: 0; text-transform: none; font-family: inherit; color: #404040; }
 
         .token-btn {
+            flex-shrink: 0;
             padding: 12px 18px; border-radius: 8px;
             border: 1px solid var(--primary); background: var(--primary);
             color: #000; font-size: 0.75rem; font-weight: 700;
@@ -91,7 +92,7 @@
 
         /* ── Driver List ── */
         .driver-item {
-            display: flex; align-items: center; gap: 12px;
+            display: flex; align-items: flex-start; gap: 12px;
             padding: 14px; background: var(--bg-input);
             border: 1px solid var(--border); border-radius: 8px;
             margin-bottom: 8px; transition: border-color 0.2s;
@@ -112,19 +113,24 @@
         .d-meta { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 1px; }
         .d-token { font-size: 0.65rem; color: #525252; font-family: monospace; letter-spacing: 1px; }
 
-        .d-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+        /* ── Ações (coluna direita) — agora em coluna para caber no mobile ── */
+        .d-right {
+            display: flex; flex-direction: column;
+            align-items: flex-end; gap: 8px; flex-shrink: 0;
+        }
 
         .status-dot {
             width: 8px; height: 8px; border-radius: 50%;
             display: inline-block; margin-right: 5px;
         }
-        .status-dot.online { background: var(--success); box-shadow: 0 0 6px rgba(34,197,94,0.4); }
+        .status-dot.online  { background: var(--success); box-shadow: 0 0 6px rgba(34,197,94,0.4); }
         .status-dot.offline { background: #404040; }
-        .status-dot.busy { background: var(--warning); box-shadow: 0 0 6px rgba(245,158,11,0.3); }
+        .status-dot.busy    { background: var(--warning); box-shadow: 0 0 6px rgba(245,158,11,0.3); }
 
         .status-label {
             font-size: 0.65rem; color: var(--text-muted);
             text-transform: uppercase; letter-spacing: 0.5px;
+            white-space: nowrap;
         }
 
         .remove-btn {
@@ -132,10 +138,42 @@
             border: 1px solid rgba(239,68,68,0.25); background: rgba(239,68,68,0.08);
             color: var(--danger); font-size: 0.6rem; cursor: pointer;
             text-transform: uppercase; letter-spacing: 0.5px;
-            transition: all 0.15s; font-weight: 600;
+            transition: all 0.15s; font-weight: 600; white-space: nowrap;
         }
-        .remove-btn:hover { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.4); }
+        .remove-btn:hover  { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.4); }
         .remove-btn:active { transform: scale(0.95); }
+
+        /* ── App Eligible Toggle ── */
+        .eligible-row {
+            display: flex; align-items: center; gap: 6px;
+            justify-content: flex-end;
+        }
+        .eligible-label {
+            font-size: 0.6rem; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;
+        }
+        .toggle-switch {
+            position: relative; width: 36px; height: 20px; flex-shrink: 0;
+        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider {
+            position: absolute; inset: 0;
+            background: #2a2a2a; border: 1px solid #333;
+            border-radius: 20px; cursor: pointer; transition: .2s;
+        }
+        .toggle-slider::before {
+            content: ''; position: absolute;
+            width: 14px; height: 14px; left: 2px; bottom: 2px;
+            background: #555; border-radius: 50%; transition: .2s;
+        }
+        .toggle-switch input:checked + .toggle-slider {
+            background: rgba(34,197,94,0.25);
+            border-color: rgba(34,197,94,0.5);
+        }
+        .toggle-switch input:checked + .toggle-slider::before {
+            background: var(--success);
+            transform: translateX(16px);
+        }
 
         /* ── Count Badge ── */
         .driver-count {
@@ -152,9 +190,9 @@
         .empty {
             text-align: center; padding: 32px 16px; color: var(--text-muted);
         }
-        .empty-icon { font-size: 2rem; margin-bottom: 8px; opacity: 0.5; }
+        .empty-icon  { font-size: 2rem; margin-bottom: 8px; opacity: 0.5; }
         .empty-title { font-size: 0.85rem; color: var(--text); margin-bottom: 4px; }
-        .empty-sub { font-size: 0.72rem; line-height: 1.5; }
+        .empty-sub   { font-size: 0.72rem; line-height: 1.5; }
 
         /* ── Confirm Popup ── */
         .confirm-overlay {
@@ -165,15 +203,12 @@
         .confirm-overlay.show { display: flex; }
         .confirm-box {
             background: var(--bg-card); border: 1px solid var(--border);
-            border-radius: 14px; max-width: 340px; width: 100%;
-            overflow: hidden;
+            border-radius: 14px; max-width: 340px; width: 100%; overflow: hidden;
         }
         .confirm-body { padding: 24px; text-align: center; }
         .confirm-title { font-size: 0.95rem; font-weight: 600; margin-bottom: 8px; }
-        .confirm-text { font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; }
-        .confirm-actions {
-            display: flex; border-top: 1px solid var(--border);
-        }
+        .confirm-text  { font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; }
+        .confirm-actions { display: flex; border-top: 1px solid var(--border); }
         .confirm-actions button {
             flex: 1; padding: 14px; border: none; background: transparent;
             font-size: 0.85rem; cursor: pointer; transition: background 0.15s;
@@ -189,8 +224,7 @@
             transform: translateX(-50%) translateY(80px);
             background: var(--bg-card); padding: 12px 24px; border-radius: 8px;
             border: 1px solid var(--border); z-index: 300; opacity: 0;
-            transition: all 0.3s; font-size: 0.82rem; max-width: 90vw;
-            text-align: center;
+            transition: all 0.3s; font-size: 0.82rem; max-width: 90vw; text-align: center;
         }
         .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
@@ -217,7 +251,6 @@
 
     <div id="mainContent" style="display:none;">
 
-        <!-- Info -->
         <div class="info-banner">
             <div class="icon">ℹ️</div>
             <div class="text">
@@ -227,7 +260,6 @@
             </div>
         </div>
 
-        <!-- Token Input -->
         <div class="card">
             <div class="card-title">Vincular Entregador</div>
             <div class="token-row">
@@ -242,7 +274,6 @@
             </div>
         </div>
 
-        <!-- Driver List -->
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
                 <div class="card-title" style="margin-bottom:0;">Entregadores Vinculados</div>
@@ -258,7 +289,6 @@
         </div>
     </div>
 
-    <!-- Confirm Remove -->
     <div class="confirm-overlay" id="confirmOverlay">
         <div class="confirm-box">
             <div class="confirm-body">
@@ -291,7 +321,6 @@
         let unsubDrivers = null;
         let pendingRemoveId = null;
 
-        // ==================== INIT (localStorage, sem Auth) ====================
         const currentStoreId = localStorage.getItem('currentStoreId')
             || localStorage.getItem('CURRENT_STORE_ID')
             || localStorage.getItem('storeId');
@@ -306,55 +335,42 @@
             listenDrivers();
         }
 
-        // ==================== LINK DRIVER BY TOKEN ====================
+        // ── VINCULAR ──
         async function linkDriver() {
             const input = document.getElementById('tokenInput');
-            const btn = document.getElementById('linkBtn');
+            const btn   = document.getElementById('linkBtn');
             const token = (input.value || '').trim().toUpperCase();
 
             if (!token) { showToast('Digite um token'); return; }
             if (token.length < 4) { showToast('Token muito curto'); return; }
             if (!currentStore) { showToast('Loja não carregada'); return; }
 
-            // Checa se já está vinculado
             const alreadyLinked = linkedDrivers.find(d => (d.driverToken || '').toUpperCase() === token);
-            if (alreadyLinked) {
-                showToast('Este entregador já está vinculado');
-                input.value = '';
-                return;
-            }
+            if (alreadyLinked) { showToast('Este entregador já está vinculado'); input.value = ''; return; }
 
-            btn.disabled = true;
-            btn.textContent = '...';
+            btn.disabled = true; btn.textContent = '...';
 
             try {
-                // Busca driver pelo token
                 const snap = await db.collection('drivers')
-                    .where('driverToken', '==', token)
-                    .limit(1)
-                    .get();
+                    .where('driverToken', '==', token).limit(1).get();
 
                 if (snap.empty) {
                     showToast('Token não encontrado');
-                    btn.disabled = false;
-                    btn.textContent = 'Vincular';
                     return;
                 }
 
-                const driverDoc = snap.docs[0];
+                const driverDoc  = snap.docs[0];
                 const driverData = driverDoc.data();
+                const existingStores = driverData.linkedStores || [];
 
-                // Checa se já pertence a outra loja
-                const existingStoreIds = driverData.linkedStores || [];
-                if (existingStoreIds.includes(currentStore.id)) {
-                    showToast('Já vinculado à sua loja');
+                if (existingStores.length > 0) {
+                    showToast(existingStores.includes(currentStore.id)
+                        ? 'Já vinculado à sua loja'
+                        : '❌ Este entregador já pertence a outra loja');
                     input.value = '';
-                    btn.disabled = false;
-                    btn.textContent = 'Vincular';
                     return;
                 }
 
-                // Adiciona storeId ao array linkedStores do driver
                 await db.collection('drivers').doc(driverDoc.id).update({
                     linkedStores: firebase.firestore.FieldValue.arrayUnion(currentStore.id)
                 });
@@ -363,25 +379,21 @@
                 showToast('✓ ' + (driverData.name || 'Entregador') + ' vinculado!');
 
             } catch (err) {
-                console.error(err);
-                showToast('Erro ao vincular');
+                console.error(err); showToast('Erro ao vincular');
             } finally {
-                btn.disabled = false;
-                btn.textContent = 'Vincular';
+                btn.disabled = false; btn.textContent = 'Vincular';
             }
         }
 
-        // Enter key
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('tokenInput').addEventListener('keydown', e => {
                 if (e.key === 'Enter') linkDriver();
             });
         });
 
-        // ==================== LISTEN LINKED DRIVERS ====================
+        // ── LISTENER ──
         function listenDrivers() {
             if (unsubDrivers) unsubDrivers();
-
             unsubDrivers = db.collection('drivers')
                 .where('linkedStores', 'array-contains', currentStore.id)
                 .onSnapshot(snap => {
@@ -389,19 +401,16 @@
                     renderDrivers();
                 }, err => {
                     console.error('Listener error:', err);
-                    // Fallback: tenta reconectar
-                    setTimeout(() => {
-                        if (currentStore) listenDrivers();
-                    }, 5000);
+                    setTimeout(() => { if (currentStore) listenDrivers(); }, 5000);
                 });
         }
 
-        // ==================== RENDER ====================
+        // ── RENDER ──
         function renderDrivers() {
             const container = document.getElementById('driversList');
             document.getElementById('driverCount').textContent = linkedDrivers.length;
 
-            if (linkedDrivers.length === 0) {
+            if (!linkedDrivers.length) {
                 container.innerHTML = `<div class="empty">
                     <div class="empty-icon">🛵</div>
                     <div class="empty-title">Nenhum entregador vinculado</div>
@@ -415,25 +424,32 @@
                     ? `<img src="${d.photoUrl}" onerror="this.parentElement.innerHTML='🛵'">`
                     : '🛵';
 
-               const online = d.online === true || d.status === 'online' || d.available === true;
-                const busy = d.currentOrderId || d.idleState === 'STORE_ACTIVE' || d.idleState === 'APP_ON_TRIP';
+                const online = d.online === true || d.status === 'online' || d.available === true;
+                const busy   = d.currentOrderId || d.idleState === 'STORE_ACTIVE' || d.idleState === 'APP_ON_TRIP';
                 const statusCls = busy ? 'busy' : (online ? 'online' : 'offline');
                 const statusTxt = busy ? 'Em entrega' : (online ? 'Online' : 'Offline');
 
-                const tokenDisplay = (d.driverToken || '').toUpperCase();
-                const phone = d.phone || '';
+                const eligible = d.appEligible !== false; // default true
 
                 return `
                 <div class="driver-item">
                     <div class="d-avatar">${photo}</div>
                     <div class="d-body">
                         <div class="d-name">${esc(d.name || 'Sem nome')}</div>
-                        ${phone ? `<div class="d-meta">📱 ${esc(phone)}</div>` : ''}
-                        <div class="d-token">TOKEN: ${esc(tokenDisplay)}</div>
+                        ${d.phone ? `<div class="d-meta">📱 ${esc(d.phone)}</div>` : ''}
+                        <div class="d-token">TOKEN: ${esc((d.driverToken || '').toUpperCase())}</div>
                     </div>
                     <div class="d-right">
                         <div class="status-label">
                             <span class="status-dot ${statusCls}"></span>${statusTxt}
+                        </div>
+                        <div class="eligible-row">
+                            <span class="eligible-label">App</span>
+                            <label class="toggle-switch" title="${eligible ? 'Habilitado no app' : 'Desabilitado no app'}">
+                                <input type="checkbox" ${eligible ? 'checked' : ''}
+                                    onchange="toggleEligible('${d.id}', this.checked)">
+                                <span class="toggle-slider"></span>
+                            </label>
                         </div>
                         <button class="remove-btn" onclick="askRemove('${d.id}', '${esc(d.name || 'Entregador')}')">Desvincular</button>
                     </div>
@@ -441,7 +457,17 @@
             }).join('');
         }
 
-        // ==================== REMOVE DRIVER ====================
+        // ── TOGGLE appEligible ──
+        async function toggleEligible(driverId, value) {
+            try {
+                await db.collection('drivers').doc(driverId).update({ appEligible: value });
+                showToast(value ? '✓ Habilitado no app' : 'Desabilitado no app');
+            } catch (err) {
+                console.error(err); showToast('Erro ao atualizar');
+            }
+        }
+
+        // ── REMOVER ──
         function askRemove(driverId, driverName) {
             pendingRemoveId = driverId;
             document.getElementById('confirmText').textContent =
@@ -458,19 +484,17 @@
             if (!pendingRemoveId || !currentStore) return;
             const driverId = pendingRemoveId;
             closeConfirm();
-
             try {
                 await db.collection('drivers').doc(driverId).update({
                     linkedStores: firebase.firestore.FieldValue.arrayRemove(currentStore.id)
                 });
                 showToast('✓ Entregador desvinculado');
             } catch (err) {
-                console.error(err);
-                showToast('Erro ao desvincular');
+                console.error(err); showToast('Erro ao desvincular');
             }
         }
 
-        // ==================== UTILS ====================
+        // ── UTILS ──
         function esc(str) {
             return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;')
                 .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
@@ -478,8 +502,7 @@
 
         function showToast(msg) {
             const t = document.getElementById('toast');
-            t.textContent = msg;
-            t.classList.add('show');
+            t.textContent = msg; t.classList.add('show');
             clearTimeout(window._tt);
             window._tt = setTimeout(() => t.classList.remove('show'), 2800);
         }
