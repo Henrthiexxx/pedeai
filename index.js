@@ -210,6 +210,7 @@ async function handleLogin(e) {
 }
 
 function handleLogout() {
+    if (window.Android) Android.clearStoreId();
     showConfirmModal('Deseja sair?', 'Você será desconectado do painel.', () => auth.signOut());
 }
 
@@ -313,6 +314,7 @@ async function loadCategories() {
 // ==================== REAL-TIME ====================
 
 function setupRealtimeListeners() {
+    if (window.Android) Android.setStoreId(currentStore.id);
     db.collection('orders').where('storeId', '==', currentStore.id).onSnapshot(snapshot => {
         snapshot.docChanges().forEach(change => {
             const order = { id: change.doc.id, ...change.doc.data() };
