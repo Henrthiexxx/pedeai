@@ -185,8 +185,8 @@
         html[data-theme="light"] .bnav-item { color: var(--pedra-muted-light); }
         html[data-theme="light"] .bnav-item.active { color: var(--text-0); }
 
-        .bnav-icon { font-size: 1.25rem; line-height: 1; position: relative; }
-        .bnav-label { font-size: 0.68rem; font-weight: 500; letter-spacing: 0.01em; }
+        .bnav-icon { font-size: 1.18rem; line-height: 1; position: relative; }
+        .bnav-label { font-size: 0.62rem; font-weight: 500; letter-spacing: 0.01em; }
         .bnav-badge {
             position: absolute; top: -4px; right: -8px;
             min-width: 17px; height: 17px; border-radius: 99px;
@@ -198,11 +198,6 @@
             content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
             width: 20px; height: 3px; border-radius: 99px; background: var(--accent); opacity: 0.7;
         }
-
-        /* ══════════ IFRAME MODAL → BOTTOM SHEET ══════════ */
-        .iframe-modal { align-items: flex-end !important; padding: 0 !important; }
-        .iframe-box { width: 100% !important; max-width: 100% !important; height: 93dvh !important; border-radius: 22px 22px 0 0 !important; }
-        .iframe-header { padding: 12px 14px !important; border-radius: 22px 22px 0 0 !important; }
 
         /* ══════════ TOAST / NOTIF — só estado .show ══════════ */
         .toast.show {
@@ -262,17 +257,17 @@
             </div>
             <div class="nav-section">
                 <div class="nav-section-title">Cardápio</div>
-                <div class="nav-item" onclick="openPopup('products.html')"><span class="icon">◉</span> Produtos</div>
-                <div class="nav-item" onclick="openPopup('batch-editor.html')"><span class="icon">⊕</span> Cadastro em Lote</div>
-                <div class="nav-item" onclick="openPopup('categories.html')"><span class="icon">▦</span> Categorias</div>
-                <div class="nav-item" onclick="openPopup('layout-editor.html')"><span class="icon">◫</span> Layout da Loja</div>
-                <div class="nav-item" onclick="openPopup('meu-entregador.html')"><span class="icon">↗</span> Meu Entregador</div>
-                <div class="nav-item" onclick="openPopup('fatura-loja.html')"><span class="icon">▤</span> Minha Fatura</div>
-                <div class="nav-item" onclick="openPopup('AdsShop.html')"><span class="icon">◈</span> Serviços</div>
+                <div class="nav-item" onclick="toggleSidebar(); goPage('products.html')"><span class="icon">◉</span> Produtos</div>
+                <div class="nav-item" onclick="toggleSidebar(); goPage('batch-editor.html')"><span class="icon">⊕</span> Cadastro em Lote</div>
+                <div class="nav-item" onclick="toggleSidebar(); goPage('categories.html')"><span class="icon">▦</span> Categorias</div>
+                <div class="nav-item" onclick="toggleSidebar(); goPage('layout-editor.html')"><span class="icon">◫</span> Layout da Loja</div>
+                <div class="nav-item" onclick="toggleSidebar(); goPage('meu-entregador.html')"><span class="icon">↗</span> Meu Entregador</div>
+                <div class="nav-item" onclick="toggleSidebar(); goPage('fatura-loja.html')"><span class="icon">▤</span> Minha Fatura</div>
+                <div class="nav-item" onclick="toggleSidebar(); goPage('AdsShop.html')"><span class="icon">◈</span> Serviços</div>
             </div>
             <div class="nav-section">
                 <div class="nav-section-title">Conta</div>
-                <div class="nav-item" onclick="openPopup('config.html')"><span class="icon">⚙</span> Configurações</div>
+                <div class="nav-item" onclick="toggleSidebar(); goPage('config.html')"><span class="icon">⚙</span> Configurações</div>
                 <div class="nav-item" onclick="handleLogout()"><span class="icon">→</span> Sair</div>
             </div>
         </nav>
@@ -329,22 +324,30 @@
         <footer id="panelShortcutsFooter" style="display:none"></footer>
     </main>
 
-    <!-- Bottom Nav -->
+    <!-- Bottom Nav compartilhável -->
     <nav class="bottom-nav" id="bottomNav">
-        <button class="bnav-item active" id="bnavDashboard" onclick="navigateTo('dashboard')">
+        <button class="bnav-item" id="bnavBack" onclick="goBack()" title="Voltar">
+            <span class="bnav-icon">‹</span>
+            <span class="bnav-label">Voltar</span>
+        </button>
+        <button class="bnav-item active" id="bnavDashboard" onclick="navigateTo('dashboard')" title="Painel">
             <span class="bnav-icon">⊞</span>
             <span class="bnav-label">Painel</span>
         </button>
-        <button class="bnav-item" id="bnavHistory" onclick="navigateTo('history')">
+        <button class="bnav-item" id="bnavHistory" onclick="navigateTo('history')" title="Histórico">
             <span class="bnav-icon" style="position:relative">
                 ☰
                 <span class="bnav-badge" id="bnavBadge" style="display:none">0</span>
             </span>
             <span class="bnav-label">Histórico</span>
         </button>
-        <button class="bnav-item" onclick="toggleSidebar()">
-            <span class="bnav-icon">⋯</span>
-            <span class="bnav-label">Menu</span>
+        <button class="bnav-item" id="bnavAction1" onclick="bottomNavActionOne()" title="Ação 1">
+            <span class="bnav-icon">□</span>
+            <span class="bnav-label">Ação 1</span>
+        </button>
+        <button class="bnav-item" id="bnavAction2" onclick="bottomNavActionTwo()" title="Ação 2">
+            <span class="bnav-icon">◇</span>
+            <span class="bnav-label">Ação 2</span>
         </button>
     </nav>
 </div>
@@ -364,18 +367,7 @@
 </div>
 
 <!-- Iframe Modal -->
-<div class="iframe-modal" id="iframeModal">
-    <div class="iframe-box">
-        <div class="iframe-header">
-            <span>Pedra Delivery</span>
-            <button class="btn btn-ghost btn-sm" onclick="closePopup()">✕ Fechar</button>
-        </div>
-        <iframe id="popupFrame" src="about:blank"></iframe>
-    </div>
-</div>
-
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<dcript src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
@@ -428,6 +420,53 @@
 <!-- App -->
 <script src="modules/fcm.js"></script>
 <script src="app.js"></script>
+
+<!-- Navegação direta + esqueleto de bottom nav compartilhável -->
+<script>
+(function () {
+    const SAME_PAGE = new Set(['dashboard', 'history']);
+
+    window.goPage = function (url) {
+        if (!url) return;
+        window.location.href = url;
+    };
+
+    window.goBack = function () {
+        if (window.history.length > 1) {
+            window.history.back();
+            return;
+        }
+        window.location.href = 'index.html';
+    };
+
+    window.bottomNavActionOne = function () {
+        if (typeof showToast === 'function') showToast('Ação 1 ainda não configurada');
+        else console.log('Ação 1 ainda não configurada');
+    };
+
+    window.bottomNavActionTwo = function () {
+        if (typeof showToast === 'function') showToast('Ação 2 ainda não configurada');
+        else console.log('Ação 2 ainda não configurada');
+    };
+
+    window.PedraBottomNav = {
+        goPage,
+        goBack,
+        actionOne: bottomNavActionOne,
+        actionTwo: bottomNavActionTwo
+    };
+
+    // Compatibilidade: se app.js ou algum resíduo chamar openPopup, agora vira navegação real.
+    window.openPopup = function (url) {
+        goPage(url);
+    };
+
+    window.closePopup = function () {
+        goBack();
+    };
+})();
+</script>
+
 
 <!-- Bottom Nav sync -->
 <script>
@@ -538,17 +577,14 @@
       window.addEventListener('resize', check, {passive:true});
     },
     bindPopupSounds() {
-      this.patchFn('openPopup', () => this.playOpen());
-      this.patchFn('closePopup', () => this.playClose());
       this.patchFn('hideNotifPopup', () => this.playClose());
       this.patchFn('showNotifPopup', () => this.playOpen());
       this.patchFn('openModal', () => this.playOpen());
       this.patchFn('closeModal', () => this.playClose());
       document.addEventListener('click', e => {
-        if (e.target.closest('[onclick*="openPopup("],[onclick*="openModal("]')) this.playOpen();
-        if (e.target.closest('[onclick*="closePopup()"],[onclick*="closeModal("],[onclick*="hideNotifPopup()"],.notif-popup-close')) this.playClose();
+        if (e.target.closest('[onclick*="openModal("]')) this.playOpen();
+        if (e.target.closest('[onclick*="closeModal("],[onclick*="hideNotifPopup()"],.notif-popup-close')) this.playClose();
       }, true);
-      this.watchVisibility(document.getElementById('iframeModal'), 'iframeModal');
       this.watchVisibility(document.getElementById('notifPopup'), 'notifPopup');
       this.watchVisibility(document.getElementById('confirmModal'), 'confirmModal');
     },
