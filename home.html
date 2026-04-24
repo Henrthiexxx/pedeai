@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pedra Delivery — Painel da Loja</title>
+    <meta name="theme-color" content="#09090b">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="icon" href="icon-192.png">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* ══════════ VARS MOBILE ══════════ */
+        :root {
+            --pedra-muted-dark: #9ca3af;
+            --pedra-muted-light: #5f6368;
+            --bnav-h: 64px;
+            --topbar-h: 54px;
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+            --safe-top: env(safe-area-inset-top, 0px);
+        }
+
+        html[data-theme="dark"] {
+            --text-muted: var(--pedra-muted-dark);
+            --text-2: var(--pedra-muted-dark);
+            --text-secondary: var(--pedra-muted-dark);
+        }
+        html[data-theme="light"] {
+            --text-muted: var(--pedra-muted-light);
+            --text-2: var(--pedra-muted-light);
+            --text-secondary: var(--pedra-muted-light);
+        }
+
+        html[data-theme="dark"] .stat-label,
+        html[data-theme="dark"] .section-count,
+        html[data-theme="dark"] .history-link,
+        html[data-theme="dark"] .nav-section-title,
+        html[data-theme="dark"] .sidebar-store-status,
+        html[data-theme="dark"] .notif-popup-body,
+        html[data-theme="dark"] #confirmText { color: var(--pedra-muted-dark) !important; }
+
+        html[data-theme="light"] .stat-label,
+        html[data-theme="light"] .section-count,
+        html[data-theme="light"] .history-link,
+        html[data-theme="light"] .nav-section-title,
+        html[data-theme="light"] .sidebar-store-status,
+        html[data-theme="light"] .notif-popup-body,
+        html[data-theme="light"] #confirmText { color: var(--pedra-muted-light) !important; }
+
+        html[data-theme="dark"] .topbar,
+        html[data-theme="dark"] .iframe-header,
+        html[data-theme="dark"] .sidebar-header {
+            background: rgba(10,10,12,0.92) !important;
+            border-color: rgba(255,255,255,0.08) !important;
+            -webkit-backdrop-filter: blur(14px) saturate(120%);
+            backdrop-filter: blur(14px) saturate(120%);
+        }
+        html[data-theme="dark"] .topbar::before,
+        html[data-theme="dark"] .iframe-header::before,
+        html[data-theme="dark"] .sidebar-header::before { content: none !important; display: none !important; }
+        html[data-theme="dark"] .topbar-title,
+        html[data-theme="dark"] .sidebar-brand,
+        html[data-theme="dark"] .sidebar-store-name { color: #f5f7fb !important; }
+
+        /* ══════════ LAYOUT ══════════ */
+        body { overflow-x: hidden !important; }
+
+        @media (min-width: 1024px) {
+            .main-content { margin-left: 0 !important; }
+            .sidebar { transform: translateY(105%) !important; }
+            .sidebar.open { transform: translateY(0) !important; }
+            .menu-toggle, .overlay { display: none !important; }
+        }
+
+        .main-content {
+            display: flex !important;
+            flex-direction: column !important;
+            margin-left: 0 !important;
+            padding-top: calc(var(--topbar-h) + var(--safe-top)) !important;
+            padding-bottom: calc(var(--bnav-h) + var(--safe-bottom)) !important;
+            min-height: 100dvh !important;
+        }
+
+        /* ══════════ TOPBAR ══════════ */
+        .topbar {
+            position: fixed !important;
+            top: 0 !important; left: 0 !important; right: 0 !important;
+            height: calc(var(--topbar-h) + var(--safe-top)) !important;
+            padding: calc(var(--safe-top) + 8px) 12px 8px !important;
+            display: flex !important; align-items: center !important; justify-content: space-between !important;
+            z-index: 100 !important;
+        }
+        .topbar-left { display: flex !important; align-items: center !important; gap: 8px !important; min-width: 0 !important; }
+        .topbar-title { font-size: 1rem !important; font-weight: 600 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+        .menu-toggle { display: none !important; }
+        .topbar-actions { display: flex !important; align-items: center !important; gap: 6px !important; flex-shrink: 0 !important; }
+        .topbar-btn, .theme-btn {
+            width: 40px !important; height: 40px !important; min-width: 40px !important;
+            border-radius: 12px !important; padding: 0 !important; font-size: 1.05rem !important;
+            display: flex !important; align-items: center !important; justify-content: center !important;
+        }
+
+        /* ══════════ SIDEBAR → BOTTOM DRAWER ══════════ */
+        .sidebar {
+            position: fixed !important;
+            inset: auto 0 0 0 !important; top: auto !important;
+            width: 100% !important; max-height: 80dvh !important;
+            transform: translateY(105%) !important;
+            transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1) !important;
+            border-radius: 22px 22px 0 0 !important;
+            overflow-y: auto !important; overflow-x: hidden !important;
+            z-index: 300 !important;
+            display: flex !important; flex-direction: column !important;
+            padding-bottom: calc(var(--safe-bottom) + 8px) !important;
+        }
+        .sidebar.open { transform: translateY(0) !important; }
+
+        .drawer-handle {
+            width: 38px; height: 4px; border-radius: 99px;
+            background: rgba(255,255,255,0.18);
+            margin: 10px auto 6px; flex-shrink: 0;
+        }
+        html[data-theme="light"] .drawer-handle { background: rgba(0,0,0,0.15); }
+
+        .sidebar-header { border-radius: 0 !important; padding: 10px 16px 14px !important; }
+        .sidebar-nav { flex: 1 1 auto !important; overflow-y: auto !important; padding: 0 8px 4px !important; }
+        .nav-item { min-height: 46px !important; padding: 10px 14px !important; border-radius: 12px !important; font-size: 0.92rem !important; display: flex !important; align-items: center !important; gap: 10px !important; }
+        .nav-section-title { padding: 10px 14px 4px !important; font-size: 0.68rem !important; }
+
+        .sidebar-footer { margin-top: auto; padding: 6px 16px 8px; border-top: 1px solid rgba(255,255,255,0.06); }
+        html[data-theme="light"] .sidebar-footer { border-top-color: rgba(0,0,0,0.06); }
+        .sidebar-version {
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            padding: 7px 10px; border-radius: 10px; font-size: 0.72rem;
+            color: var(--text-muted); background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.05);
+        }
+        html[data-theme="light"] .sidebar-version { background: rgba(0,0,0,0.03); border-color: rgba(0,0,0,0.06); }
+
+        /* ══════════ PAGES ══════════ */
+        .page { padding: 12px !important; }
+
+        .stats-row { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 10px !important; margin-bottom: 16px !important; }
+        .stat-card { border-radius: 16px !important; padding: 16px 12px !important; }
+        .stat-number { font-size: 1.75rem !important; }
+        .stat-label  { font-size: 0.73rem !important; margin-top: 2px !important; }
+
+        .section-title { font-size: 0.88rem !important; font-weight: 600 !important; margin: 4px 0 10px !important; display: flex !important; align-items: center !important; gap: 8px !important; }
+        .history-link { font-size: 0.88rem !important; padding: 14px 16px !important; border-radius: 14px !important; margin-top: 10px !important; }
+
+        .order-card { border-radius: 16px !important; padding: 0 !important; margin-bottom: 10px !important; }
+        .order-header { padding: 14px !important; }
+        .order-body-inner { padding: 0 14px 14px !important; }
+        .order-actions { display: flex !important; flex-direction: column !important; gap: 7px !important; margin-top: 14px !important; }
+        .order-actions .btn { width: 100% !important; min-height: 44px !important; border-radius: 12px !important; font-size: 0.88rem !important; }
+
+        .history-controls { display: flex !important; flex-direction: column !important; gap: 10px !important; margin-bottom: 12px !important; }
+        .history-controls .form-input { max-width: 100% !important; width: 100% !important; min-height: 44px !important; }
+        .filter-chips { display: flex !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; gap: 7px !important; flex-wrap: nowrap !important; padding-bottom: 2px !important; scrollbar-width: none !important; }
+        .filter-chips::-webkit-scrollbar { display: none !important; }
+        .filter-chip { flex-shrink: 0 !important; min-height: 36px !important; padding: 6px 14px !important; font-size: 0.83rem !important; }
+
+        /* ══════════ BOTTOM NAV ══════════ */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            height: calc(var(--bnav-h) + var(--safe-bottom));
+            padding-bottom: var(--safe-bottom);
+            display: flex; align-items: stretch;
+            z-index: 200;
+            border-top: 1px solid rgba(255,255,255,0.07);
+            -webkit-backdrop-filter: blur(16px) saturate(130%);
+            backdrop-filter: blur(16px) saturate(130%);
+        }
+        html[data-theme="dark"] .bottom-nav { background: rgba(10,10,12,0.92); border-top-color: rgba(255,255,255,0.07); }
+        html[data-theme="light"] .bottom-nav { background: rgba(255,255,255,0.92); border-top-color: rgba(0,0,0,0.07); }
+
+        .bnav-item {
+            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+            background: none; border: none; cursor: pointer; padding: 6px 4px;
+            position: relative; transition: opacity 0.15s; color: var(--text-2);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .bnav-item:active { opacity: 0.6; }
+        .bnav-item.active { color: var(--text-0); }
+        html[data-theme="light"] .bnav-item { color: var(--pedra-muted-light); }
+        html[data-theme="light"] .bnav-item.active { color: var(--text-0); }
+
+        .bnav-icon { font-size: 1.25rem; line-height: 1; position: relative; }
+        .bnav-label { font-size: 0.68rem; font-weight: 500; letter-spacing: 0.01em; }
+        .bnav-badge {
+            position: absolute; top: -4px; right: -8px;
+            min-width: 17px; height: 17px; border-radius: 99px;
+            background: var(--red); color: #fff;
+            font-size: 0.62rem; font-weight: 700;
+            display: flex; align-items: center; justify-content: center; padding: 0 4px;
+        }
+        .bnav-item.active::after {
+            content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 20px; height: 3px; border-radius: 99px; background: var(--accent); opacity: 0.7;
+        }
+
+        /* ══════════ IFRAME MODAL → BOTTOM SHEET ══════════ */
+        .iframe-modal { align-items: flex-end !important; padding: 0 !important; }
+        .iframe-box { width: 100% !important; max-width: 100% !important; height: 93dvh !important; border-radius: 22px 22px 0 0 !important; }
+        .iframe-header { padding: 12px 14px !important; border-radius: 22px 22px 0 0 !important; }
+
+        /* ══════════ TOAST / NOTIF — só estado .show ══════════ */
+        .toast.show {
+            bottom: calc(var(--bnav-h) + var(--safe-bottom) + 10px) !important;
+            left: 16px !important; right: 16px !important;
+            max-width: none !important; transform: none !important; border-radius: 14px !important;
+        }
+        .notif-popup { left: 12px !important; right: 12px !important; max-width: none !important; transform: none !important; border-radius: 16px !important; }
+        .notif-popup.show { top: calc(var(--topbar-h) + var(--safe-top) + 8px) !important; }
+
+        /* ══════════ HIDE DESKTOP-ONLY ══════════ */
+        #panelShortcutsFooter { display: none !important; }
+    </style>
+</head>
+<body>
+<div id="authPage" style="display:none;"></div>
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Notification Popup -->
+<div class="notif-popup" id="notifPopup">
+    <div class="notif-popup-icon">🔔</div>
+    <div class="notif-popup-text">
+        <div class="notif-popup-title">Novo Pedido!</div>
+        <div class="notif-popup-body" id="notifBody">—</div>
+    </div>
+    <button class="notif-popup-close" onclick="hideNotifPopup()">×</button>
+</div>
+
+<!-- ══════════ MAIN APP ══════════ -->
+<div id="mainApp">
+    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar → Bottom Drawer -->
+    <aside class="sidebar" id="sidebar">
+        <div class="drawer-handle"></div>
+        <div class="sidebar-header">
+            <div class="sidebar-brand">Pedra Delivery</div>
+            <div class="sidebar-store">
+                <div class="sidebar-avatar" id="sidebarAvatar">🏪</div>
+                <div>
+                    <div class="sidebar-store-name" id="sidebarStoreName">Minha Loja</div>
+                    <div class="sidebar-store-status" id="sidebarStatus">🟢 Aberto</div>
+                </div>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">Principal</div>
+                <div class="nav-item" data-page="dashboard" onclick="navigateTo('dashboard'); toggleSidebar()">
+                    <span class="icon">⊞</span> Painel
+                </div>
+                <div class="nav-item" data-page="history" onclick="navigateTo('history'); toggleSidebar()">
+                    <span class="icon">☰</span> Histórico
+                    <span class="nav-badge" id="pendingBadge" style="display:none">0</span>
+                </div>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">Cardápio</div>
+                <div class="nav-item" onclick="openPopup('products.html')"><span class="icon">◉</span> Produtos</div>
+                <div class="nav-item" onclick="openPopup('batch-editor.html')"><span class="icon">⊕</span> Cadastro em Lote</div>
+                <div class="nav-item" onclick="openPopup('categories.html')"><span class="icon">▦</span> Categorias</div>
+                <div class="nav-item" onclick="openPopup('layout-editor.html')"><span class="icon">◫</span> Layout da Loja</div>
+                <div class="nav-item" onclick="openPopup('meu-entregador.html')"><span class="icon">↗</span> Meu Entregador</div>
+                <div class="nav-item" onclick="openPopup('fatura-loja.html')"><span class="icon">▤</span> Minha Fatura</div>
+                <div class="nav-item" onclick="openPopup('AdsShop.html')"><span class="icon">◈</span> Serviços</div>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">Conta</div>
+                <div class="nav-item" onclick="openPopup('config.html')"><span class="icon">⚙</span> Configurações</div>
+                <div class="nav-item" onclick="handleLogout()"><span class="icon">→</span> Sair</div>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="sidebar-version">
+                <span>Beta:</span>
+                <strong id="systemVersionLabel"></strong>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="topbar">
+            <div class="topbar-left">
+                <h1 class="topbar-title" id="pageTitle">Painel Central</h1>
+            </div>
+            <div class="topbar-actions">
+                <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="Tema">◐</button>
+                <button class="topbar-btn" id="notifBtn" onclick="requestNotifPermission()" title="Notificações">🔔</button>
+                <div class="toggle" id="storeToggle" onclick="toggleStoreStatus()"></div>
+            </div>
+        </header>
+
+        <!-- DASHBOARD -->
+        <div id="dashboardPage" class="page active">
+            <div class="stats-row">
+                <div class="stat-card"><div class="stat-number" id="statPending">0</div><div class="stat-label">Pendentes</div></div>
+                <div class="stat-card"><div class="stat-number" id="statActive">0</div><div class="stat-label">Ativos</div></div>
+                <div class="stat-card"><div class="stat-number" id="statToday">0</div><div class="stat-label">Hoje</div></div>
+                <div class="stat-card"><div class="stat-number" id="statRevenue">R$ 0</div><div class="stat-label">Faturamento</div></div>
+            </div>
+            <div class="section-title">
+                <span>Pedidos Ativos</span>
+                <span class="section-count" id="activeCount" style="display:none">0</span>
+            </div>
+            <div id="activeOrdersList"></div>
+            <div class="history-link" onclick="navigateTo('history')">Ver histórico da semana →</div>
+        </div>
+
+        <!-- HISTORY -->
+        <div id="historyPage" class="page">
+            <div class="history-controls">
+                <input type="text" class="form-input" placeholder="🔍 Buscar pedido..." id="historySearch" oninput="renderHistory()">
+                <div class="filter-chips">
+                    <button class="filter-chip active" onclick="setHistoryFilter('all', this)">Todos</button>
+                    <button class="filter-chip" onclick="setHistoryFilter('delivered', this)">✅ Entregues</button>
+                    <button class="filter-chip" onclick="setHistoryFilter('cancelled', this)">❌ Cancelados</button>
+                </div>
+            </div>
+            <div id="historyList"></div>
+        </div>
+
+        <footer id="panelShortcutsFooter" style="display:none"></footer>
+    </main>
+
+    <!-- Bottom Nav -->
+    <nav class="bottom-nav" id="bottomNav">
+        <button class="bnav-item active" id="bnavDashboard" onclick="navigateTo('dashboard')">
+            <span class="bnav-icon">⊞</span>
+            <span class="bnav-label">Painel</span>
+        </button>
+        <button class="bnav-item" id="bnavHistory" onclick="navigateTo('history')">
+            <span class="bnav-icon" style="position:relative">
+                ☰
+                <span class="bnav-badge" id="bnavBadge" style="display:none">0</span>
+            </span>
+            <span class="bnav-label">Histórico</span>
+        </button>
+        <button class="bnav-item" onclick="toggleSidebar()">
+            <span class="bnav-icon">⋯</span>
+            <span class="bnav-label">Menu</span>
+        </button>
+    </nav>
+</div>
+
+<!-- Confirm Modal -->
+<div class="modal" id="confirmModal">
+    <div class="modal-box">
+        <div class="modal-body" style="text-align:center;padding:28px;">
+            <div class="modal-title" id="confirmTitle" style="margin-bottom:10px">Confirmar</div>
+            <div style="color:var(--text-2);margin-bottom:24px;font-size:.9rem" id="confirmText">Deseja continuar?</div>
+            <div style="display:flex;gap:10px">
+                <button class="btn btn-ghost" onclick="closeModal('confirmModal')" style="flex:1">Cancelar</button>
+                <button class="btn btn-danger" id="confirmOk" style="flex:1">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Iframe Modal -->
+<div class="iframe-modal" id="iframeModal">
+    <div class="iframe-box">
+        <div class="iframe-header">
+            <span>Pedra Delivery</span>
+            <button class="btn btn-ghost btn-sm" onclick="closePopup()">✕ Fechar</button>
+        </div>
+        <iframe id="popupFrame" src="about:blank"></iframe>
+    </div>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
+
+<!-- Auth guard: redireciona para login se não autenticado -->
+<script>
+(function () {
+    // Firebase será inicializado pelo app.js — apenas escuta o estado
+    // Usa um listener único que se remove após a primeira verificação
+    let checked = false;
+    function check() {
+        if (checked) return;
+        checked = true;
+        const user = firebase.auth().currentUser;
+        if (!user) {
+            // Aguarda onAuthStateChanged para decisão definitiva
+        }
+    }
+
+    // Garante redirect se não houver usuário após init
+    document.addEventListener('DOMContentLoaded', () => {
+        // app.js chama firebase.initializeApp — após isso, verifica
+        setTimeout(() => {
+            if (!firebase.apps.length) return; // app.js ainda não rodou
+            const unsubscribe = firebase.auth().onAuthStateChanged((user) => {
+                if (!user) {
+                    unsubscribe();
+                    window.location.replace('login.html');
+                } else {
+                    unsubscribe();
+                }
+            });
+        }, 0);
+    });
+
+    // Override handleLogout para redirecionar para login.html
+    // (executado após app.js para sobrescrever a versão dele)
+    window.addEventListener('load', () => {
+        const _orig = window.handleLogout;
+        window.handleLogout = async function () {
+            try {
+                await firebase.auth().signOut();
+            } catch (_) {}
+            window.location.replace('login.html');
+        };
+    });
+})();
+</script>
+
+<!-- App -->
+<script src="modules/fcm.js"></script>
+<script src="app.js"></script>
+
+<!-- Bottom Nav sync -->
+<script>
+(function () {
+    function syncBadge() {
+        const src = document.getElementById('pendingBadge');
+        const dst = document.getElementById('bnavBadge');
+        if (!src || !dst) return;
+        dst.textContent = src.textContent;
+        dst.style.display = src.style.display;
+    }
+
+    function patchNavigate() {
+        const orig = window.navigateTo;
+        if (typeof orig !== 'function') return;
+        window.navigateTo = function (page) {
+            orig.apply(this, arguments);
+            document.querySelectorAll('.bnav-item').forEach(el => el.classList.remove('active'));
+            const map = { dashboard: 'bnavDashboard', history: 'bnavHistory' };
+            const t = document.getElementById(map[page]);
+            if (t) t.classList.add('active');
+        };
+    }
+
+    function init() {
+        patchNavigate();
+        const src = document.getElementById('pendingBadge');
+        if (src) {
+            new MutationObserver(syncBadge).observe(src, { attributes: true, childList: true, characterData: true, subtree: true });
+            syncBadge();
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init, { once: true });
+    } else {
+        init();
+    }
+})();
+</script>
+
+<script>
+/* ===== Sound FX ===== */
+(function () {
+  const SoundFX = {
+    enabled: true, ctx: null, hoverThrottle: 0, lastVisibility: new Map(),
+    ensureContext() {
+      if (!this.enabled) return null;
+      try {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        if (!this.ctx) this.ctx = new AC();
+        if (this.ctx.state === 'suspended') this.ctx.resume().catch(() => {});
+        return this.ctx;
+      } catch (_) { return null; }
+    },
+    tone({ freq=440,type='sine',duration=0.06,gain=0.02,attack=0.003,release=0.05,when=0 }) {
+      const ctx = this.ensureContext(); if (!ctx) return;
+      const now = ctx.currentTime + when;
+      const osc = ctx.createOscillator(); const amp = ctx.createGain();
+      osc.type = type; osc.frequency.setValueAtTime(freq, now);
+      amp.gain.setValueAtTime(0.0001, now);
+      amp.gain.linearRampToValueAtTime(gain, now + attack);
+      amp.gain.exponentialRampToValueAtTime(0.0001, now + duration + release);
+      osc.connect(amp); amp.connect(ctx.destination);
+      osc.start(now); osc.stop(now + duration + release + 0.02);
+    },
+    playHover() {
+      const now = performance.now(); if (now - this.hoverThrottle < 65) return;
+      this.hoverThrottle = now;
+      this.tone({freq:720,type:'sine',duration:0.025,gain:0.012,attack:0.002,release:0.03});
+      this.tone({freq:980,type:'triangle',duration:0.02,gain:0.008,attack:0.002,release:0.025,when:0.012});
+    },
+    playOpen() {
+      this.tone({freq:420,type:'triangle',duration:0.04,gain:0.02,attack:0.002,release:0.04});
+      this.tone({freq:640,type:'sine',duration:0.05,gain:0.018,attack:0.002,release:0.05,when:0.02});
+      this.tone({freq:880,type:'triangle',duration:0.045,gain:0.013,attack:0.002,release:0.05,when:0.045});
+    },
+    playClose() {
+      this.tone({freq:820,type:'triangle',duration:0.035,gain:0.015,attack:0.002,release:0.03});
+      this.tone({freq:560,type:'sine',duration:0.04,gain:0.014,attack:0.002,release:0.04,when:0.018});
+      this.tone({freq:360,type:'triangle',duration:0.05,gain:0.012,attack:0.002,release:0.05,when:0.04});
+    },
+    initUnlock() {
+      ['pointerdown','touchstart','keydown'].forEach(e => window.addEventListener(e, () => this.ensureContext(), {passive:true,once:true}));
+    },
+    bindHover() {
+      const sel = 'button,.btn,.nav-item,.filter-chip,.toggle,.theme-btn,.topbar-btn,.history-link,.bnav-item,[role="button"]';
+      document.addEventListener('pointerover', e => { const t = e.target.closest(sel); if(!t||t.disabled) return; this.playHover(); }, {passive:true});
+    },
+    patchFn(name, fn) {
+      const orig = window[name]; if (typeof orig !== 'function') return;
+      window[name] = function(...a) { try{fn(...a);}catch(_){} return orig.apply(this,a); };
+    },
+    elementVisible(el) {
+      if (!el) return false; const s = getComputedStyle(el);
+      if (s.display==='none'||s.visibility==='hidden'||+s.opacity===0) return false;
+      const r = el.getBoundingClientRect(); return r.width>0 && r.height>0;
+    },
+    watchVisibility(el, key) {
+      if (!el) return; this.lastVisibility.set(key, this.elementVisible(el));
+      const check = () => {
+        const prev = this.lastVisibility.get(key); const next = this.elementVisible(el);
+        if (prev===next) return; this.lastVisibility.set(key,next);
+        if (next) this.playOpen(); else this.playClose();
+      };
+      new MutationObserver(check).observe(el,{attributes:true,attributeFilter:['class','style','hidden','aria-hidden']});
+      window.addEventListener('resize', check, {passive:true});
+    },
+    bindPopupSounds() {
+      this.patchFn('openPopup', () => this.playOpen());
+      this.patchFn('closePopup', () => this.playClose());
+      this.patchFn('hideNotifPopup', () => this.playClose());
+      this.patchFn('showNotifPopup', () => this.playOpen());
+      this.patchFn('openModal', () => this.playOpen());
+      this.patchFn('closeModal', () => this.playClose());
+      document.addEventListener('click', e => {
+        if (e.target.closest('[onclick*="openPopup("],[onclick*="openModal("]')) this.playOpen();
+        if (e.target.closest('[onclick*="closePopup()"],[onclick*="closeModal("],[onclick*="hideNotifPopup()"],.notif-popup-close')) this.playClose();
+      }, true);
+      this.watchVisibility(document.getElementById('iframeModal'), 'iframeModal');
+      this.watchVisibility(document.getElementById('notifPopup'), 'notifPopup');
+      this.watchVisibility(document.getElementById('confirmModal'), 'confirmModal');
+    },
+    init() { this.initUnlock(); this.bindHover(); this.bindPopupSounds(); }
+  };
+  window.PedraSoundFX = SoundFX;
+  if (document.readyState==='loading') document.addEventListener('DOMContentLoaded', ()=>SoundFX.init(), {once:true});
+  else SoundFX.init();
+})();
+</script>
+
+<script>
+/* ===== Config Bridge ===== */
+(function(){
+  const KEY='pedrad_ui_sounds', EV='pedrad-ui-sounds-changed';
+  const nb=(v,fb=true)=>typeof v==='boolean'?v:v==='true'?true:v==='false'?false:fb;
+  const rp=()=>{try{return nb(localStorage.getItem(KEY),true);}catch{return true;}};
+  const sp=(v)=>{try{localStorage.setItem(KEY,v?'true':'false');}catch{}};
+  function ap(v,o={}){
+    const n=nb(v,true);
+    if(window.PedraSoundFX){window.PedraSoundFX.enabled=n;if(n&&typeof window.PedraSoundFX.ensureContext==='function')window.PedraSoundFX.ensureContext();}
+    window.UI_SOUNDS_ENABLED=n; document.documentElement.dataset.uiSounds=n?'on':'off';
+    if(!o.silent)window.dispatchEvent(new CustomEvent(EV,{detail:{enabled:n,source:o.source||'local'}}));
+    return n;
+  }
+  window.setUiSoundEnabled=(v)=>{const n=ap(v,{source:'direct'});sp(n);return n;};
+  window.getUiSoundEnabled=()=>nb(window.UI_SOUNDS_ENABLED,rp());
+  window.addEventListener('message',e=>{
+    const p=e.data; if(!p||typeof p!=='object') return;
+    if(p.type===EV||p.type==='pedrad-config-changed'){
+      if(typeof p.enabled==='boolean')sp(ap(p.enabled,{source:'message'}));
+      if(p.settings?.uiSoundEnabled!=null)sp(ap(p.settings.uiSoundEnabled,{source:'message'}));
+    }
+  });
+  window.addEventListener('storage',e=>{if(e.key===KEY)ap(e.newValue,{source:'storage'});});
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)ap(rp(),{source:'visibility',silent:true});});
+  ap(rp(),{source:'boot',silent:true});
+})();
+</script>
+
+<script>
+/* ===== Version label ===== */
+(function(){
+  const KS=['pedrad_system_version','system_version','app_version','pedrad_version'];
+  function rv(){
+    try{if(typeof window.PEDRAD_SYSTEM_VERSION==='string'&&window.PEDRAD_SYSTEM_VERSION.trim())return window.PEDRAD_SYSTEM_VERSION.trim();for(const k of KS){const v=localStorage.getItem(k);if(v?.trim())return v.trim();}}catch{}
+    return 'v0.1.14';
+  }
+  function render(){const el=document.getElementById('systemVersionLabel');if(el)el.textContent=rv();}
+  function init(){render();window.addEventListener('storage',e=>{if(KS.includes(e.key))render();});}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
+  else init();
+})();
+</script>
+
+</body>
+</html>

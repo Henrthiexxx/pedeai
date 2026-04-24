@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Pedra Delivery — Entrar</title>
+
+  <meta name="theme-color" content="#09090b" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+  <link rel="icon" href="icon-192.png" />
+  <link rel="prefetch" href="home.html" />
+  <link rel="stylesheet" href="style.css" />
+
+  <style>
+    :root {
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    #authPage.auth-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: calc(var(--safe-top) + 24px) 16px calc(var(--safe-bottom) + 24px) !important;
+    }
+
+    #mainApp {
+      display: none;
+    }
+
+    .auth-box {
+      width: 100%;
+      max-width: 420px !important;
+    }
+
+    .auth-card {
+      padding: 22px 18px !important;
+      border-radius: 20px !important;
+    }
+
+    .btn-block {
+      min-height: 48px !important;
+      font-size: 0.95rem !important;
+    }
+
+    .form-input {
+      min-height: 44px !important;
+    }
+
+    .login-error {
+      display: none;
+      background: var(--red-bg, rgba(255, 80, 80, 0.12));
+      border: 1px solid var(--red-b, rgba(255, 80, 80, 0.35));
+      color: var(--red, #ff6b6b);
+      font-size: 0.82rem;
+      padding: 10px 14px;
+      border-radius: 10px;
+      margin-bottom: 14px;
+    }
+
+    .login-error.show {
+      display: block;
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .spinner-inline {
+      display: none;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    .btn-primary.loading .spinner-inline {
+      display: inline-block;
+    }
+
+    .btn-primary.loading .btn-text {
+      display: none;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="authPage" class="auth-page">
+    <div class="auth-box">
+      <div class="auth-logo">
+        <h1>Pedra Delivery</h1>
+        <p>Painel do estabelecimento</p>
+      </div>
+
+      <div class="auth-card">
+        <div class="login-error" id="loginError"></div>
+
+        <form id="loginForm">
+          <div class="form-group">
+            <label class="form-label" for="loginEmail">E-mail</label>
+            <input
+              type="email"
+              class="form-input"
+              id="loginEmail"
+              placeholder="loja@email.com"
+              autocomplete="email"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="loginPassword">Senha</label>
+            <input
+              type="password"
+              class="form-input"
+              id="loginPassword"
+              placeholder="••••••••"
+              autocomplete="current-password"
+              required
+            />
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block" id="loginBtn">
+            <span class="btn-text">Entrar</span>
+            <span class="spinner-inline"></span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ID esperado pelo app.js -->
+  <main id="mainApp">
+    <p>Carregando painel...</p>
+  </main>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
+
+  <script>
+    const AUTH_ERRORS = {
+      "auth/user-not-found": "E-mail não cadastrado.",
+      "auth/wrong-password": "Senha incorreta.",
+      "auth/invalid-email": "E-mail inválido.",
+      "auth/too-many-requests": "Muitas tentativas. Tente novamente em alguns minutos.",
+      "auth/user-disabled": "Conta desativada.",
+      "auth/invalid-credential": "E-mail ou senha incorretos."
+    };
+
+    function showError(msg) {
+      const el = document.getElementById("loginError");
+      if (!el) return;
+
+      el.textContent = msg;
+      el.classList.add("show");
+    }
+
+    function clearError() {
+      const el = document.getElementById("loginError");
+      if (!el) return;
+
+      el.textContent = "";
+      el.classList.remove("show");
+    }
+
+    function setLoading(isLoading) {
+      const btn = document.getElementById("loginBtn");
+      if (!btn) return;
+
+      btn.disabled = isLoading;
+      btn.classList.toggle("loading", isLoading);
+    }
+
+    function showAuth() {
+      const authPage = document.getElementById("authPage");
+      const mainApp = document.getElementById("mainApp");
+
+      if (authPage) authPage.style.display = "flex";
+      if (mainApp) mainApp.style.display = "none";
+    }
+
+    function showApp() {
+      const authPage = document.getElementById("authPage");
+      const mainApp = document.getElementById("mainApp");
+
+      if (authPage) authPage.style.display = "none";
+      if (mainApp) mainApp.style.display = "block";
+    }
+
+    async function handleLogin(event) {
+      event.preventDefault();
+      clearError();
+      setLoading(true);
+
+      const email = document.getElementById("loginEmail").value.trim();
+      const password = document.getElementById("loginPassword").value;
+
+      try {
+        await firebase.auth().signInWithEmailAndPassword(email, password);
+        showApp();
+        window.location.href = "home.html";
+      } catch (err) {
+        const msg = AUTH_ERRORS[err.code] || "Erro ao entrar. Tente novamente.";
+        showError(msg);
+        setLoading(false);
+      }
+    }
+
+    document.getElementById("loginForm").addEventListener("submit", handleLogin);
+
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        showApp();
+        window.location.href = "home.html";
+      } else {
+        showAuth();
+        setLoading(false);
+      }
+    });
+  </script>
+
+</body>
+</html>
