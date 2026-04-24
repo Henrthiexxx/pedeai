@@ -1,0 +1,33 @@
+.has-internal-bottom-nav {
+  padding-bottom: 80px;
+}
+
+.internal-bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 64px;
+  display: flex;
+  z-index: 9999;
+  background: rgba(10, 10, 12, 0.94);
+  border-top: 1px solid rgba(255,255,255,.08);
+  backdrop-filter: blur(14px);
+}
+
+.internal-nav-btn {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  font-size: 18px;
+}
+
+.internal-nav-btn small {
+  font-size: 11px;
+}
