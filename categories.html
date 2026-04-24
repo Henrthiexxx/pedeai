@@ -1,604 +1,568 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Categorias</title>
-  <meta name="theme-color" content="#000000">
-  <style>
-    :root {
-      --bg: #000; --bg-card: #0a0a0a; --bg-input: #111;
-      --border: #262626; --text: #fafafa; --text-muted: #737373;
-      --primary: #fff; --danger: #ef4444; --success: #22c55e;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: var(--bg); color: var(--text);
-      min-height: 100vh; padding-bottom: 100px;
-    }
-
-    /* Header */
-    .header {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      height: 64px; background: var(--bg);
-      border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; gap: 12px;
-      padding: 0 16px; padding-top: env(safe-area-inset-top);
-    }
-    .btn-back {
-      width: 44px; height: 44px; border-radius: 12px;
-      background: var(--bg-input); border: 1px solid var(--border);
-      color: var(--text); font-size: 1.1rem; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .header-title { font-size: 1rem; font-weight: 700; letter-spacing: 1px; }
-
-    /* Container */
-    .container {
-      max-width: 600px; margin: 0 auto;
-      padding: 84px 16px 20px;
-    }
-
-    /* Stats */
-    .stats {
-      display: flex; gap: 12px; margin-bottom: 20px;
-    }
-    .stat-card {
-      flex: 1; background: var(--bg-card);
-      border: 1px solid var(--border); border-radius: 14px;
-      padding: 16px; text-align: center;
-    }
-    .stat-value { font-size: 1.8rem; font-weight: 800; }
-    .stat-label { font-size: .75rem; color: var(--text-muted); margin-top: 4px; }
-
-    /* Add Form */
-    .add-form {
-      background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: 14px; padding: 16px; margin-bottom: 20px;
-    }
-    .add-form-title {
-      font-size: .8rem; color: var(--text-muted);
-      text-transform: uppercase; letter-spacing: 1px;
-      margin-bottom: 12px;
-    }
-    .add-form-row { display: flex; gap: 10px; }
-    .form-input {
-      flex: 1; padding: 14px 16px; border-radius: 10px;
-      border: 1px solid var(--border); background: var(--bg-input);
-      color: var(--text); font-size: 1rem;
-    }
-    .form-input:focus { outline: none; border-color: var(--primary); }
-    .btn {
-      padding: 14px 20px; border-radius: 10px; border: none;
-      font-size: .9rem; font-weight: 600; cursor: pointer;
-      transition: all .2s;
-    }
-    .btn-primary { background: var(--primary); color: #000; }
-    .btn-primary:hover { opacity: .9; }
-    .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
-    .btn-danger { background: rgba(239,68,68,.15); color: var(--danger); border: 1px solid rgba(239,68,68,.3); }
-    .btn-danger:hover { background: rgba(239,68,68,.25); }
-
-    /* Categories List */
-    .categories-list { display: flex; flex-direction: column; gap: 10px; }
-    .category-card {
-      background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: 14px; padding: 16px;
-      display: flex; align-items: center; gap: 14px;
-    }
-    .category-icon {
-      width: 48px; height: 48px; border-radius: 12px;
-      background: var(--bg-input); border: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.4rem;
-    }
-    .category-info { flex: 1; min-width: 0; }
-    .category-name { font-weight: 700; font-size: 1rem; margin-bottom: 2px; }
-    .category-count { font-size: .85rem; color: var(--text-muted); }
-    .category-actions { display: flex; gap: 8px; }
-    .btn-icon {
-      width: 40px; height: 40px; border-radius: 10px;
-      border: 1px solid var(--border); background: var(--bg-input);
-      color: var(--text); font-size: 1rem; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .btn-icon:hover { border-color: var(--primary); }
-    .btn-icon.danger { border-color: rgba(239,68,68,.3); color: var(--danger); }
-    .btn-icon.danger:hover { background: rgba(239,68,68,.1); }
-
-    /* Empty State */
-    .empty-state {
-      text-align: center; padding: 60px 20px;
-      background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: 14px;
-    }
-    .empty-icon { font-size: 3rem; margin-bottom: 12px; }
-    .empty-title { font-weight: 700; margin-bottom: 8px; }
-    .empty-desc { color: var(--text-muted); font-size: .9rem; }
-
-    /* Toast */
-    .toast {
-      position: fixed; bottom: 24px; left: 50%;
-      transform: translateX(-50%) translateY(100px);
-      background: var(--bg-card); padding: 14px 24px;
-      border-radius: 12px; border: 1px solid var(--border);
-      z-index: 1000; opacity: 0; transition: all .3s;
-    }
-    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-
-    /* Loading */
-    .loading {
-      display: flex; align-items: center; justify-content: center;
-      padding: 60px; color: var(--text-muted);
-    }
-
-    /* Confirm Popup */
-    .popup-overlay {
-      display: none; position: fixed; inset: 0;
-      background: rgba(0,0,0,.85); z-index: 9999;
-      align-items: center; justify-content: center; padding: 20px;
-    }
-    .popup-overlay.show { display: flex; }
-    .popup-box {
-      background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: 16px; max-width: 360px; width: 100%; overflow: hidden;
-    }
-    .popup-header { padding: 24px 20px 0; text-align: center; }
-    .popup-icon { font-size: 3rem; margin-bottom: 12px; }
-    .popup-title { font-size: 1.1rem; font-weight: 700; }
-    .popup-message {
-      padding: 12px 20px 24px; text-align: center;
-      color: var(--text-muted); font-size: .9rem; line-height: 1.5;
-    }
-    .popup-actions { display: flex; border-top: 1px solid var(--border); }
-    .popup-btn {
-      flex: 1; padding: 16px; border: none; background: transparent;
-      color: var(--text); font-size: .95rem; cursor: pointer;
-    }
-    .popup-btn:hover { background: rgba(255,255,255,.05); }
-    .popup-btn.cancel { color: var(--text-muted); }
-    .popup-btn.danger { color: var(--danger); font-weight: 600; }
-    .popup-btn + .popup-btn { border-left: 1px solid var(--border); }
-
-    /* Edit Mode */
-    .category-card.editing { border-color: var(--primary); }
-    .edit-input {
-      flex: 1; padding: 10px 14px; border-radius: 8px;
-      border: 1px solid var(--border); background: var(--bg-input);
-      color: var(--text); font-size: 1rem;
-    }
-    .edit-input:focus { outline: none; border-color: var(--primary); }
-
-    html, body { height: 100%; }
-body{
-  min-height: 100dvh;
-  padding-bottom: calc(90px + env(safe-area-inset-bottom));
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<title>Categorias - Pedra Delivery</title>
+<meta name="theme-color" content="#09090b">
+<link rel="stylesheet" href="style.css">
+<style>
+:root{
+    color-scheme: dark light;
 }
-
-  </style>
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{
+    font-family:var(--font, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif);
+    background:var(--bg-0, #0a0a0c);
+    color:var(--text-0, #f0f0f2);
+    min-height:100dvh;
+    margin:0;
+    padding:18px;
+    padding-top:max(18px, env(safe-area-inset-top));
+    padding-bottom:max(18px, env(safe-area-inset-bottom));
+}
+.container{
+    max-width:760px;
+    margin:0 auto;
+}
+.page-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    padding-bottom:16px;
+    margin-bottom:18px;
+    border-bottom:1px solid var(--border, #2a2a30);
+}
+.page-title{
+    font-size:1rem;
+    font-weight:600;
+    letter-spacing:-.02em;
+}
+.page-title small{
+    display:block;
+    margin-top:4px;
+    color:var(--text-2, #6e6e78);
+    font-size:.76rem;
+    font-weight:500;
+    letter-spacing:.02em;
+}
+.header-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+}
+.panel{
+    background:var(--bg-1, #111114);
+    border:1px solid var(--border, #2a2a30);
+    border-radius:var(--r, 14px);
+    box-shadow:var(--sh-sm, 0 1px 3px rgba(0,0,0,.4),0 1px 2px rgba(0,0,0,.3));
+}
+.section{
+    padding:18px;
+    margin-bottom:12px;
+}
+.section-title{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:14px;
+}
+.section-title h2{
+    font-size:.84rem;
+    font-weight:600;
+    color:var(--text-1, #b0b0b8);
+    text-transform:uppercase;
+    letter-spacing:.06em;
+}
+.section-note{
+    color:var(--text-2, #6e6e78);
+    font-size:.76rem;
+    line-height:1.5;
+}
+.stats-grid{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0,1fr));
+    gap:10px;
+    margin-bottom:12px;
+}
+.stat-card{
+    background:var(--bg-1, #111114);
+    border:1px solid var(--border, #2a2a30);
+    border-radius:var(--r, 14px);
+    padding:18px;
+    text-align:center;
+    box-shadow:var(--sh-sm, 0 1px 3px rgba(0,0,0,.4),0 1px 2px rgba(0,0,0,.3));
+    transition:all .2s ease;
+}
+.stat-card:hover{
+    border-color:var(--border-h, #3a3a42);
+    box-shadow:var(--sh-md, 0 4px 14px rgba(0,0,0,.5),0 2px 4px rgba(0,0,0,.4));
+    transform:translateY(-1px);
+}
+.stat-number{
+    font-size:1.55rem;
+    font-weight:700;
+    letter-spacing:-.03em;
+}
+.stat-label{
+    margin-top:4px;
+    font-size:.68rem;
+    font-weight:600;
+    color:var(--text-2, #6e6e78);
+    text-transform:uppercase;
+    letter-spacing:.08em;
+}
+.add-row{
+    display:flex;
+    gap:10px;
+    align-items:center;
+}
+.form-input{
+    min-width:0;
+}
+.actions-col{
+    display:flex;
+    gap:8px;
+    align-items:center;
+}
+.category-list{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+}
+.category-card{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:14px 16px;
+    background:var(--bg-1, #111114);
+    border:1px solid var(--border, #2a2a30);
+    border-radius:var(--r, 14px);
+    box-shadow:var(--sh-sm, 0 1px 3px rgba(0,0,0,.4),0 1px 2px rgba(0,0,0,.3));
+    transition:all .2s ease;
+}
+.category-card:hover{
+    border-color:var(--border-h, #3a3a42);
+    box-shadow:var(--sh-md, 0 4px 14px rgba(0,0,0,.5),0 2px 4px rgba(0,0,0,.4));
+}
+.category-icon{
+    width:42px;
+    height:42px;
+    border-radius:var(--rs, 10px);
+    background:var(--bg-2, #19191d);
+    border:1px solid var(--border, #2a2a30);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:1.1rem;
+    flex-shrink:0;
+}
+.category-info{
+    flex:1;
+    min-width:0;
+}
+.category-name{
+    font-size:.92rem;
+    font-weight:600;
+    color:var(--text-0, #f0f0f2);
+}
+.category-count{
+    margin-top:3px;
+    font-size:.76rem;
+    color:var(--text-2, #6e6e78);
+}
+.category-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+}
+.btn{
+    min-height:38px;
+}
+.btn-neutral{
+    background:var(--bg-2, #19191d);
+    color:var(--text-0, #f0f0f2);
+    border-color:var(--border, #2a2a30);
+}
+.btn-neutral:hover{
+    background:var(--bg-3, #222228);
+    border-color:var(--border-h, #3a3a42);
+}
+.btn-danger-soft{
+    background:transparent;
+    color:var(--red, #f87171);
+    border-color:var(--red-b, rgba(248,113,113,.2));
+    box-shadow:none;
+}
+.btn-danger-soft:hover{
+    background:var(--red-bg, rgba(248,113,113,.08));
+    border-color:var(--red-b, rgba(248,113,113,.2));
+    color:var(--red, #f87171);
+    box-shadow:none;
+}
+.btn-label{
+    font-size:.8rem;
+    letter-spacing:.02em;
+}
+.cat-edit-input{
+    flex:1;
+    min-width:0;
+    padding:10px 14px;
+    background:var(--bg-2, #19191d);
+    border:1px solid var(--blue-b, rgba(96,165,250,.2));
+    border-radius:var(--rs, 10px);
+    color:var(--text-0, #f0f0f2);
+    font-family:inherit;
+    font-size:.9rem;
+}
+.cat-edit-input:focus{
+    outline:none;
+    border-color:var(--blue, #60a5fa);
+    box-shadow:0 0 0 3px var(--blue-bg, rgba(96,165,250,.08));
+}
+.empty-state{
+    background:var(--bg-1, #111114);
+    border:1px dashed var(--border, #2a2a30);
+    border-radius:var(--r, 14px);
+    padding:42px 18px;
+    text-align:center;
+    color:var(--text-2, #6e6e78);
+}
+.empty-state strong{
+    display:block;
+    margin-bottom:6px;
+    color:var(--text-0, #f0f0f2);
+    font-size:.92rem;
+}
+.toast{
+    left:50%;
+    transform:translateX(-50%);
+}
+.popup-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.6);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    z-index:500;
+    backdrop-filter:blur(4px);
+}
+.popup-overlay.show{
+    display:flex;
+}
+.popup-box{
+    width:100%;
+    max-width:380px;
+    background:var(--bg-1, #111114);
+    border:1px solid var(--border, #2a2a30);
+    border-radius:var(--r, 14px);
+    box-shadow:var(--sh-lg, 0 14px 44px rgba(0,0,0,.6),0 4px 14px rgba(0,0,0,.4));
+    overflow:hidden;
+}
+.popup-head{
+    padding:18px 20px 10px;
+}
+.popup-title{
+    font-size:.96rem;
+    font-weight:600;
+}
+.popup-msg{
+    color:var(--text-1, #b0b0b8);
+    font-size:.84rem;
+    line-height:1.5;
+    padding:0 20px 18px;
+}
+.popup-actions{
+    display:flex;
+    gap:10px;
+    justify-content:flex-end;
+    padding:16px 20px;
+    border-top:1px solid var(--border, #2a2a30);
+}
+@media (max-width:640px){
+    body{
+        padding:14px;
+        padding-top:max(14px, env(safe-area-inset-top));
+        padding-bottom:max(14px, env(safe-area-inset-bottom));
+    }
+    .page-header{
+        align-items:flex-start;
+        flex-direction:column;
+    }
+    .header-actions{
+        width:100%;
+    }
+    .header-actions .btn{
+        width:100%;
+        justify-content:center;
+    }
+    .add-row{
+        flex-direction:column;
+        align-items:stretch;
+    }
+    .add-row .btn{
+        width:100%;
+        justify-content:center;
+    }
+    .category-card{
+        align-items:flex-start;
+        flex-wrap:wrap;
+    }
+    .category-actions{
+        width:100%;
+        justify-content:flex-start;
+        margin-left:54px;
+    }
+    .stats-grid{
+        grid-template-columns:1fr;
+    }
+    .popup-actions{
+        flex-direction:column;
+    }
+    .popup-actions .btn{
+        width:100%;
+        justify-content:center;
+    }
+}
+</style>
 </head>
 <body>
-  <header class="header">
-    
-    <div class="header-title">CATEGORIAS</div>
-  </header>
+<div class="toast" id="toast"></div>
 
-  <div class="container">
-    <!-- Stats -->
-    <div class="stats">
-      <div class="stat-card">
-        <div class="stat-value" id="totalCategories">0</div>
-        <div class="stat-label">Categorias</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" id="totalProducts">0</div>
-        <div class="stat-label">Produtos</div>
-      </div>
-    </div>
-
-    <!-- Add Form -->
-    <div class="add-form">
-      <div class="add-form-title">➕ Nova Categoria</div>
-      <div class="add-form-row">
-        <input type="text" class="form-input" id="newCategoryName" 
-               placeholder="Nome da categoria" maxlength="50"
-               onkeypress="if(event.key==='Enter')addCategory()">
-        <button class="btn btn-primary" id="btnAdd" onclick="addCategory()">+</button>
-      </div>
-    </div>
-
-    <!-- Categories List -->
-    <div id="categoriesList">
-      <div class="loading">Carregando...</div>
-    </div>
-  </div>
-
-  <div class="toast" id="toast"></div>
-
-  <!-- Confirm Delete Popup -->
-  <div class="popup-overlay" id="deletePopup">
+<div class="popup-overlay" id="delPopup">
     <div class="popup-box">
-      <div class="popup-header">
-        <div class="popup-icon">🗑️</div>
-        <div class="popup-title">Excluir categoria?</div>
-      </div>
-      <div class="popup-message" id="deleteMessage">Esta categoria será removida permanentemente.</div>
-      <div class="popup-actions">
-        <button class="popup-btn cancel" onclick="closeDeletePopup()">Cancelar</button>
-        <button class="popup-btn danger" id="btnConfirmDelete">Excluir</button>
-      </div>
+        <div class="popup-head">
+            <div class="popup-title">Excluir categoria?</div>
+        </div>
+        <div class="popup-msg" id="delMsg">—</div>
+        <div class="popup-actions">
+            <button class="btn btn-neutral" onclick="closeDelPopup()">Cancelar</button>
+            <button class="btn btn-danger-soft" id="delBtn" onclick="doDelete()">Excluir</button>
+        </div>
     </div>
-  </div>
+</div>
 
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<div class="container">
+    <div class="page-header">
+        <div class="page-title">
+            Categorias
+            <small>Organize a vitrine da loja sem a estética de aplicativo infantil.</small>
+        </div>
+       
+    </div>
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyAnIJRcUxN-0swpVnonPbJjTSK87o4CQ_g",
-      authDomain: "pedrad-814d0.firebaseapp.com",
-      projectId: "pedrad-814d0",
-      storageBucket: "pedrad-814d0.appspot.com",
-      messagingSenderId: "293587190550",
-      appId: "1:293587190550:web:80c9399f82847c80e20637"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number" id="totalCats">0</div>
+            <div class="stat-label">Categorias</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="totalProds">0</div>
+            <div class="stat-label">Produtos</div>
+        </div>
+    </div>
 
-    let storeId = null;
-    let categories = [];
-    let products = [];
-    let categoryToDelete = null;
+    <div class="panel section">
+        <div class="section-title">
+            <h2>Nova categoria</h2>
+        </div>
+        <div class="section-note">Crie grupos para organizar seus produtos com um visual mais sério e consistente.</div>
+        <div class="add-row" style="margin-top:14px;">
+            <input type="text" class="form-input" id="newCatName" placeholder="Ex: Açaí, Bebidas, Combos..." maxlength="50" onkeydown="if(event.key==='Enter')addCat()">
+            <button class="btn btn-primary" id="btnAdd" onclick="addCat()">Adicionar</button>
+        </div>
+    </div>
 
-    // ===== AUTH =====
-    auth.onAuthStateChanged(async (user) => {
-      if (user) {
-        await loadStore(user);
-      } else {
-        location.href = 'index.html';
-      }
-    });
+    <div id="catList" class="category-list"></div>
+</div>
 
-    // ===== LOAD STORE =====
-    async function loadStore(user) {
-      try {
-        // Tenta pelo email primeiro
-        let snapshot = await db.collection('stores')
-          .where('ownerEmail', '==', user.email).limit(1).get();
-        
-        if (snapshot.empty) {
-          snapshot = await db.collection('stores')
-            .where('ownerId', '==', user.uid).limit(1).get();
-        }
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script>
+const FC={apiKey:"AIzaSyAnIJRcUxN-0swpVnonPbJjTSK87o4CQ_g",authDomain:"pedrad-814d0.firebaseapp.com",projectId:"pedrad-814d0",storageBucket:"pedrad-814d0.appspot.com",messagingSenderId:"293587190550",appId:"1:293587190550:web:80c9399f82847c80e20637"};
+if(!firebase.apps.length)firebase.initializeApp(FC);
+const db=firebase.firestore(),auth=firebase.auth();
 
-        if (!snapshot.empty) {
-          storeId = snapshot.docs[0].id;
-          const storeData = snapshot.docs[0].data();
-          categories = storeData.categories || [];
-          
-          await loadProducts();
-          renderCategories();
-        } else {
-          showToast('Loja não encontrada');
-        }
-      } catch (err) {
-        console.error('Erro ao carregar loja:', err);
-        showToast('Erro ao carregar');
-      }
+const storeId=localStorage.getItem('currentStoreId');
+let categories=[],products=[],delIdx=null,editIdx=null;
+
+function applyTheme(theme){
+    const normalized = theme === 'light' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', normalized);
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if(meta){
+        meta.setAttribute('content', normalized === 'light' ? '#f5f5f7' : '#09090b');
     }
+}
 
-    // ===== LOAD PRODUCTS =====
-    async function loadProducts() {
-      try {
-        const snapshot = await db.collection('products')
-          .where('storeId', '==', storeId).get();
-        
-        products = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-
-        // Extrai categorias dos produtos que não estão na lista
-        const productCategories = [...new Set(
-          products.map(p => p.category).filter(Boolean)
-        )];
-
-        // Merge: categorias salvas + categorias de produtos
-        const allCategories = [...new Set([...categories, ...productCategories])];
-        
-        // Se encontrou novas categorias, salva
-        if (allCategories.length > categories.length) {
-          categories = allCategories.sort();
-          await saveCategoriesToStore();
+function detectParentTheme(){
+    try{
+        if(window.opener?.document?.documentElement){
+            const t = window.opener.document.documentElement.getAttribute('data-theme');
+            if(t) return t;
         }
-
-      } catch (err) {
-        console.error('Erro ao carregar produtos:', err);
-      }
+    }catch(e){}
+    try{
+        if(window.parent && window.parent !== window && window.parent.document?.documentElement){
+            const t = window.parent.document.documentElement.getAttribute('data-theme');
+            if(t) return t;
+        }
+    }catch(e){}
+    const keys = ['theme','appTheme','pedrad_theme','data-theme','preferredTheme'];
+    for(const key of keys){
+        try{
+            const value = localStorage.getItem(key);
+            if(value === 'light' || value === 'dark') return value;
+        }catch(e){}
     }
+    return document.documentElement.getAttribute('data-theme') || 'dark';
+}
 
-    // ===== COUNT PRODUCTS BY CATEGORY =====
-    function countProducts(categoryName) {
-      return products.filter(p => 
-        (p.category || '').toLowerCase().trim() === categoryName.toLowerCase().trim()
-      ).length;
-    }
+function syncTheme(){
+    applyTheme(detectParentTheme());
+}
 
-    // ===== RENDER =====
-    function renderCategories() {
-      const container = document.getElementById('categoriesList');
-      
-      // Update stats
-      document.getElementById('totalCategories').textContent = categories.length;
-      document.getElementById('totalProducts').textContent = products.length;
+syncTheme();
+setInterval(syncTheme, 1200);
 
-      if (categories.length === 0) {
-        container.innerHTML = `
-          <div class="empty-state">
-            <div class="empty-icon">📁</div>
-            <div class="empty-title">Nenhuma categoria</div>
-            <div class="empty-desc">Crie categorias para organizar seus produtos</div>
-          </div>
-        `;
+function esc(s){const d=document.createElement('div');d.textContent=String(s||'');return d.innerHTML}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2500)}
+function goBack(){if(window.parent!==window)window.parent.postMessage('closePopup','*');else location.href='index.html'}
+
+function getIcon(name){
+    const l=(name||'').toLowerCase();
+    if(l.includes('hambur')||l.includes('burger'))return'🍔';if(l.includes('pizza'))return'🍕';
+    if(l.includes('bebida')||l.includes('drink'))return'🥤';if(l.includes('sobremesa')||l.includes('doce'))return'🍰';
+    if(l.includes('açaí')||l.includes('acai'))return'🍇';if(l.includes('sorvete'))return'🍦';
+    if(l.includes('lanche'))return'🌭';if(l.includes('salada'))return'🥗';
+    if(l.includes('sushi'))return'🍣';if(l.includes('frango'))return'🍗';if(l.includes('carne'))return'🥩';
+    if(l.includes('massa'))return'🍝';if(l.includes('porç'))return'🍟';if(l.includes('combo'))return'🍱';
+    if(l.includes('promo'))return'🏷️';return'📁';
+}
+
+function countProds(cat){return products.filter(p=>(p.category||'').toLowerCase().trim()===cat.toLowerCase().trim()).length}
+
+function render(){
+    document.getElementById('totalCats').textContent=categories.length;
+    document.getElementById('totalProds').textContent=products.length;
+    const el=document.getElementById('catList');
+    if(!categories.length){
+        el.innerHTML='<div class="empty-state"><strong>Nenhuma categoria criada</strong>Adicione a primeira categoria para organizar a loja.</div>';
         return;
-      }
-
-      container.innerHTML = categories.map((cat, index) => {
-        const count = countProducts(cat);
-        const icon = getCategoryIcon(cat);
-        
-        return `
-          <div class="category-card" id="cat-${index}">
-            <div class="category-icon">${icon}</div>
+    }
+    el.innerHTML=categories.map((c,i)=>{
+        const count=countProds(c);
+        if(editIdx===i){
+            return`<div class="category-card">
+                <div class="category-icon">${getIcon(c)}</div>
+                <input type="text" class="cat-edit-input" id="editInput" value="${esc(c)}" maxlength="50" onkeydown="if(event.key==='Enter')saveEdit(${i})">
+                <div class="category-actions">
+                    <button class="btn btn-primary btn-sm" onclick="saveEdit(${i})">Salvar</button>
+                    <button class="btn btn-neutral btn-sm" onclick="cancelEdit()">Cancelar</button>
+                </div>
+            </div>`;
+        }
+        return`<div class="category-card">
+            <div class="category-icon">${getIcon(c)}</div>
             <div class="category-info">
-              <div class="category-name">${escapeHtml(cat)}</div>
-              <div class="category-count">${count} produto${count !== 1 ? 's' : ''}</div>
+                <div class="category-name">${esc(c)}</div>
+                <div class="category-count">${count} produto${count!==1?'s':''}</div>
             </div>
             <div class="category-actions">
-              <button class="btn-icon" onclick="editCategory(${index})" title="Editar">✏️</button>
-              <button class="btn-icon danger" onclick="confirmDelete(${index})" title="Excluir">🗑️</button>
+                <button class="btn btn-neutral btn-sm" onclick="startEdit(${i})">Editar</button>
+                <button class="btn btn-danger-soft btn-sm" onclick="confirmDel(${i})">Excluir</button>
             </div>
-          </div>
-        `;
-      }).join('');
-    }
+        </div>`;
+    }).join('');
+    if(editIdx!==null)document.getElementById('editInput')?.focus();
+}
 
-    // ===== GET CATEGORY ICON =====
-    function getCategoryIcon(name) {
-      const lower = name.toLowerCase();
-      if (lower.includes('hambur') || lower.includes('burger')) return '🍔';
-      if (lower.includes('pizza')) return '🍕';
-      if (lower.includes('bebida') || lower.includes('drink')) return '🥤';
-      if (lower.includes('sobremesa') || lower.includes('doce')) return '🍰';
-      if (lower.includes('salada')) return '🥗';
-      if (lower.includes('lanche')) return '🌭';
-      if (lower.includes('açaí') || lower.includes('acai')) return '🍇';
-      if (lower.includes('sorvete')) return '🍦';
-      if (lower.includes('sushi') || lower.includes('japon')) return '🍣';
-      if (lower.includes('frango')) return '🍗';
-      if (lower.includes('carne')) return '🥩';
-      if (lower.includes('peixe') || lower.includes('frutos')) return '🐟';
-      if (lower.includes('massa') || lower.includes('pasta')) return '🍝';
-      if (lower.includes('porç') || lower.includes('porcao')) return '🍟';
-      if (lower.includes('combo')) return '🍱';
-      if (lower.includes('promo')) return '🏷️';
-      return '📁';
-    }
+async function loadData(){
+    if(!storeId)return;
+    try{
+        const[storeDoc,snap]=await Promise.all([
+            db.collection('stores').doc(storeId).get(),
+            db.collection('products').where('storeId','==',storeId).get()
+        ]);
+        const d=storeDoc.exists?storeDoc.data():{};
+        categories=Array.isArray(d.categories)?[...d.categories].sort():[];
+        products=snap.docs.map(doc=>({id:doc.id,...doc.data()}));
+        const prodCats=[...new Set(products.map(p=>p.category).filter(Boolean))];
+        const all=[...new Set([...categories,...prodCats])].sort();
+        if(all.length>categories.length){categories=all;await saveCats()}
+        render();
+    }catch(e){console.error(e);toast('Erro ao carregar')}
+}
 
-    // ===== ADD CATEGORY =====
-    async function addCategory() {
-      const input = document.getElementById('newCategoryName');
-      const name = input.value.trim();
+async function saveCats(){await db.collection('stores').doc(storeId).update({categories})}
 
-      if (!name) {
-        showToast('Digite o nome da categoria');
-        input.focus();
-        return;
-      }
+async function addCat(){
+    const input=document.getElementById('newCatName');
+    const name=input.value.trim();
+    if(!name){toast('Digite o nome');input.focus();return}
+    if(categories.some(c=>c.toLowerCase()===name.toLowerCase())){toast('Já existe');return}
+    const btn=document.getElementById('btnAdd');btn.disabled=true;btn.textContent='Adicionando...';
+    try{categories.push(name);categories.sort();await saveCats();input.value='';render();toast('Categoria criada')}
+    catch(e){categories.pop();toast('Erro ao salvar')}
+    finally{btn.disabled=false;btn.textContent='Adicionar'}
+}
 
-      // Verifica duplicata (case-insensitive)
-      const exists = categories.some(c => 
-        c.toLowerCase().trim() === name.toLowerCase().trim()
-      );
-
-      if (exists) {
-        showToast('Categoria já existe');
-        return;
-      }
-
-      const btn = document.getElementById('btnAdd');
-      btn.disabled = true;
-      btn.textContent = 'Salvando...';
-
-      try {
-        categories.push(name);
-        categories.sort();
-        await saveCategoriesToStore();
-        
-        input.value = '';
-        renderCategories();
-        showToast('✓ Categoria criada!');
-
-      } catch (err) {
-        console.error('Erro ao criar:', err);
-        categories.pop(); // Reverte
-        showToast('Erro ao criar');
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Adicionar';
-      }
-    }
-
-    // ===== EDIT CATEGORY =====
-    function editCategory(index) {
-      const card = document.getElementById(`cat-${index}`);
-      const oldName = categories[index];
-      const count = countProducts(oldName);
-
-      card.classList.add('editing');
-      card.innerHTML = `
-        <div class="category-icon">${getCategoryIcon(oldName)}</div>
-        <input type="text" class="edit-input" id="editInput-${index}" 
-               value="${escapeHtml(oldName)}" maxlength="50"
-               onkeypress="if(event.key==='Enter')saveEdit(${index})">
-        <div class="category-actions">
-          <button class="btn-icon" onclick="saveEdit(${index})" title="Salvar">✓</button>
-          <button class="btn-icon" onclick="cancelEdit(${index})" title="Cancelar">✗</button>
-        </div>
-      `;
-
-      const input = document.getElementById(`editInput-${index}`);
-      input.focus();
-      input.select();
-    }
-
-    async function saveEdit(index) {
-      const input = document.getElementById(`editInput-${index}`);
-      const newName = input.value.trim();
-      const oldName = categories[index];
-
-      if (!newName) {
-        showToast('Nome não pode ser vazio');
-        return;
-      }
-
-      if (newName === oldName) {
-        renderCategories();
-        return;
-      }
-
-      // Verifica duplicata
-      const exists = categories.some((c, i) => 
-        i !== index && c.toLowerCase().trim() === newName.toLowerCase().trim()
-      );
-
-      if (exists) {
-        showToast('Categoria já existe');
-        return;
-      }
-
-      try {
-        // Atualiza produtos com essa categoria
-        const productsToUpdate = products.filter(p => 
-          (p.category || '').toLowerCase().trim() === oldName.toLowerCase().trim()
-        );
-
-        const batch = db.batch();
-        
-        productsToUpdate.forEach(p => {
-          const ref = db.collection('products').doc(p.id);
-          batch.update(ref, { category: newName });
-        });
-
-        // Atualiza categoria na lista
-        categories[index] = newName;
-        categories.sort();
-
-        // Salva no store
-        const storeRef = db.collection('stores').doc(storeId);
-        batch.update(storeRef, { categories: categories });
-
+function startEdit(i){editIdx=i;render()}
+function cancelEdit(){editIdx=null;render()}
+async function saveEdit(i){
+    const input=document.getElementById('editInput');
+    const newName=(input.value||'').trim();
+    const oldName=categories[i];
+    if(!newName){toast('Nome vazio');return}
+    if(newName===oldName){cancelEdit();return}
+    if(categories.some((c,j)=>j!==i&&c.toLowerCase()===newName.toLowerCase())){toast('Já existe');return}
+    try{
+        const toUpdate=products.filter(p=>(p.category||'').toLowerCase().trim()===oldName.toLowerCase().trim());
+        const batch=db.batch();
+        toUpdate.forEach(p=>batch.update(db.collection('products').doc(p.id),{category:newName}));
+        categories[i]=newName;categories.sort();
+        batch.update(db.collection('stores').doc(storeId),{categories});
         await batch.commit();
+        toUpdate.forEach(p=>p.category=newName);
+        editIdx=null;render();
+        toast(`${toUpdate.length} produto(s) atualizado(s)`);
+    }catch(e){console.error(e);toast('Erro ao editar');render()}
+}
 
-        // Atualiza produtos localmente
-        productsToUpdate.forEach(p => p.category = newName);
+function confirmDel(i){
+    const count=countProds(categories[i]);
+    if(count>0){toast(`Remova ${count} produto(s) primeiro`);return}
+    delIdx=i;
+    document.getElementById('delMsg').textContent=`"${categories[i]}" será removida da sua loja.`;
+    document.getElementById('delPopup').classList.add('show');
+}
+function closeDelPopup(){document.getElementById('delPopup').classList.remove('show');delIdx=null}
+async function doDelete(){
+    if(delIdx===null)return;
+    try{
+        categories.splice(delIdx,1);
+        await saveCats();
+        closeDelPopup();
+        render();
+        toast('Categoria removida');
+    }catch(e){console.error(e);toast('Erro ao excluir')}
+}
 
-        renderCategories();
-        showToast(`✓ Atualizado! ${productsToUpdate.length} produto(s) atualizados`);
+document.getElementById('delPopup').addEventListener('click',e=>{if(e.target.id==='delPopup')closeDelPopup()});
 
-      } catch (err) {
-        console.error('Erro ao editar:', err);
-        showToast('Erro ao editar');
-        renderCategories();
-      }
-    }
-
-    function cancelEdit(index) {
-      renderCategories();
-    }
-
-    // ===== DELETE CATEGORY =====
-    function confirmDelete(index) {
-      const name = categories[index];
-      const count = countProducts(name);
-
-      if (count > 0) {
-        showToast(`❌ Remova ${count} produto(s) desta categoria primeiro`);
-        return;
-      }
-
-      categoryToDelete = index;
-      document.getElementById('deleteMessage').textContent = 
-        `A categoria "${name}" será removida permanentemente.`;
-      document.getElementById('deletePopup').classList.add('show');
-      
-      document.getElementById('btnConfirmDelete').onclick = () => deleteCategory();
-    }
-
-    function closeDeletePopup() {
-      document.getElementById('deletePopup').classList.remove('show');
-      categoryToDelete = null;
-    }
-
-    async function deleteCategory() {
-      if (categoryToDelete === null) return;
-
-      const name = categories[categoryToDelete];
-      
-      try {
-        categories.splice(categoryToDelete, 1);
-        await saveCategoriesToStore();
-        
-        closeDeletePopup();
-        renderCategories();
-        showToast('✓ Categoria removida');
-
-      } catch (err) {
-        console.error('Erro ao excluir:', err);
-        showToast('Erro ao excluir');
-      }
-    }
-
-    // ===== SAVE TO STORE =====
-    async function saveCategoriesToStore() {
-      await db.collection('stores').doc(storeId).update({
-        categories: categories
-      });
-    }
-
-    // ===== UTILS =====
-    function goBack() {
-      if (window.opener) {
-        window.close();
-      } else if (document.referrer.includes(location.host)) {
-        history.back();
-      } else {
-        location.href = 'index.html';
-      }
-    }
-
-    function showToast(msg) {
-      const t = document.getElementById('toast');
-      t.textContent = msg;
-      t.classList.add('show');
-      setTimeout(() => t.classList.remove('show'), 3000);
-    }
-
-    function escapeHtml(str) {
-      return String(str || '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
-    }
-
-    // Click outside popup to close
-    document.getElementById('deletePopup').addEventListener('click', function(e) {
-      if (e.target === this) closeDeletePopup();
-    });
-  </script>
+(async()=>{
+    if(!storeId){document.getElementById('catList').innerHTML='<div class="empty-state"><strong>Faça login primeiro</strong>A loja atual não foi encontrada no navegador.</div>';return}
+    const user=auth.currentUser||await new Promise(r=>{const u=auth.onAuthStateChanged(x=>{u();r(x)})});
+    if(!user){document.getElementById('catList').innerHTML='<div class="empty-state"><strong>Faça login</strong>O acesso à loja precisa de autenticação.</div>';return}
+    await loadData();
+})();
+</script>
 </body>
 </html>

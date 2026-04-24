@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<title>Produtos - Pedra Delivery</title>
+<meta name="theme-color" content="#09090b">
+<link rel="stylesheet" href="style.css">
+<style>
+:root{
+    --focus-ring: 0 0 0 1px rgba(255,255,255,.05), 0 0 0 2px rgba(212,175,55,.35);
+}
+
+body{
+    background:var(--bg-0);
+    color:var(--text-0);
+    min-height:100dvh;
+    padding:16px;
+    padding-top:max(16px,env(safe-area-inset-top));
+    padding-bottom:max(16px,env(safe-area-inset-bottom));
+}
+
+.container{max-width:1480px;margin:0 auto}
+
+.page-header{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:14px;
+    margin-bottom:18px;
+    padding-bottom:16px;
+    border-bottom:1px solid var(--border)
+}
+
+.page-title{font-size:1.05rem;font-weight:600;letter-spacing:-.02em}
+.page-subtitle{color:var(--text-2);font-size:.84rem;margin-top:4px}
+.header-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+.toolbar{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    margin-bottom:14px
+}
+.toolbar-left{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    flex:1;
+    min-width:260px;
+    flex-wrap:wrap
+}
+.toolbar .search{flex:1;min-width:220px}
+.toolbar-right{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+
+.view-switch{
+    display:flex;
+    gap:6px;
+    align-items:center;
+    flex-wrap:wrap;
+    padding:4px;
+    border:1px solid var(--border);
+    border-radius:14px;
+    background:var(--bg-1);
+    box-shadow:var(--sh-sm)
+}
+.view-btn{
+    min-width:92px;
+    padding:8px 12px;
+    border-radius:10px;
+    border:1px solid transparent;
+    background:transparent;
+    color:var(--text-2);
+    font:inherit;
+    font-size:.78rem;
+    font-weight:600;
+    cursor:pointer;
+    transition:all .18s ease;
+}
+.view-btn:hover{
+    color:var(--text-0);
+    background:var(--bg-2);
+    border-color:var(--border);
+}
+.view-btn.active{
+    background:var(--accent);
+    color:var(--accent-t);
+    border-color:var(--accent);
+    box-shadow:var(--sh-sm);
+}
+
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.filter-chip{
+    padding:7px 14px;
+    font-size:.78rem;
+    border-radius:999px;
+    cursor:pointer;
+    border:1px solid var(--border);
+    color:var(--text-2);
+    background:var(--bg-1);
+    font-family:inherit;
+    transition:all .2s;
+    box-shadow:var(--sh-sm)
+}
+.filter-chip:hover{
+    border-color:var(--border-h);
+    color:var(--text-0);
+    transform:translateY(-1px);
+    box-shadow:var(--sh-md)
+}
+.filter-chip.active{
+    background:var(--accent);
+    color:var(--accent-t);
+    border-color:var(--accent)
+}
+
+.grid{
+    display:grid;
+    gap:12px;
+    transition:all .2s ease;
+}
+
+.grid.view-default{
+    grid-template-columns:repeat(6,minmax(0,1fr));
+    gap:12px;
+}
+
+.grid.view-compact{
+    grid-template-columns:repeat(8,minmax(0,1fr));
+    gap:10px;
+}
+
+.grid.view-list{
+    grid-template-columns:1fr;
+    gap:10px;
+}
+
+.product-card{
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    background:var(--bg-1);
+    border:1px solid var(--border);
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow:var(--sh-sm);
+    transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease,background .18s ease;
+    min-width:0;
+    cursor:pointer;
+    outline:none;
+    user-select:none;
+}
+.product-card:hover{
+    border-color:var(--border-h);
+    box-shadow:var(--sh-md);
+    transform:translateY(-2px);
+}
+.product-card:focus-visible{
+    box-shadow:var(--focus-ring), var(--sh-md);
+    border-color:var(--accent);
+}
+.product-card.selected{
+    border-color:var(--accent);
+    box-shadow:var(--focus-ring), var(--sh-md);
+}
+.product-card.inactive{
+    opacity:.86;
+}
+
+.product-image{
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+    background:
+        radial-gradient(circle at top, rgba(255,255,255,.05), transparent 55%),
+        linear-gradient(180deg, var(--bg-2), var(--bg-1));
+    padding:10px;
+}
+
+.product-image img{
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    object-position:center;
+    display:block;
+    pointer-events:none;
+}
+
+.product-image .ph{
+    color:var(--text-3);
+    font-size:.78rem;
+    text-align:center;
+    width:100%;
+    pointer-events:none;
+}
+
+.status-dot{
+    position:absolute;
+    left:10px;
+    top:10px;
+    width:10px;
+    height:10px;
+    border-radius:999px;
+    box-shadow:0 0 0 2px rgba(0,0,0,.16);
+    z-index:2;
+}
+.status-dot.on{background:var(--green)}
+.status-dot.off{background:var(--red)}
+
+.action-hints{
+    position:absolute;
+    right:8px;
+    top:8px;
+    display:flex;
+    gap:6px;
+    z-index:2;
+    pointer-events:none;
+}
+.action-hint{
+    width:26px;
+    height:26px;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:rgba(15,15,20,.68);
+    border:1px solid rgba(255,255,255,.08);
+    color:#fff;
+    font-size:.82rem;
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    box-shadow:0 6px 16px rgba(0,0,0,.22);
+}
+.action-hint.key{
+    font-size:.72rem;
+    font-weight:700;
+    letter-spacing:.02em;
+}
+
+.product-body{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    min-width:0;
+}
+
+.product-main{
+    min-width:0;
+}
+
+.product-line{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    min-width:0;
+}
+
+.product-name{
+    font-weight:600;
+    font-size:.84rem;
+    line-height:1.25;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    min-width:0;
+}
+.product-price{
+    font-weight:700;
+    font-size:.8rem;
+    white-space:nowrap;
+    color:var(--text-0);
+    flex-shrink:0;
+}
+.product-meta{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    min-width:0;
+}
+.product-cat{
+    color:var(--text-2);
+    font-size:.7rem;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    min-width:0;
+}
+.product-extra{
+    color:var(--text-2);
+    font-size:.68rem;
+    flex-shrink:0;
+    white-space:nowrap;
+}
+
+.product-badges{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+    margin-top:2px;
+}
+.badge{
+    font-size:.64rem;
+    padding:4px 7px;
+    border-radius:999px;
+    border:1px solid var(--border);
+    background:var(--bg-2);
+    color:var(--text-1);
+    font-weight:600;
+    letter-spacing:.02em
+}
+.badge.on{background:var(--green-bg);border-color:var(--green-b);color:var(--green)}
+.badge.off{background:var(--red-bg);border-color:var(--red-b);color:var(--red)}
+
+.grid.view-default .product-card{
+    border-radius:18px;
+}
+.grid.view-default .product-image{
+    aspect-ratio:1 / 1;
+    min-height:150px;
+    padding:14px;
+}
+.grid.view-default .product-body{
+    padding:9px 10px 10px;
+    background:linear-gradient(180deg, rgba(255,255,255,.01), rgba(255,255,255,.02));
+    border-top:1px solid var(--border);
+    min-height:62px;
+    justify-content:center;
+}
+.grid.view-default .product-badges{
+    display:none;
+}
+.grid.view-default .action-hint{
+    width:24px;
+    height:24px;
+    font-size:.78rem;
+}
+.grid.view-default .action-hint.key{
+    font-size:.69rem;
+}
+
+.grid.view-compact .product-card{
+    border-radius:16px;
+}
+.grid.view-compact .product-image{
+    aspect-ratio:1 / 1;
+    min-height:110px;
+    padding:12px;
+}
+.grid.view-compact .product-body{
+    padding:6px 7px 7px;
+    min-height:38px;
+    justify-content:center;
+}
+.grid.view-compact .product-name{
+    font-size:.73rem;
+    text-align:center;
+}
+.grid.view-compact .product-price{
+    display:none;
+}
+.grid.view-compact .product-meta{
+    display:none;
+}
+.grid.view-compact .product-badges{
+    display:none;
+}
+.grid.view-compact .action-hints{
+    top:auto;
+    bottom:8px;
+    right:8px;
+}
+.grid.view-compact .action-hint{
+    width:24px;
+    height:24px;
+    border-radius:9px;
+    font-size:.74rem;
+}
+.grid.view-compact .action-hint.key{
+    font-size:.66rem;
+}
+.grid.view-compact .status-dot{
+    width:9px;
+    height:9px;
+}
+
+.grid.view-list .product-card{
+    display:grid;
+    grid-template-columns:160px minmax(0,1fr);
+    align-items:stretch;
+    border-radius:18px;
+}
+.grid.view-list .product-image{
+    min-height:132px;
+    height:100%;
+    border-right:1px solid var(--border);
+}
+.grid.view-list .product-body{
+    padding:14px 14px 12px;
+    justify-content:center;
+}
+.grid.view-list .product-line{
+    margin-bottom:4px;
+}
+.grid.view-list .product-name{
+    font-size:.92rem;
+}
+.grid.view-list .product-price{
+    font-size:.9rem;
+}
+.grid.view-list .product-cat{
+    font-size:.76rem;
+}
+.grid.view-list .product-extra{
+    font-size:.72rem;
+}
+.grid.view-list .product-badges{
+    margin-top:8px;
+}
+.grid.view-list .action-hints{
+    right:10px;
+    top:10px;
+}
+
+.empty-state{
+    padding:44px 20px;
+    text-align:center;
+    color:var(--text-2);
+    border:1px dashed var(--border);
+    border-radius:var(--r);
+    background:var(--bg-1)
+}
+.loading-state{
+    padding:44px 20px;
+    text-align:center;
+    color:var(--text-2)
+}
+.loading-state .spinner{margin:0 auto 10px}
+.muted-box{padding:40px;color:var(--text-2)}
+
+.btn-danger{
+    background:var(--red-bg)!important;
+    color:var(--red)!important;
+    border-color:var(--red-b)!important
+}
+.btn-danger:hover{
+    background:rgba(248,113,113,.14)!important;
+    color:var(--red)!important;
+    border-color:rgba(248,113,113,.34)!important
+}
+.btn-soft{
+    background:var(--bg-2);
+    color:var(--text-0);
+    border-color:var(--border)
+}
+.btn-soft:hover{
+    background:var(--bg-3);
+    border-color:var(--border-h)
+}
+
+.page-footer{
+    margin-top:18px;
+    padding:12px 14px;
+    border:1px solid var(--border);
+    border-radius:16px;
+    background:var(--bg-1);
+    box-shadow:var(--sh-sm);
+}
+.footer-hints{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-bottom:10px;
+}
+.footer-chip{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:7px 11px;
+    border:1px solid var(--border);
+    border-radius:999px;
+    background:var(--bg-2);
+    color:var(--text-1);
+    font-size:.74rem;
+    line-height:1;
+}
+.footer-chip i{
+    font-style:normal;
+    font-size:.82rem;
+    color:var(--text-0);
+}
+.footer-selection{
+    color:var(--text-2);
+    font-size:.78rem;
+    line-height:1.4;
+}
+.footer-selection strong{
+    color:var(--text-0);
+    font-weight:600;
+}
+
+@media(max-width:1440px){
+    .grid.view-default{grid-template-columns:repeat(5,minmax(0,1fr))}
+    .grid.view-compact{grid-template-columns:repeat(7,minmax(0,1fr))}
+}
+@media(max-width:1220px){
+    .grid.view-default{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .grid.view-compact{grid-template-columns:repeat(6,minmax(0,1fr))}
+}
+@media(max-width:980px){
+    .grid.view-default{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .grid.view-compact{grid-template-columns:repeat(5,minmax(0,1fr))}
+    .grid.view-list .product-card{grid-template-columns:140px minmax(0,1fr)}
+}
+@media(max-width:760px){
+    .toolbar{align-items:stretch}
+    .toolbar-left,.toolbar-right{width:100%}
+    .toolbar-right{justify-content:space-between}
+    .view-switch{width:100%;justify-content:space-between}
+    .view-btn{flex:1}
+    .grid.view-default{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .grid.view-compact{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .grid.view-list .product-card{grid-template-columns:1fr}
+    .grid.view-list .product-image{
+        min-height:140px;
+        border-right:none;
+        border-bottom:1px solid var(--border);
+    }
+}
+@media(max-width:560px){
+    .grid.view-default{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .grid.view-compact{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .page-header{flex-direction:column;align-items:stretch}
+    .header-actions{width:100%}
+    .header-actions .btn{flex:1}
+}
+@media(max-width:420px){
+    .grid.view-default,.grid.view-compact{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .product-name{font-size:.78rem}
+    .grid.view-compact .product-name{font-size:.69rem}
+}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<div class="container">
+    <div class="page-header">
+        <div>
+            <div class="page-title">Produtos</div>
+            <div class="page-subtitle" id="subInfo">Carregando...</div>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-soft" onclick="openBatch()">Lote</button>
+            <button class="btn btn-primary" onclick="openCreate()">Novo</button>
+        </div>
+    </div>
+
+    <div class="toolbar">
+        <div class="toolbar-left">
+            <div class="search">
+                <input class="form-input" id="searchInput" placeholder="Buscar por nome ou categoria..." oninput="render()">
+            </div>
+        </div>
+
+        <div class="toolbar-right">
+            <div class="view-switch" aria-label="Modo de visualização">
+                <button class="view-btn active" data-view="default" onclick="setViewMode('default')">Padrão</button>
+                <button class="view-btn" data-view="compact" onclick="setViewMode('compact')">Compacto</button>
+                <button class="view-btn" data-view="list" onclick="setViewMode('list')">Lista</button>
+            </div>
+            <button class="btn btn-ghost" onclick="refreshNow()">Atualizar</button>
+        </div>
+    </div>
+
+    <div class="filters">
+        <button class="filter-chip active" data-f="all" onclick="setFilter('all')">Todos</button>
+        <button class="filter-chip" data-f="active" onclick="setFilter('active')">Ativos</button>
+        <button class="filter-chip" data-f="inactive" onclick="setFilter('inactive')">Inativos</button>
+    </div>
+
+    <div id="loading" class="loading-state">
+        <div class="spinner"></div>
+        <div>Carregando...</div>
+    </div>
+
+    <div id="content" style="display:none">
+        <div id="grid" class="grid view-default"></div>
+        <div id="emptyState" class="empty-state" style="display:none">Nenhum produto encontrado.</div>
+
+        <div class="page-footer">
+            <div class="footer-hints">
+                <span class="footer-chip"><i>🖱</i> Clique no card para editar</span>
+                <span class="footer-chip"><i>⌦</i> Delete exclui o item selecionado</span>
+                <span class="footer-chip"><i>⇥</i> Passe o mouse ou use Tab para selecionar</span>
+                <span class="footer-chip"><i>✎</i> Ícones indicam função, não são botões separados</span>
+            </div>
+            <div class="footer-selection" id="selectionInfo">Nenhum produto selecionado.</div>
+        </div>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script>
+const FC={apiKey:"AIzaSyAnIJRcUxN-0swpVnonPbJjTSK87o4CQ_g",authDomain:"pedrad-814d0.firebaseapp.com",projectId:"pedrad-814d0",storageBucket:"pedrad-814d0.appspot.com",messagingSenderId:"293587190550",appId:"1:293587190550:web:80c9399f82847c80e20637"};
+if(!firebase.apps.length)firebase.initializeApp(FC);
+
+const db=firebase.firestore(),auth=firebase.auth();
+const storeId=(new URLSearchParams(location.search)).get('storeId')||localStorage.getItem('currentStoreId');
+
+let allProducts=[],unsub=null,filter='all';
+let currentStoreName='';
+let viewMode=localStorage.getItem('pedrad-products-view-mode')||'default';
+let selectedProductId=null;
+
+function esc(s){
+    const d=document.createElement('div');
+    d.textContent=String(s||'');
+    return d.innerHTML;
+}
+
+function money(v){
+    return (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+}
+
+function toast(m){
+    const t=document.getElementById('toast');
+    t.textContent=m;
+    t.classList.add('show');
+    clearTimeout(t._t);
+    t._t=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+function applyTheme(theme){
+    document.documentElement.setAttribute('data-theme',theme==='light'?'light':'dark');
+    const meta=document.querySelector('meta[name="theme-color"]');
+    if(meta)meta.setAttribute('content',theme==='light'?'#f5f5f7':'#09090b');
+}
+
+function detectParentTheme(){
+    try{
+        if(window.opener && window.opener.document){
+            const t=window.opener.document.documentElement.getAttribute('data-theme');
+            if(t)return t;
+        }
+    }catch(e){}
+    try{
+        if(window.parent && window.parent!==window && window.parent.document){
+            const t=window.parent.document.documentElement.getAttribute('data-theme');
+            if(t)return t;
+        }
+    }catch(e){}
+    const keys=['theme','appTheme','data-theme','pedrad-theme','color-theme'];
+    for(const key of keys){
+        const val=localStorage.getItem(key);
+        if(val==='light'||val==='dark')return val;
+    }
+    return document.documentElement.getAttribute('data-theme')||'dark';
+}
+
+function syncTheme(){applyTheme(detectParentTheme())}
+syncTheme();
+setInterval(syncTheme,1200);
+window.addEventListener('storage',syncTheme);
+
+function getProductById(id){
+    return allProducts.find(p=>p.id===id)||null;
+}
+
+function updateSelectionUI(){
+    document.querySelectorAll('.product-card').forEach(card=>{
+        card.classList.toggle('selected',card.dataset.id===selectedProductId);
+    });
+
+    const info=document.getElementById('selectionInfo');
+    const product=getProductById(selectedProductId);
+
+    if(!product){
+        info.innerHTML='Nenhum produto selecionado.';
+        return;
+    }
+
+    info.innerHTML=`Selecionado: <strong>${esc(product.name||'Sem nome')}</strong> • Clique para editar • Pressione <strong>Delete</strong> para excluir.`;
+}
+
+function selectProduct(id){
+    selectedProductId=id||null;
+    updateSelectionUI();
+}
+
+function applyViewMode(){
+    const safe=['default','compact','list'].includes(viewMode)?viewMode:'default';
+    viewMode=safe;
+    localStorage.setItem('pedrad-products-view-mode',viewMode);
+
+    const grid=document.getElementById('grid');
+    if(grid)grid.className=`grid view-${viewMode}`;
+
+    document.querySelectorAll('.view-btn').forEach(btn=>{
+        btn.classList.toggle('active',btn.dataset.view===viewMode);
+    });
+}
+
+function setViewMode(mode){
+    viewMode=mode;
+    applyViewMode();
+    render();
+}
+
+function updateSubtitle(totalVisible=allProducts.length,totalAll=allProducts.length){
+    const modeLabel=viewMode==='compact'?'Compacto':viewMode==='list'?'Lista':'Padrão';
+    const storePart=currentStoreName?`Loja: ${currentStoreName}`:'Loja carregada';
+    const countPart=`${totalVisible} de ${totalAll} produto${totalAll===1?'':'s'}`;
+    document.getElementById('subInfo').textContent=`${storePart} • ${countPart} • Visualização: ${modeLabel}`;
+}
+
+function setFilter(f){
+    filter=f;
+    document.querySelectorAll('.filter-chip').forEach(c=>c.classList.toggle('active',c.dataset.f===f));
+    render();
+}
+
+function getFilteredProducts(){
+    const q=(document.getElementById('searchInput').value||'').toLowerCase().trim();
+    let list=[...allProducts];
+
+    if(filter==='active')list=list.filter(p=>p.active!==false);
+    else if(filter==='inactive')list=list.filter(p=>p.active===false);
+
+    if(q){
+        list=list.filter(p=>
+            (p.name||'').toLowerCase().includes(q)||
+            (p.category||'').toLowerCase().includes(q)
+        );
+    }
+
+    list.sort((a,b)=>{
+        if((a.active!==false)!==(b.active!==false))return (b.active!==false)?1:-1;
+        return (a.name||'').localeCompare(b.name||'','pt-BR');
+    });
+
+    return list;
+}
+
+function productCardHtml(p){
+    const img=p.imageData&&p.imageData.startsWith('data:')?p.imageData:(p.imageUrl||'');
+    const active=p.active!==false;
+    const groups=p.addonGroups||[];
+    const legacyAddons=(p.addons||[]).length+(p.flavors||[]).length+(p.sizes||[]).length+(p.extras||[]).length;
+    const addonCount=groups.reduce((s,g)=>(s+(g.items||[]).length),0)+legacyAddons;
+    const extra=addonCount?`${addonCount} adicionais`:(active?'Disponível':'Indisponível');
+
+    return `
+        <article
+            class="product-card ${active?'':'inactive'}"
+            data-id="${esc(p.id)}"
+            tabindex="0"
+            role="button"
+            aria-label="Produto ${esc(p.name||'Sem nome')}"
+            title="Clique para editar • Delete para excluir"
+        >
+            <div class="product-image">
+                <span class="status-dot ${active?'on':'off'}"></span>
+
+                <div class="action-hints" aria-hidden="true">
+                    <span class="action-hint">✎</span>
+                    <span class="action-hint key">⌦</span>
+                </div>
+
+                ${
+                    img
+                    ? `<img src="${esc(img)}" alt="" onerror="this.remove();this.parentElement.insertAdjacentHTML('beforeend','<div class=&quot;ph&quot;>Sem imagem</div>')">`
+                    : `<div class="ph">Sem imagem</div>`
+                }
+            </div>
+
+            <div class="product-body">
+                <div class="product-main">
+                    <div class="product-line">
+                        <div class="product-name">${esc(p.name||'Sem nome')}</div>
+                        <div class="product-price">${money(p.price)}</div>
+                    </div>
+
+                    <div class="product-meta">
+                        <div class="product-cat">${esc(p.category||'Sem categoria')}</div>
+                        <div class="product-extra">${esc(extra)}</div>
+                    </div>
+
+                    <div class="product-badges">
+                        <span class="badge ${active?'on':'off'}">${active?'Ativo':'Inativo'}</span>
+                        ${addonCount?`<span class="badge">${addonCount} adicionais</span>`:''}
+                    </div>
+                </div>
+            </div>
+        </article>
+    `;
+}
+
+function render(){
+    applyViewMode();
+
+    const grid=document.getElementById('grid');
+    const empty=document.getElementById('emptyState');
+    const list=getFilteredProducts();
+
+    updateSubtitle(list.length,allProducts.length);
+
+    if(!list.length){
+        grid.innerHTML='';
+        empty.style.display='block';
+        selectProduct(null);
+        return;
+    }
+
+    empty.style.display='none';
+    grid.innerHTML=list.map(productCardHtml).join('');
+
+    if(selectedProductId && !list.some(p=>p.id===selectedProductId)){
+        selectedProductId=null;
+    }
+
+    if(!selectedProductId && list.length){
+        selectedProductId=list[0].id;
+    }
+
+    updateSelectionUI();
+}
+
+function openEdit(id){
+    location.href=`product-edit.html?storeId=${encodeURIComponent(storeId)}&productId=${encodeURIComponent(id)}`;
+}
+
+function openCreate(){
+    location.href=`product-edit.html?storeId=${encodeURIComponent(storeId)}`;
+}
+
+function openBatch(){
+    location.href=`batch-editor.html?storeId=${encodeURIComponent(storeId)}`;
+}
+
+async function deleteProduct(id,name){
+    if(!confirm(`Excluir "${name}"?`))return;
+    try{
+        await db.collection('products').doc(id).delete();
+        if(selectedProductId===id)selectedProductId=null;
+        toast('Excluído!');
+    }catch(e){
+        toast('Erro: '+e.message);
+    }
+}
+
+async function copyProduct(id){
+    const p=allProducts.find(x=>x.id===id);
+    if(!p)return;
+    try{
+        const clone=JSON.parse(JSON.stringify(p));
+        delete clone.id;
+        clone.name=(clone.name||'')+' (cópia)';
+        clone.createdAt=firebase.firestore.FieldValue.serverTimestamp();
+        clone.updatedAt=firebase.firestore.FieldValue.serverTimestamp();
+        clone.storeId=storeId;
+        await db.collection('products').add(clone);
+        toast('Copiado!');
+    }catch(e){
+        toast('Erro: '+e.message);
+    }
+}
+
+function refreshNow(){
+    toast('Atualizando...');
+    listen();
+}
+
+async function loadInfo(){
+    try{
+        const doc=await db.collection('stores').doc(storeId).get();
+        const d=doc.exists?doc.data():{};
+        currentStoreName=d.name||'';
+        updateSubtitle(allProducts.length,allProducts.length);
+    }catch(e){
+        currentStoreName='';
+        document.getElementById('subInfo').textContent=storeId;
+    }
+}
+
+function listen(){
+    if(unsub)unsub();
+
+    unsub=db.collection('products').where('storeId','==',storeId).onSnapshot(snap=>{
+        allProducts=snap.docs.map(d=>({id:d.id,...d.data()}));
+        document.getElementById('loading').style.display='none';
+        document.getElementById('content').style.display='block';
+        render();
+    },err=>{
+        console.error(err);
+        document.getElementById('loading').style.display='none';
+        document.getElementById('content').style.display='block';
+        toast('Erro ao carregar');
+        updateSubtitle(0,0);
+    });
+}
+
+function isTypingTarget(el){
+    if(!el)return false;
+    const tag=(el.tagName||'').toLowerCase();
+    return tag==='input' || tag==='textarea' || el.isContentEditable;
+}
+
+document.getElementById('grid').addEventListener('click',e=>{
+    const card=e.target.closest('.product-card');
+    if(!card)return;
+    const id=card.dataset.id;
+    if(!id)return;
+    selectProduct(id);
+    openEdit(id);
+});
+
+document.getElementById('grid').addEventListener('mouseover',e=>{
+    const card=e.target.closest('.product-card');
+    if(!card)return;
+    selectProduct(card.dataset.id);
+});
+
+document.getElementById('grid').addEventListener('focusin',e=>{
+    const card=e.target.closest('.product-card');
+    if(!card)return;
+    selectProduct(card.dataset.id);
+});
+
+document.getElementById('grid').addEventListener('keydown',e=>{
+    const card=e.target.closest('.product-card');
+    if(!card)return;
+
+    const id=card.dataset.id;
+    const product=getProductById(id);
+    if(!product)return;
+
+    if(e.key==='Enter' || e.key===' '){
+        e.preventDefault();
+        openEdit(id);
+        return;
+    }
+
+    if(e.key==='Delete'){
+        e.preventDefault();
+        deleteProduct(id,product.name||'Sem nome');
+    }
+});
+
+document.addEventListener('keydown',e=>{
+    if(e.key!=='Delete')return;
+    if(isTypingTarget(document.activeElement))return;
+    if(!selectedProductId)return;
+
+    const product=getProductById(selectedProductId);
+    if(!product)return;
+
+    e.preventDefault();
+    deleteProduct(selectedProductId,product.name||'Sem nome');
+});
+
+applyViewMode();
+
+(async()=>{
+    if(!storeId){
+        document.getElementById('loading').innerHTML='<div class="muted-box">StoreId não informado</div>';
+        return;
+    }
+
+    const user=auth.currentUser||await new Promise(r=>{
+        const u=auth.onAuthStateChanged(x=>{
+            u();
+            r(x);
+        });
+    });
+
+    if(!user){
+        document.getElementById('loading').innerHTML='<div class="muted-box">Faça login primeiro</div>';
+        return;
+    }
+
+    await loadInfo();
+    listen();
+})();
+
+window.addEventListener('beforeunload',()=>{if(unsub)unsub()});
+</script>
+</body>
+</html>

@@ -1,556 +1,402 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastro em Lote - Pedrad</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', -apple-system, sans-serif; background: #0a0a14; color: #e0e0e0; min-height: 100vh; }
-
-        .header { background: #12121f; border-bottom: 1px solid #1e1e35; padding: 16px 24px; display: flex; align-items: center; gap: 14px; position: sticky; top: 0; z-index: 50; }
-        .header h1 { font-size: 1.1rem; font-weight: 600; color: #a78bfa; display: flex; align-items: center; gap: 8px; }
-        .store-tag { font-size: .75rem; background: #1e1e35; color: #888; padding: 4px 10px; border-radius: 20px; margin-left: auto; }
-
-        .container { max-width: 600px; margin: 0 auto; padding: 24px 16px 100px; }
-
-        .steps { display: flex; gap: 8px; margin-bottom: 28px; }
-        .step-dot { flex: 1; height: 4px; border-radius: 2px; background: #1e1e35; transition: background .3s; }
-        .step-dot.active { background: #a78bfa; }
-        .step-dot.done { background: #10b981; }
-
-        .card { background: #12121f; border: 1px solid #1e1e35; border-radius: 12px; padding: 24px; margin-bottom: 16px; }
-        .card-title { font-size: .8rem; color: #888; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; }
-
-        .field { margin-bottom: 14px; }
-        .field label { display: block; font-size: .8rem; color: #666; margin-bottom: 6px; }
-        .field input, .field select { width: 100%; padding: 11px 13px; background: #0a0a14; border: 1px solid #2a2a45; border-radius: 8px; color: #e0e0e0; font-size: .92rem; outline: none; transition: border-color .2s; }
-        .field input:focus, .field select:focus { border-color: #a78bfa; }
-        .field input::placeholder { color: #444; }
-        .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
-        /* Price toggle */
-        .price-toggle { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-        .price-toggle label { margin: 0; font-size: .85rem; color: #aaa; }
-        .toggle { position: relative; width: 40px; height: 22px; cursor: pointer; flex-shrink: 0; }
-        .toggle input { display: none; }
-        .toggle .slider { position: absolute; inset: 0; background: #2a2a45; border-radius: 11px; transition: background .2s; }
-        .toggle .slider::after { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; background: #888; border-radius: 50%; transition: all .2s; }
-        .toggle input:checked + .slider { background: #a78bfa; }
-        .toggle input:checked + .slider::after { left: 21px; background: #fff; }
-
-        /* Name input box */
-        .name-box { background: #0a0a14; border: 2px dashed #a78bfa40; border-radius: 12px; padding: 22px 20px; text-align: center; margin-bottom: 20px; transition: border-color .3s; }
-        .name-box.active { border-color: #a78bfa; }
-        .name-box .counter { font-size: .8rem; color: #a78bfa; margin-bottom: 10px; }
-        .name-box input { width: 100%; padding: 13px; background: #12121f; border: 1px solid #2a2a45; border-radius: 8px; color: #e0e0e0; font-size: 1.05rem; text-align: center; outline: none; }
-        .name-box input:focus { border-color: #a78bfa; }
-        .name-box input::placeholder { color: #444; }
-        .name-box .hint { font-size: .7rem; color: #555; margin-top: 8px; }
-
-        /* Items list */
-        .items-header { font-size: .8rem; color: #888; margin-bottom: 10px; }
-        .items-list { list-style: none; max-height: 460px; overflow-y: auto; margin-bottom: 20px; }
-        .items-list::-webkit-scrollbar { width: 4px; }
-        .items-list::-webkit-scrollbar-thumb { background: #2a2a45; border-radius: 2px; }
-
-        /* Item card */
-        .item-card { background: #0a0a14; border: 1px solid #1e1e35; border-radius: 10px; margin-bottom: 8px; overflow: hidden; }
-        .item-card.expanded { border-color: #a78bfa40; }
-
-        .item-main { display: flex; align-items: center; gap: 8px; padding: 10px 12px; }
-        .item-num { color: #555; font-size: .75rem; min-width: 20px; }
-        .item-label { flex: 1; font-size: .88rem; }
-        .item-label strong { color: #a78bfa; }
-        .item-price-inline { width: 90px; padding: 5px 8px; background: #12121f; border: 1px solid #2a2a45; border-radius: 6px; color: #e0e0e0; font-size: .85rem; outline: none; text-align: right; }
-        .item-price-inline:focus { border-color: #a78bfa; }
-
-        .item-main input.edit-name { flex: 1; background: #12121f; border: 1px solid #a78bfa; border-radius: 6px; color: #e0e0e0; padding: 5px 8px; font-size: .88rem; outline: none; }
-
-        .icon-btn { background: none; border: none; cursor: pointer; padding: 4px 6px; border-radius: 4px; font-size: .85rem; transition: background .15s; }
-        .icon-btn:hover { background: #1e1e35; }
-        .icon-btn.edit { color: #60a5fa; }
-        .icon-btn.del { color: #f87171; }
-        .icon-btn.save { color: #34d399; }
-        .icon-btn.expand { color: #a78bfa; font-size: .8rem; }
-
-        /* Expanded options panel */
-        .item-opts { padding: 0 12px 12px; border-top: 1px solid #1e1e35; display: none; }
-        .item-card.expanded .item-opts { display: block; }
-        .opts-tabs { display: flex; gap: 6px; margin: 12px 0 10px; flex-wrap: wrap; }
-        .opts-tab { padding: 5px 12px; border: 1px solid #2a2a45; border-radius: 20px; font-size: .78rem; cursor: pointer; transition: all .15s; color: #888; background: none; }
-        .opts-tab.active { background: #a78bfa20; border-color: #a78bfa; color: #a78bfa; }
-        .opts-panel { display: none; }
-        .opts-panel.active { display: block; }
-        .opt-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid #1a1a2e; font-size: .85rem; }
-        .opt-row:last-child { border: none; }
-        .opt-row input[type="text"] { flex: 1; background: #12121f; border: 1px solid #2a2a45; border-radius: 6px; color: #e0e0e0; padding: 5px 8px; font-size: .83rem; outline: none; }
-        .opt-row input[type="number"] { width: 80px; background: #12121f; border: 1px solid #2a2a45; border-radius: 6px; color: #e0e0e0; padding: 5px 8px; font-size: .83rem; outline: none; text-align: right; }
-        .opt-row input:focus { border-color: #a78bfa; }
-        .opt-add-row { display: flex; gap: 8px; margin-top: 10px; }
-        .opt-add-row input[type="text"] { flex: 1; background: #0a0a14; border: 1px solid #2a2a45; border-radius: 6px; color: #e0e0e0; padding: 7px 10px; font-size: .83rem; outline: none; }
-        .opt-add-row input[type="number"] { width: 80px; background: #0a0a14; border: 1px solid #2a2a45; border-radius: 6px; color: #e0e0e0; padding: 7px 8px; font-size: .83rem; outline: none; text-align: right; }
-        .opt-add-row input:focus { border-color: #a78bfa; }
-        .btn-add-opt { padding: 7px 12px; background: #1e1e35; border: 1px solid #2a2a45; border-radius: 6px; color: #a78bfa; font-size: .83rem; cursor: pointer; white-space: nowrap; }
-        .btn-add-opt:hover { background: #2a2a45; }
-        .opt-empty { color: #555; font-size: .8rem; padding: 8px 0; }
-
-        /* Actions */
-        .actions { display: flex; gap: 10px; justify-content: flex-end; }
-        .btn { padding: 11px 22px; border: none; border-radius: 8px; cursor: pointer; font-size: .9rem; font-weight: 600; transition: all .2s; }
-        .btn:hover { filter: brightness(1.1); }
-        .btn:disabled { opacity: .4; cursor: not-allowed; }
-        .btn-primary { background: #a78bfa; color: #0a0a14; }
-        .btn-success { background: #10b981; color: #fff; }
-        .btn-ghost { background: #1e1e35; color: #aaa; }
-
-        .status-msg { text-align: center; font-size: .85rem; min-height: 22px; margin-top: 12px; }
-        .status-msg.ok { color: #34d399; }
-        .status-msg.error { color: #f87171; }
-        .status-msg.info { color: #60a5fa; }
-        .done-banner { text-align: center; padding: 20px; color: #34d399; font-weight: 600; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<title>Cadastro em Lote - Pedra Delivery</title>
+<meta name="theme-color" content="#09090b">
+<link rel="stylesheet" href="style.css">
+<style>
+body{
+    font-family:var(--font);
+    background:var(--bg-0);
+    color:var(--text-0);
+    min-height:100dvh;
+    padding:16px;
+    padding-top:max(16px,env(safe-area-inset-top));
+    padding-bottom:max(16px,env(safe-area-inset-bottom));
+}
+.container{max-width:640px;margin:0 auto}
+.page-header{
+    display:flex;align-items:flex-start;justify-content:space-between;gap:14px;
+    margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--border)
+}
+.page-title{font-size:1.05rem;font-weight:600;letter-spacing:-.02em}
+.page-subtitle{font-size:.82rem;color:var(--text-2);margin-top:4px}
+.section{
+    background:var(--bg-1);border:1px solid var(--border);border-radius:var(--r);
+    padding:18px;margin-bottom:14px;box-shadow:var(--sh-sm);transition:all .2s
+}
+.section:hover{border-color:var(--border-h);box-shadow:var(--sh-md)}
+.form-group{margin-bottom:14px}
+.form-group:last-child{margin-bottom:0}
+.form-label{
+    display:block;font-size:.78rem;font-weight:600;color:var(--text-2);margin-bottom:6px;
+    letter-spacing:.02em
+}
+.form-input,.form-select,.input-field{
+    width:100%;padding:10px 14px;background:var(--bg-2);border:1px solid var(--border);
+    border-radius:var(--rs);color:var(--text-0);font-size:.88rem;font-family:inherit;
+    box-shadow:inset 0 1px 2px rgba(0,0,0,.06);transition:border .2s,box-shadow .2s,background .2s
+}
+.form-input:focus,.form-select:focus,.input-field:focus{
+    outline:none;border-color:var(--border-h);
+    box-shadow:0 0 0 3px var(--blue-bg),inset 0 1px 2px rgba(0,0,0,.06)
+}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.config-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.input-box{
+    background:var(--bg-2);border:1px solid var(--border);border-radius:var(--r);padding:18px;
+    text-align:center;margin-bottom:14px;box-shadow:var(--sh-sm)
+}
+.input-counter{font-size:.78rem;color:var(--text-2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em}
+.input-field{
+    padding:14px 16px;font-size:1rem;text-align:center;background:var(--bg-1)
+}
+.input-hint{font-size:.74rem;color:var(--text-2);margin-top:8px}
+.done-msg{
+    color:var(--green);text-align:center;padding:16px;font-size:.9rem;
+    background:var(--green-bg);border:1px solid var(--green-b);border-radius:var(--rs)
+}
+.list-wrap{
+    background:var(--bg-2);border:1px solid var(--border);border-radius:var(--r);padding:12px 12px 8px;margin-bottom:14px
+}
+.list-label{
+    font-size:.76rem;color:var(--text-2);margin-bottom:10px;text-transform:uppercase;
+    letter-spacing:.05em;font-weight:600
+}
+.list{list-style:none;max-height:280px;overflow-y:auto}
+.list li{
+    display:flex;align-items:center;gap:8px;padding:10px 10px;background:var(--bg-1);
+    border:1px solid var(--border);border-radius:var(--rs);margin-bottom:8px;font-size:.84rem;box-shadow:var(--sh-sm)
+}
+.list li:last-child{margin-bottom:0}
+.list li span{flex:1;line-height:1.45}
+.list li input{
+    flex:1;background:var(--bg-2);border:1px solid var(--border-h);border-radius:var(--rx);
+    color:var(--text-0);padding:7px 9px;font-size:.84rem;font-family:inherit
+}
+.list li input:focus{outline:none;box-shadow:0 0 0 3px var(--blue-bg)}
+.progress{
+    font-size:.82rem;color:var(--text-1);margin-bottom:14px;padding:10px 12px;background:var(--bg-2);
+    border:1px solid var(--border);border-radius:var(--rs)
+}
+.actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.actions .btn{min-width:118px}
+.status{font-size:.84rem;text-align:center;margin-top:10px;min-height:20px;color:var(--text-2)}
+.loading-state{padding:46px 20px;text-align:center;color:var(--text-2)}
+.loading-state .spinner{margin:0 auto 10px}
+.muted-box{padding:40px 20px;text-align:center;color:var(--text-2)}
+.btn-soft{background:var(--bg-2);color:var(--text-0);border-color:var(--border)}
+.btn-soft:hover{background:var(--bg-3);border-color:var(--border-h)}
+.btn-success{
+    background:var(--green-bg)!important;color:var(--green)!important;border-color:var(--green-b)!important
+}
+.btn-success:hover{background:rgba(52,211,153,.14)!important;color:var(--green)!important;border-color:rgba(52,211,153,.34)!important}
+.btn-danger{
+    background:var(--red-bg)!important;color:var(--red)!important;border-color:var(--red-b)!important
+}
+.btn-danger:hover{background:rgba(248,113,113,.14)!important;color:var(--red)!important;border-color:rgba(248,113,113,.34)!important}
+.inline-help{font-size:.74rem;color:var(--text-2);margin-top:6px;line-height:1.45}
+@media(max-width:560px){
+    .page-header{flex-direction:column;align-items:stretch}
+    .config-grid,.grid-2{grid-template-columns:1fr}
+    .actions{flex-direction:column}
+    .actions .btn{width:100%}
+}
+</style>
 </head>
 <body>
-    <div class="header">
-        <h1>📦 Cadastro em Lote</h1>
-        <span class="store-tag" id="storeTag">Loja: ...</span>
-    </div>
-    <div class="container">
-        <div class="steps">
-            <div class="step-dot" id="step1"></div>
-            <div class="step-dot" id="step2"></div>
-            <div class="step-dot" id="step3"></div>
+<div class="toast" id="toast"></div>
+<div class="container">
+    <div class="page-header">
+        <div>
+            <div class="page-title">Cadastro em lote</div>
+            <div class="page-subtitle">Criação rápida de vários produtos da mesma linha</div>
         </div>
-        <div id="content"></div>
+        
     </div>
+    <div id="view"></div>
+</div>
 
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
-    <script src="firebase-config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script>
+const FC={apiKey:"AIzaSyAnIJRcUxN-0swpVnonPbJjTSK87o4CQ_g",authDomain:"pedrad-814d0.firebaseapp.com",projectId:"pedrad-814d0",storageBucket:"pedrad-814d0.appspot.com",messagingSenderId:"293587190550",appId:"1:293587190550:web:80c9399f82847c80e20637"};
+if(!firebase.apps.length)firebase.initializeApp(FC);
+const db=firebase.firestore(),auth=firebase.auth();
 
-    <script>
-    (() => {
-        const db = firebase.firestore();
-        const params = new URLSearchParams(window.location.search);
-        const storeId = params.get('storeId') || localStorage.getItem('currentStoreId');
+const params=new URLSearchParams(location.search);
+const storeId=params.get('storeId')||localStorage.getItem('currentStoreId');
 
-        if (!storeId) {
-            document.getElementById('content').innerHTML = '<div class="done-banner" style="color:#f87171;">❌ storeId não encontrado.</div>';
-            return;
+let state={marca:'',tipo:'',preco:0,categoria:'',quantidade:0,items:[],currentIndex:0,editingId:null,step:'config',categories:[]};
+let idCounter=0;
+
+function esc(s){const d=document.createElement('div');d.textContent=String(s||'');return d.innerHTML}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2500)}
+function goBack(event){
+  if (event) event.preventDefault();
+
+  // Se estiver dentro de um popup em iframe, fecha o popup pai
+  if (window.parent && window.parent !== window && typeof window.parent.closePopup === 'function') {
+    window.parent.closePopup();
+    return;
+  }
+
+  // Se estiver na própria página principal e houver popup aberto
+  if (typeof closePopup === 'function') {
+    closePopup();
+    return;
+  }
+
+  // Fallback
+  window.history.back();
+}
+     
+        
+function applyTheme(theme){
+    document.documentElement.setAttribute('data-theme',theme==='light'?'light':'dark');
+    const meta=document.querySelector('meta[name="theme-color"]');
+    if(meta)meta.setAttribute('content',theme==='light'?'#f5f5f7':'#09090b');
+}
+function detectParentTheme(){
+    try{
+        if(window.opener && window.opener.document){
+            const t=window.opener.document.documentElement.getAttribute('data-theme');
+            if(t)return t;
         }
-        document.getElementById('storeTag').textContent = `ID: ${storeId.substring(0,12)}…`;
-
-        let categories = [];
-        let state = {
-            marca:'', tipo:'', quantidade:0,
-            price:'', usePrice:false, category:'',
-            items:[], currentIndex:0, editingId:null,
-            expandedId:null, activeTab:{},   // {itemId: 'flavors'|'sizes'|'extras'}
-            step:1
-        };
-        let idCounter = 0;
-
-        // ── Helpers ─────────────────────────────────────────────────────────
-        function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-        function makeItem(nome) {
-            idCounter++;
-            return { id: idCounter, nome, price: state.price||'', flavors:[], sizes:[], extras:[] };
+    }catch(e){}
+    try{
+        if(window.parent && window.parent!==window && window.parent.document){
+            const t=window.parent.document.documentElement.getAttribute('data-theme');
+            if(t)return t;
         }
+    }catch(e){}
+    const keys=['theme','appTheme','data-theme','pedrad-theme','color-theme'];
+    for(const key of keys){
+        const val=localStorage.getItem(key);
+        if(val==='light'||val==='dark')return val;
+    }
+    return document.documentElement.getAttribute('data-theme')||'dark';
+}
+function syncTheme(){applyTheme(detectParentTheme())}
+syncTheme();
+setInterval(syncTheme,1200);
+window.addEventListener('storage',syncTheme);
 
-        function getItem(id) { return state.items.find(i => i.id === id); }
+async function loadCategories(){
+    if(!storeId)return;
+    try{
+        const doc=await db.collection('stores').doc(storeId).get();
+        const d=doc.exists?doc.data():{};
+        state.categories=Array.isArray(d.categories)?d.categories.sort():[];
+    }catch(e){}
+}
 
-        function sanitizeOpts(arr) {
-            if (!Array.isArray(arr)) return [];
-            return arr.filter(x => x && x.name && String(x.name).trim());
-        }
+function render(){
+    const el=document.getElementById('view');
+    if(state.step==='config')el.innerHTML=renderConfig();
+    else el.innerHTML=renderInput();
+    bindEvents();
+}
 
-        // ── Load categories ──────────────────────────────────────────────────
-        async function loadCategories() {
-            try {
-                const storeDoc = await db.collection('stores').doc(storeId).get();
-                const sd = storeDoc.exists ? storeDoc.data() : {};
-                const saved = Array.isArray(sd.categories) ? sd.categories : Array.isArray(sd.categorias) ? sd.categorias : [];
-                const snap = await db.collection('products').where('storeId','==',storeId).get();
-                const fromProd = new Set();
-                snap.docs.forEach(d => { const c=(d.data().category||'').trim(); if(c) fromProd.add(c); });
-                categories = [...new Set([...saved,...fromProd])].filter(Boolean).sort((a,b)=>a.localeCompare(b,'pt-BR'));
-                if (sd.name) document.getElementById('storeTag').textContent = sd.name;
-            } catch(e) { console.error('Erro categorias:', e); }
-        }
+function renderConfig(){
+    const catOpts=state.categories.length
+        ?state.categories.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('')
+        :'<option value="">Nenhuma disponível</option>';
+    return`
+    <div class="section">
+        <div class="form-group">
+            <label class="form-label">Marca</label>
+            <input class="form-input" id="fMarca" value="${esc(state.marca)}" placeholder="Ex: Ziggy, Essência...">
+        </div>
 
-        // ── Render ───────────────────────────────────────────────────────────
-        function render() {
-            [1,2,3].forEach(i => {
-                document.getElementById(`step${i}`).className = 'step-dot' + (i<state.step?' done':i===state.step?' active':'');
-            });
-            const c = document.getElementById('content');
-            if (state.step===1) { c.innerHTML = renderConfig(); bindConfig(); document.getElementById('inMarca')?.focus(); }
-            else if (state.step===2) { c.innerHTML = renderInput(); bindInput(); if(state.currentIndex<state.quantidade) document.getElementById('inName')?.focus(); }
-        }
+        <div class="config-grid">
+            <div class="form-group">
+                <label class="form-label">Tipo</label>
+                <input class="form-input" id="fTipo" value="${esc(state.tipo)}" placeholder="Ex: Essência">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Quantidade</label>
+                <input class="form-input" id="fQtd" type="number" min="1" max="200" value="${state.quantidade||''}" placeholder="5">
+            </div>
+        </div>
 
-        // ── Step 1: Config ───────────────────────────────────────────────────
-        function renderConfig() {
-            const opts = categories.length
-                ? '<option value="">Sem categoria</option>' + categories.map(c=>`<option value="${esc(c)}" ${state.category===c?'selected':''}>${esc(c)}</option>`).join('')
-                : '<option value="">Nenhuma categoria</option>';
-            return `
-                <div class="card">
-                    <div class="card-title">Dados do lote</div>
-                    <div class="field"><label>Marca</label><input id="inMarca" value="${esc(state.marca)}" placeholder="Ex: Ziggy"></div>
-                    <div class="row-2">
-                        <div class="field"><label>Tipo</label><input id="inTipo" value="${esc(state.tipo)}" placeholder="Ex: Essência"></div>
-                        <div class="field"><label>Quantidade</label><input id="inQtd" type="number" min="1" max="200" value="${state.quantidade||''}" placeholder="5"></div>
-                    </div>
-                    <div class="field"><label>Categoria (opcional)</label><select id="inCat">${opts}</select></div>
-                    <div class="price-toggle">
-                        <label class="toggle"><input type="checkbox" id="chkPrice" ${state.usePrice?'checked':''}><span class="slider"></span></label>
-                        <label for="chkPrice">Preço igual para todos</label>
-                    </div>
-                    <div class="field" id="priceField" style="display:${state.usePrice?'block':'none'}">
-                        <label>Preço (R$)</label>
-                        <input id="inPrice" type="number" step="0.01" min="0" value="${state.price}" placeholder="0.00">
-                    </div>
-                </div>
-                <div class="actions">
-                    <button class="btn btn-ghost" onclick="window.close()">Cancelar</button>
-                    <button class="btn btn-primary" id="btnStart">Iniciar ▶</button>
-                </div>`;
-        }
+        <div class="config-grid">
+            <div class="form-group">
+                <label class="form-label">Preço unitário (R$)</label>
+                <input class="form-input" id="fPreco" type="number" step="0.10" min="0" value="${state.preco||''}" placeholder="0,00">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Categoria</label>
+                <select class="form-select" id="fCat">
+                    <option value="">Selecione...</option>${catOpts}
+                </select>
+            </div>
+        </div>
 
-        function bindConfig() {
-            ['inMarca','inTipo','inQtd','inPrice'].forEach((id,i,a) => {
-                const el = document.getElementById(id); if(!el) return;
-                el.addEventListener('keydown', e => {
-                    if(e.key!=='Enter') return;
-                    const nx = a.slice(i+1).map(x=>document.getElementById(x)).find(x=>x&&x.offsetParent);
-                    nx ? nx.focus() : goStep2();
-                });
-            });
-            document.getElementById('chkPrice').addEventListener('change', e => {
-                state.usePrice = e.target.checked;
-                document.getElementById('priceField').style.display = state.usePrice ? 'block' : 'none';
-                if(state.usePrice) document.getElementById('inPrice')?.focus();
-            });
-            document.getElementById('btnStart').addEventListener('click', goStep2);
-        }
+        <div class="inline-help">Preencha a base comum e depois informe apenas a variação de cada item. Porque repetir coisa igual manualmente é um hobby estranho.</div>
 
-        function goStep2() {
-            state.marca    = document.getElementById('inMarca')?.value.trim()||'';
-            state.tipo     = document.getElementById('inTipo')?.value.trim()||'';
-            state.quantidade = parseInt(document.getElementById('inQtd')?.value)||0;
-            state.price    = document.getElementById('inPrice')?.value||'';
-            state.category = document.getElementById('inCat')?.value||'';
-            if(!state.marca||!state.tipo||state.quantidade<1) { alert('Preencha Marca, Tipo e Quantidade.'); return; }
-            state.step=2; state.currentIndex=0; state.items=[];
-            render();
-        }
+        <div class="actions" style="margin-top:16px">
+            <button class="btn btn-soft" onclick="goBack()">Cancelar</button>
+            <button class="btn btn-primary" onclick="startInput()">Iniciar cadastro</button>
+        </div>
+    </div>`;
+}
 
-        // ── Step 2: Input ────────────────────────────────────────────────────
-        function renderInput() {
-            const done = state.currentIndex >= state.quantidade;
-            const catL = state.category ? ` · 📂 ${esc(state.category)}` : '';
-            const priceNote = state.usePrice ? ` · R$ ${parseFloat(state.price||0).toFixed(2)}` : ' · preço individual';
-            return `
-                <div class="card" style="padding:14px 18px;margin-bottom:14px;">
-                    <span style="font-size:.85rem;color:#a78bfa;font-weight:600;">${esc(state.marca)} · ${esc(state.tipo)}${catL}</span>
-                    <span style="float:right;font-size:.8rem;color:#888;">${Math.min(state.currentIndex,state.quantidade)} / ${state.quantidade}${priceNote}</span>
-                </div>
+function renderInput(){
+    const done=state.currentIndex>=state.quantidade;
+    const progress=`${Math.min(state.currentIndex,state.quantidade)} / ${state.quantidade}`;
+    const listHtml=state.items.map(it=>{
+        if(state.editingId===it.id)
+            return`<li>
+                <input class="be-edit" data-id="${it.id}" value="${esc(it.nome)}">
+                <button class="btn btn-success btn-sm" onclick="saveEdit(${it.id})">Salvar</button>
+                <button class="btn btn-danger btn-sm" onclick="delItem(${it.id})">Remover</button>
+            </li>`;
+        return`<li>
+            <span>${esc(state.marca)} ${esc(state.tipo)} <strong>${esc(it.nome)}</strong></span>
+            <button class="btn btn-soft btn-sm" onclick="startEditItem(${it.id})">Editar</button>
+            <button class="btn btn-danger btn-sm" onclick="delItem(${it.id})">Remover</button>
+        </li>`;
+    }).join('');
 
-                ${!done ? `
-                <div class="name-box active" id="nameBox">
-                    <div class="counter">Item ${state.currentIndex+1} de ${state.quantidade}</div>
-                    <input id="inName" placeholder="Nome e Enter ↵" autocomplete="off">
-                    <div class="hint">Enter para adicionar</div>
-                </div>` : `<div class="done-banner">✅ Todos preenchidos!</div>`}
+    return`
+    <div class="section">
+        <div class="progress"><strong>${esc(state.marca)}</strong> · ${esc(state.tipo)} · progresso ${progress}</div>
 
-                ${state.items.length ? `<div class="items-header">📋 ${state.items.length} item(ns) · <small style="color:#555;">clique em ▸ para sabores/extras</small></div>` : ''}
-                <ul class="items-list" id="list">${renderItems()}</ul>
+        ${!done?`
+        <div class="input-box">
+            <div class="input-counter">Item ${state.currentIndex+1} de ${state.quantidade}</div>
+            <input class="input-field" id="nameInput" placeholder="Digite a variação e pressione Enter" autocomplete="off">
+            <div class="input-hint">Exemplo: Morango, Uva, 500 ml, Grande, Tradicional</div>
+        </div>`:`<div class="done-msg">Todos os nomes foram preenchidos.</div>`}
 
-                <div class="actions">
-                    <button class="btn btn-ghost" id="btnBack">← Voltar</button>
-                    ${state.items.length ? `<button class="btn btn-success" id="btnSave">Salvar ${state.items.length} produto${state.items.length>1?'s':''} ✓</button>` : ''}
-                </div>
-                <div class="status-msg" id="statusMsg"></div>`;
-        }
+        <div class="list-wrap">
+            ${state.items.length?`<div class="list-label">Itens adicionados (${state.items.length})</div>`:''}
+            <ul class="list" id="itemList">${listHtml}</ul>
+        </div>
 
-        function renderItems() {
-            return state.items.map((it, i) => {
-                const isEditing  = state.editingId === it.id;
-                const isExpanded = state.expandedId === it.id;
-                const activeTab  = state.activeTab[it.id] || 'flavors';
-                const optCount   = (it.flavors?.length||0) + (it.sizes?.length||0) + (it.extras?.length||0);
-                const optBadge   = optCount ? `<span style="font-size:.7rem;color:#a78bfa;margin-left:4px;">${optCount}</span>` : '';
+        <div class="actions">
+            <button class="btn btn-soft" onclick="goBack()">Cancelar</button>
+            ${state.items.length?`<button class="btn btn-success" id="saveBtn" onclick="saveBatch()">Salvar (${state.items.length})</button>`:''}
+        </div>
+        <div class="status" id="status"></div>
+    </div>`;
+}
 
-                const mainRow = isEditing
-                    ? `<input class="edit-name" data-id="${it.id}" value="${esc(it.nome)}" autocomplete="off">
-                       ${!state.usePrice ? `<input type="number" class="item-price-inline" data-price="${it.id}" value="${esc(it.price)}" placeholder="R$" step="0.01">` : ''}
-                       <button class="icon-btn save" data-a="save" data-id="${it.id}">💾</button>
-                       <button class="icon-btn del" data-a="del" data-id="${it.id}">🗑️</button>`
-                    : `<span class="item-label">${esc(state.marca)} ${esc(state.tipo)} <strong>${esc(it.nome)}</strong></span>
-                       ${!state.usePrice ? `<input type="number" class="item-price-inline" data-price="${it.id}" value="${esc(it.price)}" placeholder="R$" step="0.01">` : ''}
-                       <button class="icon-btn edit" data-a="edit" data-id="${it.id}">✏️</button>
-                       <button class="icon-btn expand" data-a="expand" data-id="${it.id}" title="Sabores/Extras">▸${optBadge}</button>
-                       <button class="icon-btn del" data-a="del" data-id="${it.id}">🗑️</button>`;
-
-                const optsPanel = `
-                    <div class="item-opts">
-                        <div class="opts-tabs">
-                            <button class="opts-tab ${activeTab==='flavors'?'active':''}" data-tab="flavors" data-id="${it.id}">🍓 Sabores (${it.flavors?.length||0})</button>
-                            <button class="opts-tab ${activeTab==='sizes'?'active':''}" data-tab="sizes" data-id="${it.id}">📏 Tamanhos (${it.sizes?.length||0})</button>
-                            <button class="opts-tab ${activeTab==='extras'?'active':''}" data-tab="extras" data-id="${it.id}">➕ Extras (${it.extras?.length||0})</button>
-                        </div>
-                        ${['flavors','sizes','extras'].map(type => `
-                        <div class="opts-panel ${activeTab===type?'active':''}" data-panel="${type}-${it.id}">
-                            ${renderOptRows(it, type)}
-                            <div class="opt-add-row">
-                                <input type="text" placeholder="${type==='flavors'?'Nome do sabor':type==='sizes'?'Tamanho':'Nome do extra'}" data-newoname="${type}-${it.id}">
-                                <input type="number" step="0.50" min="0" placeholder="+ R$" data-newoPrice="${type}-${it.id}">
-                                <button class="btn-add-opt" data-addopt="${type}" data-id="${it.id}">+ Add</button>
-                            </div>
-                        </div>`).join('')}
-                    </div>`;
-
-                return `<li class="item-card${isExpanded?' expanded':''}" id="ic-${it.id}">
-                    <div class="item-main">
-                        <span class="item-num">${i+1}.</span>
-                        ${mainRow}
-                    </div>
-                    ${optsPanel}
-                </li>`;
-            }).join('');
-        }
-
-        function renderOptRows(item, type) {
-            const arr = item[type] || [];
-            if (!arr.length) return `<div class="opt-empty">Nenhum item. Adicione abaixo.</div>`;
-            return arr.map((opt, idx) => `
-                <div class="opt-row">
-                    <input type="text" value="${esc(opt.name)}" data-optname="${type}-${item.id}-${idx}">
-                    <input type="number" step="0.50" min="0" value="${opt.price||0}" placeholder="R$" data-optprice="${type}-${item.id}-${idx}">
-                    <button class="icon-btn del" data-delopt="${type}" data-id="${item.id}" data-idx="${idx}">🗑️</button>
-                </div>`).join('');
-        }
-
-        // ── Bind Step 2 ──────────────────────────────────────────────────────
-        function bindInput() {
-            document.getElementById('inName')?.addEventListener('keydown', e => { if(e.key==='Enter') addName(); });
-            document.getElementById('btnBack')?.addEventListener('click', ()=>{ state.step=1; render(); });
-            document.getElementById('btnSave')?.addEventListener('click', saveBatch);
-
-            const list = document.getElementById('list');
-            if (!list) return;
-
-            // Delegated: main actions
-            list.addEventListener('click', e => {
-                const b = e.target.closest('[data-a]');
-                if (b) {
-                    const id = +b.dataset.id;
-                    if (b.dataset.a==='edit')   { state.editingId = state.editingId===id?null:id; refreshItem(id); return; }
-                    if (b.dataset.a==='save')   { saveItemEdit(id); return; }
-                    if (b.dataset.a==='del')    { delItem(id); return; }
-                    if (b.dataset.a==='expand') { state.expandedId = state.expandedId===id?null:id; if(!state.activeTab[id]) state.activeTab[id]='flavors'; refreshItem(id); return; }
-                }
-                // Tab switch
-                const tab = e.target.closest('[data-tab]');
-                if (tab) { state.activeTab[+tab.dataset.id] = tab.dataset.tab; refreshItem(+tab.dataset.id); return; }
-                // Add option
-                const addBtn = e.target.closest('[data-addopt]');
-                if (addBtn) { addOpt(addBtn.dataset.addopt, +addBtn.dataset.id); return; }
-                // Del option
-                const delBtn = e.target.closest('[data-delopt]');
-                if (delBtn) { delOpt(delBtn.dataset.delopt, +delBtn.dataset.id, +delBtn.dataset.idx); return; }
-            });
-
-            // Enter saves editing
-            list.addEventListener('keydown', e => {
-                if (e.key==='Enter') {
-                    const inp = e.target.closest('.edit-name');
-                    if (inp) saveItemEdit(+inp.dataset.id);
-                }
-            });
-
-            // Live-update price per item
-            list.addEventListener('change', e => {
-                const priceEl = e.target.closest('[data-price]');
-                if (priceEl) { const it = getItem(+priceEl.dataset.price); if(it) it.price = priceEl.value; }
-                // Live-update opt name/price
-                const optName = e.target.closest('[data-optname]');
-                if (optName) {
-                    const [type, itemId, idx] = optName.dataset.optname.split('-');
-                    const it = getItem(+itemId); if(it&&it[type]?.[+idx]) it[type][+idx].name = e.target.value;
-                }
-                const optPrice = e.target.closest('[data-optprice]');
-                if (optPrice) {
-                    const [type, itemId, idx] = optPrice.dataset.optprice.split('-');
-                    const it = getItem(+itemId); if(it&&it[type]?.[+idx]) it[type][+idx].price = parseFloat(e.target.value)||0;
-                }
-            });
-        }
-
-        function addName() {
-            const input = document.getElementById('inName');
-            const nome = input?.value.trim(); if(!nome) return;
-            const item = makeItem(nome);
-            state.items.push(item);
-            state.currentIndex++;
-            input.value = '';
-            refreshListAndUI();
-            if (state.currentIndex >= state.quantidade) {
-                const box = document.getElementById('nameBox');
-                if (box) box.outerHTML = '<div class="done-banner">✅ Todos preenchidos!</div>';
-            } else {
-                const c = document.querySelector('.name-box .counter');
-                if (c) c.textContent = `Item ${state.currentIndex+1} de ${state.quantidade}`;
-                input?.focus();
+function bindEvents(){
+    const nameInput=document.getElementById('nameInput');
+    if(nameInput)nameInput.addEventListener('keydown',e=>{if(e.key==='Enter')addName()});
+    ['fMarca','fTipo','fQtd','fPreco'].forEach((id,i,arr)=>{
+        const el=document.getElementById(id);
+        if(el)el.addEventListener('keydown',e=>{
+            if(e.key==='Enter'){
+                const next=document.getElementById(arr[i+1])||document.getElementById('fCat');
+                if(next)next.focus();else startInput();
             }
-            const l = document.getElementById('list'); if(l) l.scrollTop = l.scrollHeight;
-        }
+        });
+    });
+    if(state.step==='config')document.getElementById('fMarca')?.focus();
+    else document.getElementById('nameInput')?.focus();
+    if(state.editingId!==null){
+        const ed=document.querySelector(`.be-edit[data-id="${state.editingId}"]`);
+        if(ed){ed.focus();ed.addEventListener('keydown',e=>{if(e.key==='Enter')saveEdit(state.editingId)})}
+    }
+}
 
-        function saveItemEdit(id) {
-            const inp = document.querySelector(`.edit-name[data-id="${id}"]`);
-            if (inp) { const v = inp.value.trim(); if(v) { const it=getItem(id); if(it) it.nome=v; } }
-            const priceInp = document.querySelector(`[data-price="${id}"]`);
-            if (priceInp) { const it=getItem(id); if(it) it.price=priceInp.value; }
-            state.editingId = null;
-            refreshItem(id);
-        }
+function startInput(){
+    state.marca=(document.getElementById('fMarca')?.value||'').trim();
+    state.tipo=(document.getElementById('fTipo')?.value||'').trim();
+    state.quantidade=parseInt(document.getElementById('fQtd')?.value)||0;
+    state.preco=parseFloat(document.getElementById('fPreco')?.value)||0;
+    state.categoria=(document.getElementById('fCat')?.value||'').trim();
+    if(!state.marca||!state.tipo||state.quantidade<1){toast('Preencha marca, tipo e quantidade');return}
+    state.step='input';state.currentIndex=0;state.items=[];
+    render();
+}
 
-        function delItem(id) {
-            state.items = state.items.filter(i => i.id !== id);
-            if (state.editingId===id) state.editingId=null;
-            if (state.expandedId===id) state.expandedId=null;
-            refreshListAndUI();
-        }
+function addName(){
+    const input=document.getElementById('nameInput');
+    const nome=(input.value||'').trim();
+    if(!nome)return;
+    idCounter++;
+    state.items.push({id:idCounter,nome});
+    state.currentIndex++;
+    input.value='';
+    document.getElementById('itemList').innerHTML=state.items.map(it=>`<li><span>${esc(state.marca)} ${esc(state.tipo)} <strong>${esc(it.nome)}</strong></span><button class="btn btn-soft btn-sm" onclick="startEditItem(${it.id})">Editar</button><button class="btn btn-danger btn-sm" onclick="delItem(${it.id})">Remover</button></li>`).join('');
+    if(state.currentIndex>=state.quantidade){render();return}
+    const counter=document.querySelector('.input-counter');
+    if(counter)counter.textContent=`Item ${state.currentIndex+1} de ${state.quantidade}`;
+    const lbl=document.querySelector('.list-label');
+    if(lbl)lbl.textContent=`Itens adicionados (${state.items.length})`;
+    const acts=document.querySelector('.actions');
+    if(acts&&!document.getElementById('saveBtn')){
+        acts.innerHTML=`<button class="btn btn-soft" onclick="goBack()">Cancelar</button><button class="btn btn-success" id="saveBtn" onclick="saveBatch()">Salvar (${state.items.length})</button>`;
+    }else if(document.getElementById('saveBtn')){
+        document.getElementById('saveBtn').textContent=`Salvar (${state.items.length})`;
+    }
+    const ul=document.getElementById('itemList');if(ul)ul.scrollTop=ul.scrollHeight;
+    input.focus();
+}
 
-        function addOpt(type, itemId) {
-            const nameEl  = document.querySelector(`[data-newoname="${type}-${itemId}"]`);
-            const priceEl = document.querySelector(`[data-newoPrice="${type}-${itemId}"]`);
-            const name = nameEl?.value.trim(); if(!name) return;
-            const price = parseFloat(priceEl?.value)||0;
-            const it = getItem(itemId); if(!it) return;
-            it[type] = it[type]||[];
-            it[type].push({ name, price });
-            if(nameEl) nameEl.value='';
-            if(priceEl) priceEl.value='';
-            refreshItem(itemId);
-        }
+function startEditItem(id){state.editingId=id;render()}
+function saveEdit(id){
+    const input=document.querySelector(`.be-edit[data-id="${id}"]`);
+    const nome=(input?.value||'').trim();
+    if(nome){const it=state.items.find(x=>x.id===id);if(it)it.nome=nome}
+    state.editingId=null;render();
+}
+function delItem(id){
+    state.items=state.items.filter(x=>x.id!==id);
+    if(state.editingId===id)state.editingId=null;
+    render();
+}
 
-        function delOpt(type, itemId, idx) {
-            const it = getItem(itemId); if(!it) return;
-            it[type].splice(idx, 1);
-            refreshItem(itemId);
-        }
+async function saveBatch(){
+    if(!state.items.length)return;
+    if(!storeId){toast('StoreId não encontrado');return}
+    const btn=document.getElementById('saveBtn');
+    if(btn){btn.disabled=true;btn.textContent='Salvando...'}
 
-        function refreshItem(id) {
-            const li = document.getElementById(`ic-${id}`);
-            if (!li) { refreshListAndUI(); return; }
-            const tmp = document.createElement('ul');
-            const singleState = { ...state, items: [getItem(id)] };
-            // We need a clean render, swap entire <li>
-            const newHtml = renderItems();
-            const allItems = document.getElementById('list');
-            if (allItems) {
-                // Only re-render the specific li to avoid losing focus on other inputs
-                tmp.innerHTML = newHtml;
-                const newLi = [...tmp.querySelectorAll('li')].find(l => l.id===`ic-${id}`);
-                if (newLi) li.replaceWith(newLi);
-            }
-        }
+    try{
+        const batch=db.batch();
+        const now=firebase.firestore.FieldValue.serverTimestamp();
+        state.items.forEach(item=>{
+            const ref=db.collection('products').doc();
+            batch.set(ref,{
+                name:`${state.marca} ${state.tipo} ${item.nome}`,
+                marca:state.marca,
+                tipo:state.tipo,
+                variante:item.nome,
+                price:state.preco,
+                category:state.categoria,
+                active:true,
+                storeId:storeId,
+                addonGroups:[],
+                createdAt:now,
+                updatedAt:now
+            });
+        });
+        await batch.commit();
+        document.getElementById('status').innerHTML=`<span style="color:var(--green)">${state.items.length} produto(s) criado(s) com sucesso.</span>`;
+        toast(`${state.items.length} produtos salvos`);
+        setTimeout(goBack,1500);
+    }catch(e){
+        console.error(e);
+        document.getElementById('status').innerHTML=`<span style="color:var(--red)">Erro ao salvar: ${esc(e.message)}</span>`;
+        if(btn){btn.disabled=false;btn.textContent=`Salvar (${state.items.length})`}
+    }
+}
 
-        function refreshListAndUI() {
-            const l = document.getElementById('list');
-            if (l) l.innerHTML = renderItems();
-            // Rebuild save button
-            const a = document.querySelector('.actions');
-            if (a) {
-                let btn = document.getElementById('btnSave');
-                if (!btn && state.items.length) {
-                    btn = document.createElement('button');
-                    btn.className='btn btn-success'; btn.id='btnSave';
-                    btn.addEventListener('click', saveBatch);
-                    a.appendChild(btn);
-                }
-                if (btn) btn.textContent = `Salvar ${state.items.length} produto${state.items.length>1?'s':''} ✓`;
-                if (btn && !state.items.length) btn.remove();
-            }
-            const hdr = document.querySelector('.items-header');
-            if (hdr && state.items.length) hdr.textContent = `📋 ${state.items.length} item(ns) · `;
-        }
-
-        // ── Save batch ───────────────────────────────────────────────────────
-        async function saveBatch() {
-            if (!state.items.length) return;
-            const btn = document.getElementById('btnSave');
-            const st  = document.getElementById('statusMsg');
-            if (btn) { btn.disabled=true; btn.textContent='Salvando...'; }
-            if (st)  { st.className='status-msg info'; st.textContent='⏳ Gravando...'; }
-
-            try {
-                const batch = db.batch();
-                const now   = firebase.firestore.FieldValue.serverTimestamp();
-                const ids   = [];
-
-                state.items.forEach(item => {
-                    const ref = db.collection('products').doc();
-                    ids.push(ref.id);
-                    const price = state.usePrice
-                        ? (parseFloat(state.price)||0)
-                        : (parseFloat(item.price)||0);
-
-                    const doc = {
-                        name:     `${state.marca} ${state.tipo} ${item.nome}`,
-                        marca:    state.marca,
-                        tipo:     state.tipo,
-                        variante: item.nome,
-                        storeId:  storeId,
-                        price:    price,
-                        active:   true,
-                        flavors:  sanitizeOpts(item.flavors).map((x,i)=>({name:x.name,price:x.price||0,order:i})),
-                        sizes:    sanitizeOpts(item.sizes).map((x,i)=>({name:x.name,price:x.price||0,order:i})),
-                        extras:   sanitizeOpts(item.extras).map((x,i)=>({name:x.name,price:x.price||0,order:i})),
-                        createdAt: now,
-                        updatedAt: now
-                    };
-                    if (state.category) doc.category = state.category;
-                    batch.set(ref, doc);
-                });
-
-                await batch.commit();
-                console.log(`✅ ${ids.length} produtos salvos | storeId: ${storeId}`, ids);
-
-                if (window.opener) window.opener.postMessage({ type:'productSaved' }, '*');
-
-                // ── Sucesso ──
-                state.step = 3;
-                [1,2,3].forEach(i => document.getElementById(`step${i}`).className='step-dot done');
-                document.getElementById('content').innerHTML = `
-                    <div class="card" style="text-align:center;padding:40px 24px;">
-                        <div style="font-size:3rem;margin-bottom:16px;">✅</div>
-                        <div style="font-size:1.1rem;font-weight:600;color:#34d399;margin-bottom:8px;">
-                            ${state.items.length} produto${state.items.length>1?'s':''} criado${state.items.length>1?'s':''}!
-                        </div>
-                        <div style="font-size:.85rem;color:#888;margin-bottom:6px;">
-                            ${esc(state.marca)} ${esc(state.tipo)}${state.category?' · 📂 '+esc(state.category):''}
-                        </div>
-                        <div style="font-size:.8rem;color:#666;margin-bottom:24px;">${state.items.map(i=>i.nome).join(', ')}</div>
-                        <div class="actions" style="justify-content:center;gap:12px;">
-                            <button class="btn btn-primary" onclick="location.reload()">Novo Lote</button>
-                            <button class="btn btn-ghost" onclick="location.href='index.html'">Fechar</button>
-                        </div>
-                    </div>`;
-
-            } catch(err) {
-                console.error('❌ saveBatch:', err);
-                if (st)  { st.className='status-msg error'; st.textContent='❌ '+err.message; }
-                if (btn) { btn.disabled=false; btn.textContent=`Salvar ${state.items.length} produto${state.items.length>1?'s':''} ✓`; }
-            }
-        }
-
-        // ── Init ─────────────────────────────────────────────────────────────
-        (async () => { await loadCategories(); render(); })();
-    })();
-    </script>
+(async()=>{
+    if(!storeId){document.getElementById('view').innerHTML='<div class="muted-box">Loja não identificada.</div>';return}
+    const user=auth.currentUser||await new Promise(r=>{const u=auth.onAuthStateChanged(x=>{u();r(x)})});
+    if(!user){document.getElementById('view').innerHTML='<div class="muted-box">Faça login para continuar.</div>';return}
+    await loadCategories();
+    render();
+})();
+</script>
 </body>
 </html>

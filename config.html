@@ -4,159 +4,340 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Configuração da Loja - Pedrad</title>
-    <meta name="theme-color" content="#000000">
+    <meta name="theme-color" content="#0a0a0c">
+    <link rel="stylesheet" href="style.css">
     <style>
-        :root {
-            --primary: #ffffff;
-            --bg: #000000;
-            --bg-card: #0a0a0a;
-            --bg-input: #171717;
-            --text: #ffffff;
-            --text-muted: #737373;
-            --border: #262626;
-            --danger: #ef4444;
-            --success: #22c55e;
-            --radius: 12px;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg); color: var(--text); min-height: 100vh;
+            min-height: 100vh;
             padding-top: env(safe-area-inset-top);
-            padding-bottom: env(safe-area-inset-bottom);
+            padding-bottom: calc(env(safe-area-inset-bottom) + 24px);
+            background:
+                radial-gradient(ellipse at 50% 0%, var(--bg-2) 0%, var(--bg-0) 68%);
         }
-        .container { max-width: 900px; margin: 0 auto; padding: 20px; padding-bottom: 60px; }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
         .header {
-            display: flex; align-items: center; gap: 16px;
-            margin-bottom: 32px; padding-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
             border-bottom: 1px solid var(--border);
         }
-        .header h1 { font-size: 1rem; font-weight: 300; letter-spacing: 2px; text-transform: uppercase; flex: 1; }
-        .card {
-            background: var(--bg-card); border: 1px solid var(--border);
-            border-radius: var(--radius); padding: 24px; margin-bottom: 16px;
-            transition: all 0.2s ease;
+
+        .header h1 {
+            flex: 1;
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: -.02em;
         }
-        .card:hover { border-color: var(--text-muted); }
-        .card-title { font-size: 0.85rem; font-weight: 500; letter-spacing: 1px; margin-bottom: 20px; }
-        .form-group { margin-bottom: 20px; }
-        .form-label {
-            display: block; margin-bottom: 10px; font-size: 0.7rem;
-            color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;
-        }
-        .form-input, select.form-input {
-            width: 100%; padding: 16px; border-radius: 8px;
-            border: 1px solid var(--border); background: var(--bg-input);
-            color: var(--text); font-size: 1rem; transition: all 0.2s ease;
-        }
-        .form-input:focus { outline: none; border-color: var(--primary); background: #1a1a1a; }
-        textarea.form-input { min-height: 100px; resize: vertical; font-family: inherit; }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        .image-preview-wrap { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
-        .image-preview {
-            width: 140px; height: 140px; border: 1px solid var(--border);
-            border-radius: var(--radius); background: var(--bg-input);
-            overflow: hidden; display: flex; align-items: center;
-            justify-content: center; flex: 0 0 auto;
-        }
-        .image-preview img { width: 100%; height: 100%; object-fit: cover; }
-        .image-placeholder {
-            color: var(--text-muted); font-size: 0.75rem;
-            text-align: center; padding: 12px; line-height: 1.3;
-        }
-        .upload-section { flex: 1; min-width: 240px; }
-        .upload-input { display: none; }
-        .upload-status {
-            font-size: 0.75rem; color: var(--text-muted);
-            margin-top: 8px; min-height: 18px;
-        }
-        .upload-status.success { color: var(--success); }
-        .upload-status.error { color: var(--danger); }
+
+        .card,
         .settings-section {
-            background: var(--bg-card); border-radius: var(--radius);
-            padding: 24px; margin-bottom: 16px; border: 1px solid var(--border);
-            transition: all 0.2s ease;
+            background: var(--bg-1);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: var(--sh-sm);
+            transition: all .2s ease;
         }
-        .settings-section:hover { border-color: var(--text-muted); }
-        .settings-title { font-size: 0.85rem; font-weight: 500; margin-bottom: 20px; letter-spacing: 1px; }
-        .radio-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+
+        .card:hover,
+        .settings-section:hover {
+            border-color: var(--border-h);
+            box-shadow: var(--sh-md);
+        }
+
+        .card-title,
+        .settings-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: .78rem;
+            font-weight: 600;
+            color: var(--text-2);
+            margin-bottom: 18px;
+            text-transform: uppercase;
+            letter-spacing: .6px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .image-preview-wrap {
+            display: flex;
+            gap: 18px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .image-preview {
+            width: 140px;
+            height: 140px;
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            background: var(--bg-2);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,.08);
+        }
+
+        .image-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .image-placeholder {
+            color: var(--text-2);
+            font-size: .78rem;
+            text-align: center;
+            padding: 12px;
+            line-height: 1.4;
+        }
+
+        .upload-section {
+            flex: 1;
+            min-width: 240px;
+        }
+
+        .upload-input {
+            display: none;
+        }
+
+        .upload-status {
+            font-size: .75rem;
+            color: var(--text-2);
+            margin-top: 8px;
+            min-height: 18px;
+        }
+
+        .upload-status.success { color: var(--green); }
+        .upload-status.error { color: var(--red); }
+
+        .button-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .button-stack .btn {
+            width: 100%;
+        }
+
+        .radio-cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
         .radio-card {
-            background: var(--bg-input); border: 1px solid var(--border);
-            border-radius: var(--radius); padding: 20px 16px; text-align: center;
-            cursor: pointer; transition: all 0.2s ease; position: relative;
+            background: var(--bg-2);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            padding: 20px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all .2s ease;
+            position: relative;
+            box-shadow: var(--sh-sm);
         }
-        .radio-card:hover { border-color: var(--text-muted); }
-        .radio-card.selected { border-color: var(--primary); background: rgba(255, 255, 255, 0.05); }
-        .radio-card.disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
-        .radio-card-icon { font-size: 1.8rem; margin-bottom: 12px; }
-        .radio-card-title { font-weight: 500; margin-bottom: 6px; font-size: 0.85rem; }
-        .radio-card-desc { font-size: 0.7rem; color: var(--text-muted); }
+
+        .radio-card:hover {
+            border-color: var(--border-h);
+            box-shadow: var(--sh-md);
+            transform: translateY(-1px);
+        }
+
+        .radio-card.selected {
+            border-color: var(--accent);
+            background: var(--bg-3);
+            box-shadow: var(--sh-md);
+        }
+
+        .radio-card.disabled {
+            opacity: .5;
+            cursor: not-allowed;
+            pointer-events: none;
+            transform: none;
+        }
+
+        .radio-card-icon {
+            font-size: 1.65rem;
+            margin-bottom: 10px;
+        }
+
+        .radio-card-title {
+            font-weight: 600;
+            margin-bottom: 6px;
+            font-size: .88rem;
+        }
+
+        .radio-card-desc {
+            font-size: .74rem;
+            color: var(--text-2);
+        }
+
         .cooldown-info {
-            background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3);
-            border-radius: 8px; padding: 12px; margin-top: 16px;
-            font-size: 0.8rem; color: #fca5a5;
+            background: var(--red-bg);
+            border: 1px solid var(--red-b);
+            border-radius: var(--rs);
+            padding: 12px 14px;
+            margin-top: 16px;
+            font-size: .82rem;
+            color: var(--red);
         }
+
         .setting-item {
-            display: flex; justify-content: space-between;
-            align-items: center; padding: 16px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 18px;
+            padding: 16px 0;
             border-bottom: 1px solid var(--border);
         }
-        .setting-item:last-child { border-bottom: none; }
-        .setting-label { font-weight: 500; font-size: 0.9rem; }
-        .setting-desc { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
-        .toggle {
-            width: 48px; height: 24px; background: var(--border);
-            border-radius: 12px; position: relative; cursor: pointer;
-            transition: all 0.3s ease;
+
+        .setting-item:last-child {
+            border-bottom: none;
         }
-        .toggle.active { background: var(--primary); }
-        .toggle::after {
-            content: ''; position: absolute; width: 18px; height: 18px;
-            background: var(--bg); border-radius: 50%;
-            top: 3px; left: 3px; transition: all 0.3s ease;
+
+        .setting-info {
+            flex: 1;
+            min-width: 0;
         }
-        .toggle.active::after { left: 27px; background: #000; }
+
+        .setting-label {
+            font-weight: 600;
+            font-size: .9rem;
+            color: var(--text-0);
+        }
+
+        .setting-desc {
+            font-size: .78rem;
+            color: var(--text-2);
+            margin-top: 4px;
+            line-height: 1.45;
+        }
+
+        .time-inline {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .time-inline .form-input {
+            width: auto;
+            min-width: 120px;
+        }
+
+        .inline-help {
+            font-size: .75rem;
+            color: var(--text-2);
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+
+        .bottom-save {
+            margin-top: 18px;
+        }
+
         .btn {
-            padding: 14px 20px; border-radius: 8px; border: 1px solid var(--border);
-            font-size: 0.8rem; font-weight: 500; cursor: pointer;
-            transition: all 0.2s ease; display: inline-flex;
-            align-items: center; justify-content: center; gap: 8px;
-            text-transform: uppercase; letter-spacing: 1px;
-            background: transparent; color: var(--text); white-space: nowrap;
+            font-size: .84rem;
+            letter-spacing: .01em;
+            text-transform: none;
         }
-        .btn:hover { background: var(--primary); color: #000; border-color: var(--primary); }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
-        .btn-primary { background: var(--primary); color: #000; border-color: var(--primary); }
-        .btn-primary:hover { background: transparent; color: var(--primary); }
-        .btn-block { width: 100%; }
-        .btn-danger { border-color: var(--danger); color: var(--danger); }
-        .btn-danger:hover { background: var(--danger); color: #fff; }
+
+        .btn-primary {
+            font-weight: 600;
+        }
+
+        .btn-danger {
+            background: var(--red-bg);
+            color: var(--red);
+            border-color: var(--red-b);
+        }
+
+        .btn-danger:hover {
+            background: rgba(248,113,113,.15);
+            color: var(--red);
+            border-color: var(--red);
+        }
+
         .toast {
-            position: fixed; bottom: 24px; left: 50%;
-            transform: translateX(-50%) translateY(100px);
-            background: var(--bg-card); padding: 16px 28px; border-radius: 8px;
-            border: 1px solid var(--border); z-index: 300; opacity: 0;
-            transition: all 0.3s ease; font-size: 0.85rem; letter-spacing: 0.5px;
+            max-width: min(92vw, 440px);
         }
-        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
         .spinner {
-            width: 16px; height: 16px; border: 2px solid var(--border);
-            border-top-color: var(--primary); border-radius: 50%;
-            animation: spin 0.8s linear infinite;
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin .8s linear infinite;
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         @media (max-width: 768px) {
-            .form-row { grid-template-columns: 1fr; }
-            .radio-cards { grid-template-columns: 1fr; }
-            .header h1 { font-size: 0.85rem; }
-            .btn { width: 100%; }
-            .image-preview-wrap { flex-direction: column; }
-            .upload-section { width: 100%; }
+            .container {
+                padding: 16px;
+            }
+
+            .form-row,
+            .radio-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: .95rem;
+            }
+
+            .image-preview-wrap {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .image-preview {
+                width: 100%;
+                max-width: 180px;
+                margin: 0 auto;
+            }
+
+            .upload-section {
+                width: 100%;
+            }
+
+            .setting-item {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .time-inline .form-input {
+                width: 100%;
+                min-width: 0;
+            }
         }
     </style>
 </head>
 <body>
     <div class="toast" id="toast"></div>
+
     <div class="container">
         <div class="header">
             <h1>⚙️ Configurações</h1>
@@ -164,28 +345,37 @@
 
         <div class="card">
             <div class="card-title">🏪 Informações Básicas</div>
+
             <div class="form-group">
                 <label class="form-label">Logo / Imagem da Loja</label>
                 <div class="image-preview-wrap">
                     <div class="image-preview" id="storeImagePreview">
                         <div class="image-placeholder">Sem imagem<br>faça upload abaixo</div>
                     </div>
+
                     <div class="upload-section">
-                        <input type="file" class="upload-input" id="imageUpload" 
-                               accept="image/jpeg,image/jpg,image/png,image/webp" 
+                        <input type="file" class="upload-input" id="imageUpload"
+                               accept="image/jpeg,image/jpg,image/png,image/webp"
                                onchange="handleImageUpload(event)">
-                        <button class="btn btn-block" onclick="document.getElementById('imageUpload').click()" 
-                                id="uploadBtn">📁 Escolher Imagem</button>
-                        <button class="btn btn-danger btn-block" onclick="removeImage()" 
-                                id="removeBtn" style="margin-top: 10px; display: none;">🗑️ Remover Imagem</button>
+
+                        <div class="button-stack">
+                            <button class="btn" onclick="document.getElementById('imageUpload').click()"
+                                    id="uploadBtn">📁 Escolher imagem</button>
+
+                            <button class="btn btn-danger" onclick="removeImage()"
+                                    id="removeBtn" style="display:none;">🗑️ Remover imagem</button>
+                        </div>
+
                         <div class="upload-status" id="uploadStatus"></div>
                     </div>
                 </div>
             </div>
+
             <div class="form-group">
                 <label class="form-label">Nome da Loja</label>
                 <input type="text" class="form-input" id="storeName" placeholder="Nome do estabelecimento">
             </div>
+
             <div class="form-group">
                 <label class="form-label">Categoria</label>
                 <select class="form-input" id="storeCategory">
@@ -200,10 +390,12 @@
                     <option value="Outro">📦 Outro</option>
                 </select>
             </div>
+
             <div class="form-group">
                 <label class="form-label">Descrição</label>
                 <textarea class="form-input" id="storeDescription" placeholder="Fale sobre sua loja..."></textarea>
             </div>
+
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Tempo de entrega</label>
@@ -214,38 +406,45 @@
                     <input type="number" class="form-input" id="storeDeliveryFee" placeholder="5.00" step="0.50">
                 </div>
             </div>
+
             <div class="form-group">
                 <label class="form-label">Endereço</label>
                 <input type="text" class="form-input" id="storeAddress" placeholder="Rua, número - Bairro">
             </div>
+
             <div class="form-group">
                 <label class="form-label">Telefone / WhatsApp</label>
                 <input type="tel" class="form-input" id="storePhone" placeholder="(00) 00000-0000">
             </div>
-            <button class="btn btn-primary btn-block" onclick="saveStoreInfo()">Salvar Informações</button>
+
+            <button class="btn btn-primary btn-block" onclick="saveStoreInfo()">Salvar informações</button>
         </div>
 
         <div class="settings-section">
             <div class="settings-title">🚚 Tipo de Entrega</div>
+
             <div class="radio-cards">
                 <div class="radio-card" id="deliveryApp" onclick="selectDeliveryType('app')">
                     <div class="radio-card-icon">🛵</div>
                     <div class="radio-card-title">Entregador do App</div>
-                    <div class="radio-card-desc">Entregadores parceiros Pedrad</div>
+                    <div class="radio-card-desc">Entregadores parceiros Pedra Delivery</div>
                 </div>
+
                 <div class="radio-card" id="deliveryOwn" onclick="selectDeliveryType('own')">
                     <div class="radio-card-icon">👨‍💼</div>
                     <div class="radio-card-title">Entregador Próprio</div>
                     <div class="radio-card-desc">Sua equipe de entrega</div>
                 </div>
             </div>
+
             <div class="cooldown-info" id="cooldownInfo" style="display:none;">
                 ⏰ <strong>Cooldown ativo:</strong> Você poderá trocar novamente em <span id="cooldownTime">--</span>
             </div>
+
             <div class="form-group" style="margin-top:20px;">
                 <label class="form-label">Tempo de cooldown entre trocas (minutos)</label>
                 <input type="number" class="form-input" id="deliveryCooldown" placeholder="50" min="0" max="1440" value="50">
-                <div style="font-size:0.75rem;color:var(--text-muted);margin-top:8px;">
+                <div class="inline-help">
                     Define quanto tempo deve esperar para trocar o tipo de entrega novamente.
                 </div>
             </div>
@@ -253,23 +452,25 @@
 
         <div class="settings-section">
             <div class="settings-title">🕐 Horário de Funcionamento</div>
+
             <div class="setting-item">
                 <div class="setting-info">
                     <div class="setting-label">Segunda a Sexta</div>
-                    <div style="display: flex; gap: 8px; margin-top: 8px;">
-                        <input type="time" class="form-input" id="weekdayOpen" value="18:00" style="width: auto;">
-                        <span style="align-self: center;">às</span>
-                        <input type="time" class="form-input" id="weekdayClose" value="23:00" style="width: auto;">
+                    <div class="time-inline">
+                        <input type="time" class="form-input" id="weekdayOpen" value="18:00">
+                        <span class="text-muted">às</span>
+                        <input type="time" class="form-input" id="weekdayClose" value="23:00">
                     </div>
                 </div>
             </div>
+
             <div class="setting-item">
                 <div class="setting-info">
                     <div class="setting-label">Sábado e Domingo</div>
-                    <div style="display: flex; gap: 8px; margin-top: 8px;">
-                        <input type="time" class="form-input" id="weekendOpen" value="11:00" style="width: auto;">
-                        <span style="align-self: center;">às</span>
-                        <input type="time" class="form-input" id="weekendClose" value="23:00" style="width: auto;">
+                    <div class="time-inline">
+                        <input type="time" class="form-input" id="weekendOpen" value="11:00">
+                        <span class="text-muted">às</span>
+                        <input type="time" class="form-input" id="weekendClose" value="23:00">
                     </div>
                 </div>
             </div>
@@ -277,6 +478,7 @@
 
         <div class="settings-section">
             <div class="settings-title">🔔 Notificações</div>
+
             <div class="setting-item">
                 <div class="setting-info">
                     <div class="setting-label">Som de novo pedido</div>
@@ -284,6 +486,15 @@
                 </div>
                 <div class="toggle active" id="soundToggle" onclick="toggleSetting('sound')"></div>
             </div>
+
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-label">Sons da interface</div>
+                    <div class="setting-desc">Hover, abertura e fechamento de popups e ações visuais</div>
+                </div>
+                <div class="toggle active" id="uiSoundToggle" onclick="toggleSetting('uiSound')"></div>
+            </div>
+
             <div class="setting-item">
                 <div class="setting-info">
                     <div class="setting-label">Aceitar automaticamente</div>
@@ -293,14 +504,61 @@
             </div>
         </div>
 
-        <button class="btn btn-primary btn-block" onclick="saveAllSettings()">Salvar Todas Configurações</button>
+        <button class="btn btn-primary btn-block bottom-save" onclick="saveAllSettings()">Salvar todas configurações</button>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script>
-        const firebaseConfig = {
+
+        // ===== THEME SYNC =====
+        const THEME_KEYS = ['theme', 'appTheme', 'pedrad_theme', 'color-theme', 'data-theme'];
+
+        function readParentTheme() {
+            try {
+                if (window.parent && window.parent !== window && window.parent.document?.documentElement) {
+                    return window.parent.document.documentElement.getAttribute('data-theme');
+                }
+            } catch (_) {}
+            try {
+                if (window.opener && !window.opener.closed && window.opener.document?.documentElement) {
+                    return window.opener.document.documentElement.getAttribute('data-theme');
+                }
+            } catch (_) {}
+            return null;
+        }
+
+        function readStoredTheme() {
+            try {
+                for (const key of THEME_KEYS) {
+                    const value = localStorage.getItem(key);
+                    if (value === 'light' || value === 'dark') return value;
+                }
+            } catch (_) {}
+            return null;
+        }
+
+        function applyTheme(theme) {
+            const normalized = theme === 'light' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', normalized);
+            const metaTheme = document.querySelector('meta[name="theme-color"]');
+            if (metaTheme) metaTheme.setAttribute('content', normalized === 'light' ? '#f5f5f7' : '#0a0a0c');
+        }
+
+        function syncTheme() {
+            applyTheme(readParentTheme() || readStoredTheme() || 'dark');
+        }
+
+        syncTheme();
+        window.addEventListener('storage', syncTheme);
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) syncTheme();
+        });
+        setInterval(syncTheme, 1500);
+
+
+const firebaseConfig = {
             apiKey: "AIzaSyAnIJRcUxN-0swpVnonPbJjTSK87o4CQ_g",
             authDomain: "pedrad-814d0.firebaseapp.com",
             projectId: "pedrad-814d0",
@@ -315,6 +573,54 @@
         let currentStore = null;
         let cooldownInterval = null;
         let currentImageBase64 = null;
+        const UI_SOUND_KEY = 'pedrad_ui_sounds';
+
+        function readUiSoundPreference(storeSettings = null) {
+            try {
+                if (storeSettings && typeof storeSettings.uiSoundEnabled === 'boolean') {
+                    localStorage.setItem(UI_SOUND_KEY, storeSettings.uiSoundEnabled ? 'true' : 'false');
+                    return storeSettings.uiSoundEnabled;
+                }
+
+                const saved = localStorage.getItem(UI_SOUND_KEY);
+                if (saved === 'true') return true;
+                if (saved === 'false') return false;
+            } catch (_) {}
+
+            return true;
+        }
+
+        function persistUiSoundPreference(enabled) {
+            try {
+                localStorage.setItem(UI_SOUND_KEY, enabled ? 'true' : 'false');
+            } catch (_) {}
+        }
+
+        function notifyParentUiSoundChanged(enabled) {
+            try {
+                if (window.parent && window.parent !== window) {
+                    if (typeof window.parent.setUiSoundEnabled === 'function') {
+                        window.parent.setUiSoundEnabled(enabled);
+                    }
+                    window.parent.postMessage({
+                        type: 'pedrad-ui-sounds-changed',
+                        enabled
+                    }, '*');
+                }
+            } catch (_) {}
+
+            try {
+                if (window.opener && !window.opener.closed) {
+                    if (typeof window.opener.setUiSoundEnabled === 'function') {
+                        window.opener.setUiSoundEnabled(enabled);
+                    }
+                    window.opener.postMessage({
+                        type: 'pedrad-ui-sounds-changed',
+                        enabled
+                    }, '*');
+                }
+            } catch (_) {}
+        }
 
         auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
             .then(() => {
@@ -364,7 +670,12 @@
             document.getElementById('weekendOpen').value = s.weekendOpen || '11:00';
             document.getElementById('weekendClose').value = s.weekendClose || '23:00';
             document.getElementById('soundToggle').classList.toggle('active', s.soundEnabled !== false);
+            const uiSoundEnabled = readUiSoundPreference(s);
+            document.getElementById('uiSoundToggle').classList.toggle('active', uiSoundEnabled);
             document.getElementById('autoAcceptToggle').classList.toggle('active', !!s.autoAccept);
+
+            persistUiSoundPreference(uiSoundEnabled);
+            notifyParentUiSoundChanged(uiSoundEnabled);
         }
 
         // ===== IMAGE UPLOAD (Base64) =====
@@ -568,7 +879,17 @@
         }
 
         function toggleSetting(setting) {
-            document.getElementById(`${setting}Toggle`).classList.toggle('active');
+            const toggle = document.getElementById(`${setting}Toggle`);
+            if (!toggle) return;
+
+            toggle.classList.toggle('active');
+
+            if (setting === 'uiSound') {
+                const enabled = toggle.classList.contains('active');
+                persistUiSoundPreference(enabled);
+                notifyParentUiSoundChanged(enabled);
+                showToast(enabled ? '✓ Sons da interface ativados' : '✓ Sons da interface desativados');
+            }
         }
 
         // ===== SAVE =====
@@ -603,6 +924,7 @@
                     deliveryCooldownMinutes: parseInt(document.getElementById('deliveryCooldown').value) || 50,
                     settings: {
                         soundEnabled: document.getElementById('soundToggle').classList.contains('active'),
+                        uiSoundEnabled: document.getElementById('uiSoundToggle').classList.contains('active'),
                         autoAccept: document.getElementById('autoAcceptToggle').classList.contains('active'),
                         weekdayOpen: document.getElementById('weekdayOpen').value,
                         weekdayClose: document.getElementById('weekdayClose').value,

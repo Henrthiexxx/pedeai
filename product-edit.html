@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<title>Produto - Pedrad</title>
+<meta name="theme-color" content="#09090b">
+<link rel="stylesheet" href="style.css">
+<style>
+body{
+    font-family:var(--font);
+    background:var(--bg-0);
+    color:var(--text-0);
+    min-height:100dvh;
+    padding:16px;
+    padding-bottom:110px;
+    padding-top:max(16px,env(safe-area-inset-top));
+    padding-bottom:max(110px,calc(env(safe-area-inset-bottom) + 86px));
+}
+.container{max-width:760px;margin:0 auto}
+.page-header{
+    display:flex;justify-content:space-between;align-items:flex-start;gap:14px;
+    margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--border)
+}
+.page-title{font-size:1.05rem;font-weight:600;letter-spacing:-.02em}
+.page-subtitle{font-size:.82rem;color:var(--text-2);margin-top:4px}
+.section{
+    background:var(--bg-1);border:1px solid var(--border);border-radius:var(--r);
+    padding:18px;margin-bottom:14px;box-shadow:var(--sh-sm);transition:all .2s
+}
+.section:hover{border-color:var(--border-h);box-shadow:var(--sh-md)}
+.section-title{
+    font-size:.84rem;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px;
+    text-transform:uppercase;letter-spacing:.6px;color:var(--text-2)
+}
+.form-group{margin-bottom:14px}
+.form-group:last-child{margin-bottom:0}
+.form-label{
+    display:block;font-size:.78rem;font-weight:600;color:var(--text-2);margin-bottom:6px;
+    letter-spacing:.02em
+}
+.form-input,.form-select{
+    width:100%;padding:10px 14px;background:var(--bg-2);border:1px solid var(--border);
+    border-radius:var(--rs);color:var(--text-0);font-size:.88rem;font-family:inherit;
+    box-shadow:inset 0 1px 2px rgba(0,0,0,.06);transition:border .2s,box-shadow .2s,background .2s
+}
+.form-input:focus,.form-select:focus{
+    outline:none;border-color:var(--border-h);
+    box-shadow:0 0 0 3px var(--blue-bg),inset 0 1px 2px rgba(0,0,0,.06)
+}
+textarea.form-input{resize:vertical;min-height:86px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.toggle-row{
+    display:flex;align-items:center;justify-content:space-between;padding-top:14px;
+    border-top:1px solid var(--border);margin-top:12px;gap:14px
+}
+.toggle-copy-title{font-weight:600;font-size:.88rem}
+.help{font-size:.74rem;color:var(--text-2);margin-top:5px;line-height:1.45}
+.img-tabs{display:flex;gap:8px;margin-bottom:12px}
+.img-tab{
+    flex:1;padding:9px 12px;text-align:center;border:1px solid var(--border);border-radius:var(--rs);
+    cursor:pointer;font-size:.78rem;font-weight:500;transition:all .2s;background:var(--bg-2);box-shadow:var(--sh-sm)
+}
+.img-tab:hover{border-color:var(--border-h);background:var(--bg-3)}
+.img-tab.active{background:var(--accent);color:var(--accent-t);border-color:var(--accent)}
+.upload-area{
+    border:2px dashed var(--border);border-radius:var(--r);padding:26px 18px;text-align:center;
+    cursor:pointer;transition:all .2s;background:var(--bg-1)
+}
+.upload-area:hover{border-color:var(--border-h);background:var(--bg-hover)}
+.upload-area-title{font-size:.9rem;font-weight:600}
+.upload-area-sub{font-size:.78rem;color:var(--text-2);margin-top:4px}
+.img-preview{
+    width:100%;height:210px;border:1px solid var(--border);border-radius:var(--r);background:var(--bg-2);
+    display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;margin-top:12px
+}
+.img-preview img{width:100%;height:100%;object-fit:cover}
+.img-remove{
+    position:absolute;top:8px;right:8px;background:var(--bg-1);border:1px solid var(--red-b);color:var(--red);
+    width:30px;height:30px;border-radius:999px;cursor:pointer;font-size:1rem;display:flex;
+    align-items:center;justify-content:center;box-shadow:var(--sh-sm)
+}
+.img-remove:hover{background:var(--red-bg)}
+.group-card{
+    background:var(--bg-2);border:1px solid var(--border);border-radius:var(--r);padding:14px;
+    margin-bottom:10px;box-shadow:var(--sh-sm)
+}
+.group-header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.group-title-input{
+    background:transparent;border:none;color:var(--text-0);font-weight:700;font-size:.92rem;padding:0;width:auto;flex:1
+}
+.group-title-input:focus{outline:none}
+.group-meta{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
+.group-tag{
+    font-size:.68rem;padding:4px 8px;border-radius:999px;background:var(--blue-bg);color:var(--blue);
+    border:1px solid var(--blue-b);font-weight:600
+}
+.group-tag.free{background:var(--green-bg);color:var(--green);border-color:var(--green-b)}
+.group-meta-select,.group-meta-number{
+    background:var(--bg-1);border:1px solid var(--border);border-radius:var(--rx);color:var(--text-0);
+    font-size:.72rem;padding:4px 8px;font-family:inherit
+}
+.group-meta-number{width:58px;text-align:center}
+.group-meta-select:focus,.group-meta-number:focus{outline:none;border-color:var(--border-h)}
+.group-item{
+    display:grid;grid-template-columns:24px 1fr 96px 38px;gap:8px;align-items:center;padding:7px;
+    background:var(--bg-1);border:1px solid var(--border);border-radius:var(--rs);margin-bottom:6px;font-size:.84rem
+}
+.group-item .drag{color:var(--text-3);cursor:grab;user-select:none;text-align:center}
+.group-item input{
+    background:var(--bg-2);border:1px solid var(--border);border-radius:var(--rx);color:var(--text-0);
+    padding:7px 8px;font-size:.84rem;font-family:inherit
+}
+.group-item input:focus{outline:none;border-color:var(--border-h)}
+.group-add-row{display:grid;grid-template-columns:1fr 90px 90px;gap:8px;margin-top:10px}
+.group-add-row input{
+    background:var(--bg-1);border:1px solid var(--border);border-radius:var(--rs);color:var(--text-0);
+    padding:8px 10px;font-size:.84rem;font-family:inherit
+}
+.group-add-row input:focus{outline:none;border-color:var(--border-h)}
+.group-empty{text-align:center;color:var(--text-2);font-size:.82rem;padding:12px}
+.new-group{
+    border:1px dashed var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px;background:var(--bg-1)
+}
+.new-group-title{
+    font-size:.8rem;font-weight:600;margin-bottom:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--text-2)
+}
+.new-group-row{display:grid;grid-template-columns:1fr 108px;gap:8px;margin-bottom:10px}
+.new-group-opts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.new-group-opts .form-group{margin:0}
+.actions-bar{
+    position:fixed;bottom:0;left:0;right:0;display:flex;gap:10px;padding:14px 16px;
+    background:color-mix(in srgb, var(--bg-0) 88%, transparent);border-top:1px solid var(--border);
+    z-index:50;backdrop-filter:blur(10px)
+}
+.actions-bar .btn{flex:1;justify-content:center;padding:12px 14px}
+.btn-danger{
+    background:var(--red-bg)!important;color:var(--red)!important;border-color:var(--red-b)!important
+}
+.btn-danger:hover{background:rgba(248,113,113,.14)!important;color:var(--red)!important;border-color:rgba(248,113,113,.34)!important}
+.btn-soft{background:var(--bg-2);color:var(--text-0);border-color:var(--border)}
+.btn-soft:hover{background:var(--bg-3);border-color:var(--border-h)}
+.btn-success{
+    background:var(--green-bg)!important;color:var(--green)!important;border-color:var(--green-b)!important
+}
+.btn-success:hover{background:rgba(52,211,153,.14)!important;color:var(--green)!important;border-color:rgba(52,211,153,.34)!important}
+.loading-state{padding:46px 20px;text-align:center;color:var(--text-2)}
+.loading-state .spinner{margin:0 auto 10px}
+@media(max-width:560px){
+    .grid-2{grid-template-columns:1fr}
+    .new-group-row{grid-template-columns:1fr}
+    .new-group-opts{grid-template-columns:1fr 1fr}
+    .page-header{flex-direction:column;align-items:stretch}
+    .group-item{grid-template-columns:20px 1fr 82px 34px}
+    .group-add-row{grid-template-columns:1fr 84px 84px}
+}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+<div class="container">
+    <div class="page-header">
+        <div>
+            <div class="page-title" id="pageTitle">Novo Produto</div>
+            <div class="page-subtitle">Cadastro e edição de produto</div>
+        </div>
+        <button class="btn btn-ghost" onclick="goBack()">Voltar</button>
+    </div>
+
+    <div id="loading" class="loading-state">
+        <div class="spinner"></div>
+        <div>Carregando...</div>
+    </div>
+
+    <div id="form" style="display:none">
+
+        <div class="section">
+            <div class="section-title">Imagem</div>
+            <div class="img-tabs">
+                <div class="img-tab active" id="tabUrl" onclick="switchTab('url')">Usar URL</div>
+                <div class="img-tab" id="tabUpload" onclick="switchTab('upload')">Enviar arquivo</div>
+            </div>
+
+            <div id="urlPanel">
+                <input type="url" class="form-input" id="imageUrl" placeholder="https://..." oninput="previewUrl(this.value)">
+                <div class="help">Cole uma URL pública para a imagem do produto.</div>
+            </div>
+
+            <div id="uploadPanel" style="display:none">
+                <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                    <div class="upload-area-title">Selecionar imagem</div>
+                    <div class="upload-area-sub">Clique ou arraste um arquivo. Limite de 3 MB.</div>
+                </div>
+                <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleFile(this.files[0])">
+            </div>
+
+            <div class="img-preview" id="imgPreview"><span class="text-muted">Prévia</span></div>
+            <input type="hidden" id="imageData">
+        </div>
+
+        <div class="section">
+            <div class="section-title">Informações</div>
+            <div class="form-group">
+                <label class="form-label">Nome *</label>
+                <input type="text" class="form-input" id="pName" placeholder="Ex: Açaí 500 ml">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Descrição</label>
+                <textarea class="form-input" id="pDesc" placeholder="Ingredientes, tamanho, observações..."></textarea>
+            </div>
+
+            <div class="grid-2">
+                <div class="form-group">
+                    <label class="form-label">Preço (R$) *</label>
+                    <input type="number" class="form-input" id="pPrice" placeholder="0,00" step="0.10" min="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Categoria *</label>
+                    <select class="form-select" id="pCategory"><option value="">Carregando...</option></select>
+                </div>
+            </div>
+
+            <div class="toggle-row">
+                <div>
+                    <div class="toggle-copy-title">Produto ativo</div>
+                    <div class="help">Produtos inativos ficam ocultos no cardápio.</div>
+                </div>
+                <div class="toggle active" id="activeToggle" onclick="this.classList.toggle('active')"></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Grupos de adicionais</div>
+            <div class="help" style="margin:-6px 0 14px">Use grupos para coberturas, tamanhos, complementos e regras de seleção.</div>
+            <div id="groupsList"></div>
+
+            <div class="new-group" id="newGroupForm">
+                <div class="new-group-title">Novo grupo</div>
+                <div class="new-group-row">
+                    <input type="text" class="form-input" id="ngName" placeholder="Nome do grupo, ex: Coberturas">
+                    <button class="btn btn-success btn-sm" onclick="addGroup()">Criar grupo</button>
+                </div>
+
+                <div class="new-group-opts">
+                    <div class="form-group">
+                        <label class="form-label">Mínimo</label>
+                        <input type="number" class="form-input" id="ngMin" value="0" min="0" style="padding:8px 10px">
+                        <div class="help">0 = opcional</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Máximo</label>
+                        <input type="number" class="form-input" id="ngMax" value="0" min="0" style="padding:8px 10px">
+                        <div class="help">0 = ilimitado</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Tipo</label>
+                        <select class="form-select" id="ngType" style="padding:8px 10px">
+                            <option value="free">Grátis</option>
+                            <option value="paid">Pago</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="height:24px"></div>
+    </div>
+</div>
+
+<div class="actions-bar" id="actionsBar" style="display:none">
+    <button class="btn btn-soft" onclick="goBack()">Cancelar</button>
+    <button class="btn btn-primary" onclick="save()">Salvar produto</button>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script>
+const FC={apiKey:"AIzaSyAnIJRcUxN-0swpVnonPbJjTSK87o4CQ_g",authDomain:"pedrad-814d0.firebaseapp.com",projectId:"pedrad-814d0",storageBucket:"pedrad-814d0.appspot.com",messagingSenderId:"293587190550",appId:"1:293587190550:web:80c9399f82847c80e20637"};
+if(!firebase.apps.length)firebase.initializeApp(FC);
+const db=firebase.firestore(),auth=firebase.auth();
+
+const params=new URLSearchParams(location.search);
+const storeId=params.get('storeId')||localStorage.getItem('currentStoreId');
+const productId=params.get('productId')||null;
+
+let addonGroups=[];
+let categories=[];
+let currentTab='url';
+let dragState={gi:null,ii:null};
+
+function esc(s){const d=document.createElement('div');d.textContent=String(s||'');return d.innerHTML}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2500)}
+function goBack(){location.href=`products.html?storeId=${encodeURIComponent(storeId)}`}
+
+function applyTheme(theme){
+    document.documentElement.setAttribute('data-theme',theme==='light'?'light':'dark');
+    const meta=document.querySelector('meta[name="theme-color"]');
+    if(meta)meta.setAttribute('content',theme==='light'?'#f5f5f7':'#09090b');
+}
+function detectParentTheme(){
+    try{
+        if(window.opener && window.opener.document){
+            const t=window.opener.document.documentElement.getAttribute('data-theme');
+            if(t)return t;
+        }
+    }catch(e){}
+    try{
+        if(window.parent && window.parent!==window && window.parent.document){
+            const t=window.parent.document.documentElement.getAttribute('data-theme');
+            if(t)return t;
+        }
+    }catch(e){}
+    const keys=['theme','appTheme','data-theme','pedrad-theme','color-theme'];
+    for(const key of keys){
+        const val=localStorage.getItem(key);
+        if(val==='light'||val==='dark')return val;
+    }
+    return document.documentElement.getAttribute('data-theme')||'dark';
+}
+function syncTheme(){applyTheme(detectParentTheme())}
+syncTheme();
+setInterval(syncTheme,1200);
+window.addEventListener('storage',syncTheme);
+
+// ── Image ──
+function switchTab(tab){
+    currentTab=tab;
+    document.getElementById('tabUrl').classList.toggle('active',tab==='url');
+    document.getElementById('tabUpload').classList.toggle('active',tab==='upload');
+    document.getElementById('urlPanel').style.display=tab==='url'?'block':'none';
+    document.getElementById('uploadPanel').style.display=tab==='upload'?'block':'none';
+}
+
+function previewUrl(url){
+    const box=document.getElementById('imgPreview');
+    const u=(url||'').trim();
+    if(!u){box.innerHTML='<span class="text-muted">Prévia</span>';return}
+    box.innerHTML=`<img src="${esc(u)}" onerror="this.parentElement.innerHTML='<span style=color:var(--red)>Erro ao carregar</span>'"><button class="img-remove" onclick="removeImage()">×</button>`;
+}
+
+async function handleFile(file){
+    if(!file)return;
+    if(file.size>3*1024*1024){toast('Máximo de 3 MB');return}
+    try{
+        toast('Processando imagem...');
+        const b64=await resizeImage(file);
+        document.getElementById('imageData').value=b64;
+        document.getElementById('imageUrl').value='';
+        const box=document.getElementById('imgPreview');
+        box.innerHTML=`<img src="${b64}"><button class="img-remove" onclick="removeImage()">×</button>`;
+        toast('Imagem preparada');
+    }catch(e){toast('Erro na imagem')}
+}
+
+function resizeImage(file){
+    return new Promise((res,rej)=>{
+        const r=new FileReader();
+        r.onload=e=>{
+            const img=new Image();
+            img.onload=()=>{
+                const c=document.createElement('canvas');c.width=600;c.height=600;
+                const s=Math.min(img.width,img.height),x=(img.width-s)/2,y=(img.height-s)/2;
+                c.getContext('2d').drawImage(img,x,y,s,s,0,0,600,600);
+                res(c.toDataURL('image/jpeg',.85));
+            };
+            img.onerror=()=>rej();img.src=e.target.result;
+        };
+        r.onerror=()=>rej();r.readAsDataURL(file);
+    });
+}
+
+function removeImage(){
+    document.getElementById('imageData').value='';
+    document.getElementById('imageUrl').value='';
+    document.getElementById('imgPreview').innerHTML='<span class="text-muted">Prévia</span>';
+}
+
+// ── Addon Groups ──
+function addGroup(){
+    const name=(document.getElementById('ngName').value||'').trim();
+    if(!name){toast('Informe o nome do grupo');return}
+    const min=parseInt(document.getElementById('ngMin').value)||0;
+    const max=parseInt(document.getElementById('ngMax').value)||0;
+    const type=document.getElementById('ngType').value;
+    addonGroups.push({name,type,min,max,items:[]});
+    document.getElementById('ngName').value='';
+    document.getElementById('ngMin').value='0';
+    document.getElementById('ngMax').value='0';
+    renderGroups();
+}
+
+function removeGroup(gi){
+    if(!confirm(`Remover grupo "${addonGroups[gi].name}"?`))return;
+    addonGroups.splice(gi,1);
+    renderGroups();
+}
+
+function updateGroup(gi,field,value){
+    if(field==='name')addonGroups[gi].name=value;
+    if(field==='type')addonGroups[gi].type=value;
+    if(field==='min')addonGroups[gi].min=parseInt(value)||0;
+    if(field==='max')addonGroups[gi].max=parseInt(value)||0;
+}
+
+function addGroupItem(gi){
+    const nameEl=document.getElementById(`gi-name-${gi}`);
+    const priceEl=document.getElementById(`gi-price-${gi}`);
+    const name=(nameEl.value||'').trim();
+    const price=parseFloat(priceEl.value)||0;
+    if(!name){toast('Informe o nome do item');return}
+    addonGroups[gi].items.push({name,price,order:addonGroups[gi].items.length});
+    nameEl.value='';priceEl.value='';
+    renderGroups();
+}
+
+function updateGroupItem(gi,ii,field,value){
+    if(field==='name')addonGroups[gi].items[ii].name=String(value||'').trim();
+    if(field==='price')addonGroups[gi].items[ii].price=parseFloat(value)||0;
+}
+
+function removeGroupItem(gi,ii){
+    addonGroups[gi].items.splice(ii,1);
+    addonGroups[gi].items.forEach((x,i)=>x.order=i);
+    renderGroups();
+}
+
+function dragStartItem(gi,ii){dragState={gi,ii}}
+function dropItem(gi,ii){
+    if(dragState.gi!==gi||dragState.ii===null||dragState.ii===ii)return;
+    const arr=addonGroups[gi].items;
+    const[item]=arr.splice(dragState.ii,1);
+    arr.splice(ii,0,item);
+    arr.forEach((x,i)=>x.order=i);
+    dragState={gi:null,ii:null};
+    renderGroups();
+}
+
+function renderGroups(){
+    const el=document.getElementById('groupsList');
+    if(!addonGroups.length){el.innerHTML='';return}
+    el.innerHTML=addonGroups.map((g,gi)=>{
+        const typeLabel=g.type==='free'?'Grátis':'Pago';
+        const typeClass=g.type==='free'?'free':'';
+        const minMax=g.min||g.max?`Mín ${g.min} · Máx ${g.max||'∞'}`:'Opcional';
+        const itemsHtml=g.items.length?g.items.map((it,ii)=>`
+            <div class="group-item" draggable="true" ondragstart="dragStartItem(${gi},${ii})" ondragover="event.preventDefault()" ondrop="dropItem(${gi},${ii})">
+                <div class="drag">⋮⋮</div>
+                <input type="text" value="${esc(it.name)}" onchange="updateGroupItem(${gi},${ii},'name',this.value)">
+                <input type="number" value="${it.price}" step="0.50" min="0" onchange="updateGroupItem(${gi},${ii},'price',this.value)" style="text-align:right">
+                <button class="btn btn-danger btn-sm" style="padding:4px 8px" onclick="removeGroupItem(${gi},${ii})">Remover</button>
+            </div>`).join(''):'<div class="group-empty">Nenhum item neste grupo</div>';
+        return`<div class="group-card">
+            <div class="group-header">
+                <input type="text" class="group-title-input" value="${esc(g.name)}" onchange="updateGroup(${gi},'name',this.value)">
+                <button class="btn btn-danger btn-sm" onclick="removeGroup(${gi})">Excluir grupo</button>
+            </div>
+            <div class="group-meta">
+                <span class="group-tag ${typeClass}">${typeLabel}</span>
+                <span class="group-tag">${minMax}</span>
+                <select class="group-meta-select" onchange="updateGroup(${gi},'type',this.value)">
+                    <option value="free" ${g.type==='free'?'selected':''}>Grátis</option>
+                    <option value="paid" ${g.type==='paid'?'selected':''}>Pago</option>
+                </select>
+                <input type="number" class="group-meta-number" value="${g.min}" min="0" onchange="updateGroup(${gi},'min',this.value)" title="Mínimo">
+                <input type="number" class="group-meta-number" value="${g.max}" min="0" onchange="updateGroup(${gi},'max',this.value)" title="Máximo">
+            </div>
+            ${itemsHtml}
+            <div class="group-add-row">
+                <input type="text" id="gi-name-${gi}" placeholder="Nome do item" onkeydown="if(event.key==='Enter')addGroupItem(${gi})">
+                <input type="number" id="gi-price-${gi}" placeholder="R$" step="0.50" min="0">
+                <button class="btn btn-success btn-sm" onclick="addGroupItem(${gi})">Adicionar</button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+// ── Migrate legacy addons ──
+function migrateLegacy(p){
+    const groups=[];
+    if(Array.isArray(p.addons)&&p.addons.length){
+        groups.push({name:'Adicionais',type:'paid',min:0,max:0,
+            items:p.addons.filter(a=>a&&a.name).map((a,i)=>({name:String(a.name).trim(),price:parseFloat(a.price)||0,order:i}))
+        });
+    }
+    if(Array.isArray(p.flavors)&&p.flavors.length){
+        groups.push({name:'Sabores',type:'paid',min:0,max:1,
+            items:p.flavors.filter(a=>a&&a.name).map((a,i)=>({name:String(a.name).trim(),price:parseFloat(a.price)||0,order:i}))
+        });
+    }
+    if(Array.isArray(p.sizes)&&p.sizes.length){
+        groups.push({name:'Tamanhos',type:'paid',min:1,max:1,
+            items:p.sizes.filter(a=>a&&a.name).map((a,i)=>({name:String(a.name).trim(),price:parseFloat(a.price)||0,order:i}))
+        });
+    }
+    if(Array.isArray(p.extras)&&p.extras.length){
+        groups.push({name:'Extras',type:'paid',min:0,max:0,
+            items:p.extras.filter(a=>a&&a.name).map((a,i)=>({name:String(a.name).trim(),price:parseFloat(a.price)||0,order:i}))
+        });
+    }
+    return groups;
+}
+
+// ── Load/Save ──
+async function loadCategories(){
+    const select=document.getElementById('pCategory');
+    try{
+        const[storeDoc,snap]=await Promise.all([
+            db.collection('stores').doc(storeId).get(),
+            db.collection('products').where('storeId','==',storeId).get()
+        ]);
+        const d=storeDoc.exists?storeDoc.data():{};
+        const raw=Array.isArray(d.categories)?d.categories:[];
+        const set=new Set(raw.map(c=>String(c||'').trim()).filter(Boolean));
+        snap.docs.forEach(doc=>{const c=(doc.data()?.category||'').trim();if(c)set.add(c)});
+        categories=[...set].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+        select.innerHTML=categories.length
+            ?'<option value="">Selecione...</option>'+categories.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('')
+            :'<option value="">Sem categorias</option>';
+    }catch(e){select.innerHTML='<option value="">Erro</option>'}
+}
+
+async function loadProduct(){
+    try{
+        const doc=await db.collection('products').doc(productId).get();
+        if(!doc.exists){toast('Produto não encontrado');return}
+        const p=doc.data()||{};
+        document.getElementById('pName').value=p.name||'';
+        document.getElementById('pDesc').value=p.description||'';
+        document.getElementById('pPrice').value=p.price??'';
+
+        const cat=(p.category||'').trim();
+        const sel=document.getElementById('pCategory');
+        if(cat&&![...sel.options].some(o=>o.value===cat)){
+            const o=document.createElement('option');o.value=cat;o.textContent=cat;sel.appendChild(o);
+        }
+        sel.value=cat;
+
+        if(p.active===false)document.getElementById('activeToggle').classList.remove('active');
+
+        const imgData=(p.imageData||'').trim();
+        const imgUrl=(p.imageUrl||'').trim();
+        if(imgData&&imgData.startsWith('data:')){
+            document.getElementById('imageData').value=imgData;
+            switchTab('upload');
+            document.getElementById('imgPreview').innerHTML=`<img src="${imgData}"><button class="img-remove" onclick="removeImage()">×</button>`;
+        }else if(imgUrl){
+            document.getElementById('imageUrl').value=imgUrl;
+            previewUrl(imgUrl);
+        }
+
+        if(Array.isArray(p.addonGroups)&&p.addonGroups.length){
+            addonGroups=p.addonGroups.map(g=>({
+                name:g.name||'',type:g.type||'paid',min:g.min||0,max:g.max||0,
+                items:(g.items||[]).map((it,i)=>({name:String(it.name||'').trim(),price:parseFloat(it.price)||0,order:it.order??i})).filter(it=>it.name).sort((a,b)=>a.order-b.order)
+            }));
+        }else{
+            addonGroups=migrateLegacy(p);
+        }
+
+        document.getElementById('pageTitle').textContent='Editar Produto';
+    }catch(e){console.error(e);toast('Erro ao carregar')}
+}
+
+async function save(){
+    const name=(document.getElementById('pName').value||'').trim();
+    const price=parseFloat(document.getElementById('pPrice').value);
+    const category=(document.getElementById('pCategory').value||'').trim();
+    const imageUrl=(document.getElementById('imageUrl').value||'').trim();
+    const imageData=(document.getElementById('imageData').value||'').trim();
+
+    if(!name)return toast('Preencha o nome');
+    if(!price||price<=0)return toast('Preço inválido');
+    if(!category)return toast('Selecione a categoria');
+
+    const groups=addonGroups.map(g=>({
+        name:(g.name||'').trim(),
+        type:g.type||'paid',
+        min:g.min||0,
+        max:g.max||0,
+        items:(g.items||[]).filter(it=>it.name).map((it,i)=>({name:it.name.trim(),price:parseFloat(it.price)||0,order:i}))
+    })).filter(g=>g.name);
+
+    const data={
+        name,
+        description:(document.getElementById('pDesc').value||'').trim(),
+        price,category,
+        active:document.getElementById('activeToggle').classList.contains('active'),
+        imageUrl:imageData?'':imageUrl,
+        imageData:imageData||'',
+        addonGroups:groups,
+        storeId,
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    try{
+        if(productId){
+            await db.collection('products').doc(productId).update(data);
+            toast('Produto atualizado');
+        }else{
+            data.createdAt=firebase.firestore.FieldValue.serverTimestamp();
+            await db.collection('products').add(data);
+            toast('Produto criado');
+        }
+        if(window.opener)window.opener.postMessage({type:'productSaved'},'*');
+        setTimeout(goBack,300);
+    }catch(e){console.error(e);toast('Erro ao salvar')}
+}
+
+(async()=>{
+    if(!storeId){document.getElementById('loading').innerHTML='⚠️ Loja não identificada';return}
+    const user=auth.currentUser||await new Promise(r=>{const u=auth.onAuthStateChanged(x=>{u();r(x)})});
+    if(!user){document.getElementById('loading').innerHTML='⚠️ Faça login';return}
+
+    await loadCategories();
+    if(productId)await loadProduct();
+
+    document.getElementById('loading').style.display='none';
+    document.getElementById('form').style.display='block';
+    document.getElementById('actionsBar').style.display='flex';
+    renderGroups();
+})();
+</script>
+</body>
+</html>
