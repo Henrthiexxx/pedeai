@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Configuração da Loja - Pedrad</title>
+    <title>Configurações - Pedrad</title>
     <meta name="theme-color" content="#0a0a0c">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="ui/menu/nav.css">
@@ -12,275 +12,291 @@
             min-height: 100vh;
             padding-top: env(safe-area-inset-top);
             padding-bottom: calc(env(safe-area-inset-bottom) + 24px);
-            background:
-                radial-gradient(ellipse at 50% 0%, var(--bg-2) 0%, var(--bg-0) 68%);
+            background: radial-gradient(ellipse at 50% 0%, var(--bg-2) 0%, var(--bg-0) 68%);
         }
 
         .container {
-            max-width: 960px;
+            max-width: 720px;
             margin: 0 auto;
             padding: 20px;
         }
 
-        .header {
+        .page-header {
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 12px;
             margin-bottom: 24px;
             padding-bottom: 16px;
             border-bottom: 1px solid var(--border);
         }
 
-        .header h1 {
-            flex: 1;
-            font-size: 1rem;
+        .page-header svg {
+            width: 22px;
+            height: 22px;
+            stroke: var(--text-1);
+        }
+
+        .page-header h1 {
+            font-size: 1.05rem;
             font-weight: 600;
             letter-spacing: -.02em;
         }
 
-        .card,
-        .settings-section {
+        .card {
             background: var(--bg-1);
             border: 1px solid var(--border);
             border-radius: var(--r);
-            padding: 24px;
+            padding: 22px;
             margin-bottom: 16px;
             box-shadow: var(--sh-sm);
             transition: all .2s ease;
         }
 
-        .card:hover,
-        .settings-section:hover {
+        .card:hover {
             border-color: var(--border-h);
             box-shadow: var(--sh-md);
         }
 
-        .card-title,
-        .settings-title {
+        .section-head {
             display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: .78rem;
+            gap: 12px;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .section-head svg {
+            width: 22px;
+            height: 22px;
+            stroke: var(--text-1);
+            flex: 0 0 auto;
+            margin-top: 2px;
+        }
+
+        .section-head .section-title {
+            font-size: .95rem;
             font-weight: 600;
+            color: var(--text-0);
+            letter-spacing: -.01em;
+        }
+
+        .section-head .section-sub {
+            font-size: .8rem;
             color: var(--text-2);
-            margin-bottom: 18px;
-            text-transform: uppercase;
-            letter-spacing: .6px;
+            margin-top: 3px;
+            line-height: 1.4;
         }
 
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
-
-        .image-preview-wrap {
+        /* ===== LOGO CIRCULAR ===== */
+        .logo-block {
             display: flex;
-            gap: 18px;
+            flex-direction: column;
             align-items: center;
-            flex-wrap: wrap;
+            gap: 14px;
+            margin-bottom: 22px;
         }
 
-        .image-preview {
-            width: 140px;
-            height: 140px;
+        .logo-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
             border: 1px solid var(--border);
-            border-radius: var(--r);
             background: var(--bg-2);
             overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
-            flex: 0 0 auto;
             box-shadow: inset 0 1px 2px rgba(0,0,0,.08);
         }
 
-        .image-preview img {
+        .logo-circle img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
 
-        .image-placeholder {
+        .logo-placeholder {
             color: var(--text-2);
-            font-size: .78rem;
+            font-size: .72rem;
             text-align: center;
             padding: 12px;
             line-height: 1.4;
         }
 
-        .upload-section {
-            flex: 1;
-            min-width: 240px;
-        }
-
-        .upload-input {
-            display: none;
-        }
-
-        .upload-status {
-            font-size: .75rem;
-            color: var(--text-2);
-            margin-top: 8px;
-            min-height: 18px;
-        }
-
-        .upload-status.success { color: var(--green); }
-        .upload-status.error { color: var(--red); }
-
-        .button-stack {
+        .icon-actions {
             display: flex;
-            flex-direction: column;
             gap: 10px;
         }
 
-        .button-stack .btn {
-            width: 100%;
-        }
-
-        .radio-cards {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-        }
-
-        .radio-card {
-            background: var(--bg-2);
+        .icon-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
             border: 1px solid var(--border);
-            border-radius: var(--r);
-            padding: 20px 16px;
-            text-align: center;
+            background: var(--bg-2);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
-            transition: all .2s ease;
-            position: relative;
-            box-shadow: var(--sh-sm);
+            transition: all .15s ease;
+            color: var(--text-1);
         }
 
-        .radio-card:hover {
+        .icon-btn:hover {
             border-color: var(--border-h);
-            box-shadow: var(--sh-md);
-            transform: translateY(-1px);
-        }
-
-        .radio-card.selected {
-            border-color: var(--accent);
             background: var(--bg-3);
-            box-shadow: var(--sh-md);
         }
 
-        .radio-card.disabled {
+        .icon-btn:disabled {
             opacity: .5;
             cursor: not-allowed;
-            pointer-events: none;
-            transform: none;
         }
 
-        .radio-card-icon {
-            font-size: 1.65rem;
-            margin-bottom: 10px;
+        .icon-btn svg {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
         }
 
-        .radio-card-title {
-            font-weight: 600;
-            margin-bottom: 6px;
-            font-size: .88rem;
+        .icon-btn.danger {
+            color: var(--red);
+            border-color: var(--red-b);
+            background: var(--red-bg);
         }
 
-        .radio-card-desc {
+        .icon-btn.danger:hover {
+            background: rgba(248,113,113,.18);
+        }
+
+        .upload-input { display: none; }
+
+        .upload-status {
             font-size: .74rem;
+            color: var(--text-2);
+            min-height: 16px;
+            text-align: center;
+        }
+
+        .upload-status.success { color: var(--green); }
+        .upload-status.error   { color: var(--red); }
+
+        /* ===== HORÁRIO ===== */
+        .day-row {
+            display: grid;
+            grid-template-columns: 110px auto 1fr auto 1fr;
+            gap: 10px;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .day-row:last-child {
+            border-bottom: none;
+        }
+
+        .day-name {
+            font-size: .88rem;
+            font-weight: 500;
+            color: var(--text-0);
+        }
+
+        .day-row .toggle {
+            justify-self: start;
+        }
+
+        .day-row .form-input {
+            width: 100%;
+            min-width: 0;
+        }
+
+        .day-row .sep {
+            font-size: .8rem;
             color: var(--text-2);
         }
 
-        .cooldown-info {
-            background: var(--red-bg);
-            border: 1px solid var(--red-b);
-            border-radius: var(--rs);
-            padding: 12px 14px;
-            margin-top: 16px;
-            font-size: .82rem;
-            color: var(--red);
+        .day-row.disabled .form-input,
+        .day-row.disabled .sep {
+            opacity: .35;
+            pointer-events: none;
         }
 
+        .day-row.disabled .closed-label {
+            color: var(--text-2);
+            font-size: .82rem;
+        }
+
+        .closed-label {
+            display: none;
+            grid-column: 3 / 6;
+            font-size: .82rem;
+            color: var(--text-2);
+        }
+
+        .day-row.disabled .closed-label { display: block; }
+        .day-row.disabled .form-input,
+        .day-row.disabled .sep { display: none; }
+
+        .info-help {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+            margin-top: 14px;
+            padding: 12px;
+            background: var(--bg-2);
+            border-radius: var(--rs);
+            border: 1px solid var(--border);
+        }
+
+        .info-help svg {
+            width: 16px;
+            height: 16px;
+            stroke: var(--text-2);
+            flex: 0 0 auto;
+            margin-top: 1px;
+        }
+
+        .info-help span {
+            font-size: .76rem;
+            color: var(--text-2);
+            line-height: 1.45;
+        }
+
+        /* ===== NOTIFICAÇÕES ===== */
         .setting-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 18px;
-            padding: 16px 0;
+            gap: 16px;
+            padding: 14px 0;
             border-bottom: 1px solid var(--border);
         }
 
-        .setting-item:last-child {
-            border-bottom: none;
-        }
+        .setting-item:last-child { border-bottom: none; }
 
-        .setting-info {
-            flex: 1;
-            min-width: 0;
-        }
+        .setting-info { flex: 1; min-width: 0; }
 
         .setting-label {
             font-weight: 600;
-            font-size: .9rem;
+            font-size: .88rem;
             color: var(--text-0);
         }
 
         .setting-desc {
-            font-size: .78rem;
+            font-size: .76rem;
             color: var(--text-2);
-            margin-top: 4px;
+            margin-top: 3px;
             line-height: 1.45;
         }
 
-        .time-inline {
-            display: flex;
-            gap: 8px;
-            margin-top: 8px;
-            align-items: center;
-            flex-wrap: wrap;
+        /* ===== FORM ===== */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
         }
 
-        .time-inline .form-input {
-            width: auto;
-            min-width: 120px;
-        }
+        .bottom-save { margin-top: 18px; }
 
-        .inline-help {
-            font-size: .75rem;
-            color: var(--text-2);
-            margin-top: 8px;
-            line-height: 1.5;
-        }
-
-        .bottom-save {
-            margin-top: 18px;
-        }
-
-        .btn {
-            font-size: .84rem;
-            letter-spacing: .01em;
-            text-transform: none;
-        }
-
-        .btn-primary {
-            font-weight: 600;
-        }
-
-        .btn-danger {
-            background: var(--red-bg);
-            color: var(--red);
-            border-color: var(--red-b);
-        }
-
-        .btn-danger:hover {
-            background: rgba(248,113,113,.15);
-            color: var(--red);
-            border-color: var(--red);
-        }
-
-        .toast {
-            max-width: min(92vw, 440px);
-        }
+        .toast { max-width: min(92vw, 440px); }
 
         .spinner {
             width: 16px;
@@ -291,48 +307,34 @@
             animation: spin .8s linear infinite;
         }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-        @media (max-width: 768px) {
-            .container {
-                padding: 16px;
+        @media (max-width: 600px) {
+            .container { padding: 14px; }
+            .form-row { grid-template-columns: 1fr; }
+
+            .day-row {
+                grid-template-columns: 1fr auto;
+                grid-template-areas:
+                    "name toggle"
+                    "times times";
+                gap: 8px;
+                padding: 12px 0;
             }
 
-            .form-row,
-            .radio-cards {
-                grid-template-columns: 1fr;
+            .day-name { grid-area: name; }
+            .day-row .toggle { grid-area: toggle; justify-self: end; }
+
+            .day-row .time-wrap {
+                grid-area: times;
+                display: grid;
+                grid-template-columns: 1fr auto 1fr;
+                gap: 8px;
+                align-items: center;
             }
 
-            .header h1 {
-                font-size: .95rem;
-            }
-
-            .image-preview-wrap {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .image-preview {
-                width: 100%;
-                max-width: 180px;
-                margin: 0 auto;
-            }
-
-            .upload-section {
-                width: 100%;
-            }
-
-            .setting-item {
-                align-items: flex-start;
-                flex-direction: column;
-            }
-
-            .time-inline .form-input {
-                width: 100%;
-                min-width: 0;
-            }
+            .day-row.disabled .time-wrap { display: none; }
+            .day-row .closed-label { grid-area: times; }
         }
     </style>
 </head>
@@ -340,36 +342,58 @@
     <div class="toast" id="toast"></div>
 
     <div class="container">
-        <div class="header">
-            <h1>⚙️ Configurações</h1>
+        <div class="page-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+            <h1>Configurações</h1>
         </div>
 
+        <!-- ===== INFORMAÇÕES DA LOJA ===== -->
         <div class="card">
-            <div class="card-title">🏪 Informações Básicas</div>
-
-            <div class="form-group">
-                <label class="form-label">Logo / Imagem da Loja</label>
-                <div class="image-preview-wrap">
-                    <div class="image-preview" id="storeImagePreview">
-                        <div class="image-placeholder">Sem imagem<br>faça upload abaixo</div>
-                    </div>
-
-                    <div class="upload-section">
-                        <input type="file" class="upload-input" id="imageUpload"
-                               accept="image/jpeg,image/jpg,image/png,image/webp"
-                               onchange="handleImageUpload(event)">
-
-                        <div class="button-stack">
-                            <button class="btn" onclick="document.getElementById('imageUpload').click()"
-                                    id="uploadBtn">📁 Escolher imagem</button>
-
-                            <button class="btn btn-danger" onclick="removeImage()"
-                                    id="removeBtn" style="display:none;">🗑️ Remover imagem</button>
-                        </div>
-
-                        <div class="upload-status" id="uploadStatus"></div>
-                    </div>
+            <div class="section-head">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l1-5h16l1 5"/>
+                    <path d="M5 9v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9"/>
+                    <path d="M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0"/>
+                </svg>
+                <div>
+                    <div class="section-title">Informações da Loja</div>
+                    <div class="section-sub">Gerencie os dados cadastrados da sua loja.</div>
                 </div>
+            </div>
+
+            <div class="logo-block">
+                <div class="logo-circle" id="storeImagePreview">
+                    <div class="logo-placeholder">Sem imagem</div>
+                </div>
+
+                <input type="file" class="upload-input" id="imageUpload"
+                       accept="image/jpeg,image/jpg,image/png,image/webp"
+                       onchange="handleImageUpload(event)">
+
+                <div class="icon-actions">
+                    <button class="icon-btn" id="uploadBtn" title="Trocar imagem"
+                            onclick="document.getElementById('imageUpload').click()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                    </button>
+                    <button class="icon-btn danger" id="removeBtn" title="Remover imagem"
+                            onclick="removeImage()" style="display:none;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                            <path d="M10 11v6M14 11v6"/>
+                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="upload-status" id="uploadStatus"></div>
             </div>
 
             <div class="form-group">
@@ -378,17 +402,27 @@
             </div>
 
             <div class="form-group">
+                <label class="form-label">Telefone / WhatsApp</label>
+                <input type="tel" class="form-input" id="storePhone" placeholder="(00) 00000-0000">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">CNPJ</label>
+                <input type="text" class="form-input" id="storeCnpj" placeholder="00.000.000/0000-00" maxlength="18">
+            </div>
+
+            <div class="form-group">
                 <label class="form-label">Categoria</label>
                 <select class="form-input" id="storeCategory">
-                    <option value="Hambúrgueres">🍔 Hambúrgueres</option>
-                    <option value="Pizzaria">🍕 Pizzaria</option>
-                    <option value="Japonesa">🍣 Japonesa</option>
-                    <option value="Açaí e Sorvetes">🍇 Açaí e Sorvetes</option>
-                    <option value="Brasileira">🍛 Brasileira</option>
-                    <option value="Lanches">🌭 Lanches</option>
-                    <option value="Doces">🍰 Doces</option>
-                    <option value="Bebidas">🍹 Bebidas</option>
-                    <option value="Outro">📦 Outro</option>
+                    <option value="Hambúrgueres">Hambúrgueres</option>
+                    <option value="Pizzaria">Pizzaria</option>
+                    <option value="Japonesa">Japonesa</option>
+                    <option value="Açaí e Sorvetes">Açaí e Sorvetes</option>
+                    <option value="Brasileira">Brasileira</option>
+                    <option value="Lanches">Lanches</option>
+                    <option value="Doces">Doces</option>
+                    <option value="Bebidas">Bebidas</option>
+                    <option value="Outro">Outro</option>
                 </select>
             </div>
 
@@ -413,72 +447,46 @@
                 <input type="text" class="form-input" id="storeAddress" placeholder="Rua, número - Bairro">
             </div>
 
-            <div class="form-group">
-                <label class="form-label">Telefone / WhatsApp</label>
-                <input type="tel" class="form-input" id="storePhone" placeholder="(00) 00000-0000">
-            </div>
-
             <button class="btn btn-primary btn-block" onclick="saveStoreInfo()">Salvar informações</button>
         </div>
 
-        <div class="settings-section">
-            <div class="settings-title">🚚 Tipo de Entrega</div>
-
-            <div class="radio-cards">
-                <div class="radio-card" id="deliveryApp" onclick="selectDeliveryType('app')">
-                    <div class="radio-card-icon">🛵</div>
-                    <div class="radio-card-title">Entregador do App</div>
-                    <div class="radio-card-desc">Entregadores parceiros Pedra Delivery</div>
-                </div>
-
-                <div class="radio-card" id="deliveryOwn" onclick="selectDeliveryType('own')">
-                    <div class="radio-card-icon">👨‍💼</div>
-                    <div class="radio-card-title">Entregador Próprio</div>
-                    <div class="radio-card-desc">Sua equipe de entrega</div>
+        <!-- ===== HORÁRIO DE FUNCIONAMENTO ===== -->
+        <div class="card">
+            <div class="section-head">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="9"/>
+                    <polyline points="12 7 12 12 15 14"/>
+                </svg>
+                <div>
+                    <div class="section-title">Horário de Funcionamento</div>
+                    <div class="section-sub">Defina os dias e horários em que sua loja está aberta.</div>
                 </div>
             </div>
 
-            <div class="cooldown-info" id="cooldownInfo" style="display:none;">
-                ⏰ <strong>Cooldown ativo:</strong> Você poderá trocar novamente em <span id="cooldownTime">--</span>
-            </div>
+            <div id="daysContainer"></div>
 
-            <div class="form-group" style="margin-top:20px;">
-                <label class="form-label">Tempo de cooldown entre trocas (minutos)</label>
-                <input type="number" class="form-input" id="deliveryCooldown" placeholder="50" min="0" max="1440" value="50">
-                <div class="inline-help">
-                    Define quanto tempo deve esperar para trocar o tipo de entrega novamente.
-                </div>
+            <div class="info-help">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="9"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <span>Os horários informados serão exibidos para seus clientes.</span>
             </div>
         </div>
 
-        <div class="settings-section">
-            <div class="settings-title">🕐 Horário de Funcionamento</div>
-
-            <div class="setting-item">
-                <div class="setting-info">
-                    <div class="setting-label">Segunda a Sexta</div>
-                    <div class="time-inline">
-                        <input type="time" class="form-input" id="weekdayOpen" value="18:00">
-                        <span class="text-muted">às</span>
-                        <input type="time" class="form-input" id="weekdayClose" value="23:00">
-                    </div>
+        <!-- ===== NOTIFICAÇÕES ===== -->
+        <div class="card">
+            <div class="section-head">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+                <div>
+                    <div class="section-title">Notificações</div>
+                    <div class="section-sub">Comportamento de sons e alertas do app.</div>
                 </div>
             </div>
-
-            <div class="setting-item">
-                <div class="setting-info">
-                    <div class="setting-label">Sábado e Domingo</div>
-                    <div class="time-inline">
-                        <input type="time" class="form-input" id="weekendOpen" value="11:00">
-                        <span class="text-muted">às</span>
-                        <input type="time" class="form-input" id="weekendClose" value="23:00">
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="settings-section">
-            <div class="settings-title">🔔 Notificações</div>
 
             <div class="setting-item">
                 <div class="setting-info">
@@ -512,7 +520,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script>
-
         // ===== THEME SYNC =====
         const THEME_KEYS = ['theme', 'appTheme', 'pedrad_theme', 'color-theme', 'data-theme'];
 
@@ -558,8 +565,8 @@
         });
         setInterval(syncTheme, 1500);
 
-
-const firebaseConfig = {
+        // ===== FIREBASE =====
+        const firebaseConfig = {
             apiKey: "AIzaSyAnIJRcUxN-0swpVnonPbJjTSK87o4CQ_g",
             authDomain: "pedrad-814d0.firebaseapp.com",
             projectId: "pedrad-814d0",
@@ -572,29 +579,81 @@ const firebaseConfig = {
         const db = firebase.firestore();
 
         let currentStore = null;
-        let cooldownInterval = null;
         let currentImageBase64 = null;
         const UI_SOUND_KEY = 'pedrad_ui_sounds';
 
+        // ===== DAYS DEFINITION =====
+        const DAYS = [
+            { key: 'mon',      label: 'Segunda-feira' },
+            { key: 'tue',      label: 'Terça-feira'   },
+            { key: 'wed',      label: 'Quarta-feira'  },
+            { key: 'thu',      label: 'Quinta-feira'  },
+            { key: 'fri',      label: 'Sexta-feira'   },
+            { key: 'sat',      label: 'Sábado'        },
+            { key: 'sun',      label: 'Domingo'       },
+            { key: 'holidays', label: 'Feriados'      }
+        ];
+
+        function buildDayRows() {
+            const wrap = document.getElementById('daysContainer');
+            wrap.innerHTML = DAYS.map(d => `
+                <div class="day-row" id="day-${d.key}">
+                    <div class="day-name">${d.label}</div>
+                    <div class="toggle active" data-day="${d.key}" onclick="toggleDay('${d.key}')"></div>
+                    <div class="time-wrap" style="display:contents;">
+                        <input type="time" class="form-input" id="open-${d.key}" value="11:00">
+                        <span class="sep">até</span>
+                        <input type="time" class="form-input" id="close-${d.key}" value="22:00">
+                    </div>
+                    <div class="closed-label">Fechado</div>
+                </div>
+            `).join('');
+        }
+
+        function toggleDay(key) {
+            const row = document.getElementById(`day-${key}`);
+            const toggle = row.querySelector('.toggle');
+            row.classList.toggle('disabled');
+            toggle.classList.toggle('active');
+        }
+
+        function getDayState(key) {
+            const row = document.getElementById(`day-${key}`);
+            return {
+                enabled: !row.classList.contains('disabled'),
+                open: document.getElementById(`open-${key}`).value,
+                close: document.getElementById(`close-${key}`).value
+            };
+        }
+
+        function setDayState(key, state) {
+            const row = document.getElementById(`day-${key}`);
+            const toggle = row.querySelector('.toggle');
+            const enabled = state?.enabled !== false;
+
+            row.classList.toggle('disabled', !enabled);
+            toggle.classList.toggle('active', enabled);
+
+            if (state?.open)  document.getElementById(`open-${key}`).value  = state.open;
+            if (state?.close) document.getElementById(`close-${key}`).value = state.close;
+        }
+
+        // ===== UI SOUND =====
         function readUiSoundPreference(storeSettings = null) {
             try {
                 if (storeSettings && typeof storeSettings.uiSoundEnabled === 'boolean') {
                     localStorage.setItem(UI_SOUND_KEY, storeSettings.uiSoundEnabled ? 'true' : 'false');
                     return storeSettings.uiSoundEnabled;
                 }
-
                 const saved = localStorage.getItem(UI_SOUND_KEY);
                 if (saved === 'true') return true;
                 if (saved === 'false') return false;
             } catch (_) {}
-
             return true;
         }
 
         function persistUiSoundPreference(enabled) {
-            try {
-                localStorage.setItem(UI_SOUND_KEY, enabled ? 'true' : 'false');
-            } catch (_) {}
+            try { localStorage.setItem(UI_SOUND_KEY, enabled ? 'true' : 'false'); } catch (_) {}
         }
 
         function notifyParentUiSoundChanged(enabled) {
@@ -603,29 +662,24 @@ const firebaseConfig = {
                     if (typeof window.parent.setUiSoundEnabled === 'function') {
                         window.parent.setUiSoundEnabled(enabled);
                     }
-                    window.parent.postMessage({
-                        type: 'pedrad-ui-sounds-changed',
-                        enabled
-                    }, '*');
+                    window.parent.postMessage({ type: 'pedrad-ui-sounds-changed', enabled }, '*');
                 }
             } catch (_) {}
-
             try {
                 if (window.opener && !window.opener.closed) {
                     if (typeof window.opener.setUiSoundEnabled === 'function') {
                         window.opener.setUiSoundEnabled(enabled);
                     }
-                    window.opener.postMessage({
-                        type: 'pedrad-ui-sounds-changed',
-                        enabled
-                    }, '*');
+                    window.opener.postMessage({ type: 'pedrad-ui-sounds-changed', enabled }, '*');
                 }
             } catch (_) {}
         }
 
+        // ===== AUTH =====
         auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
             .then(() => {
                 auth.onAuthStateChanged(async (user) => {
+                    buildDayRows();
                     if (user) await loadStoreData(user);
                     else window.location.href = 'index.html';
                 });
@@ -652,24 +706,23 @@ const firebaseConfig = {
 
         function loadStoreUI() {
             document.getElementById('storeName').value = currentStore.name || '';
+            document.getElementById('storePhone').value = currentStore.phone || '';
+            document.getElementById('storeCnpj').value = currentStore.cnpj || '';
             document.getElementById('storeCategory').value = currentStore.category || 'Hambúrgueres';
             document.getElementById('storeDescription').value = currentStore.description || '';
             document.getElementById('storeDeliveryTime').value = currentStore.deliveryTime || '';
             document.getElementById('storeDeliveryFee').value = currentStore.deliveryFee ?? '';
             document.getElementById('storeAddress').value = currentStore.address || '';
-            document.getElementById('storePhone').value = currentStore.phone || '';
-            document.getElementById('deliveryCooldown').value = currentStore.deliveryCooldownMinutes || 50;
-            
+
             currentImageBase64 = currentStore.imageUrl || null;
             updateImagePreview(currentImageBase64);
-            selectDeliveryType(currentStore.deliveryType || 'app', false);
-            checkCooldown();
 
             const s = currentStore.settings || {};
-            document.getElementById('weekdayOpen').value = s.weekdayOpen || '18:00';
-            document.getElementById('weekdayClose').value = s.weekdayClose || '23:00';
-            document.getElementById('weekendOpen').value = s.weekendOpen || '11:00';
-            document.getElementById('weekendClose').value = s.weekendClose || '23:00';
+
+            // Carrega horários — formato novo OU fallback do formato antigo
+            const hoursData = s.hours || legacyHoursToNew(s);
+            DAYS.forEach(d => setDayState(d.key, hoursData[d.key]));
+
             document.getElementById('soundToggle').classList.toggle('active', s.soundEnabled !== false);
             const uiSoundEnabled = readUiSoundPreference(s);
             document.getElementById('uiSoundToggle').classList.toggle('active', uiSoundEnabled);
@@ -679,7 +732,25 @@ const firebaseConfig = {
             notifyParentUiSoundChanged(uiSoundEnabled);
         }
 
-        // ===== IMAGE UPLOAD (Base64) =====
+        // Converte estrutura antiga (weekday/weekend) pro novo formato granular
+        function legacyHoursToNew(s) {
+            const wOpen  = s.weekdayOpen  || '11:00';
+            const wClose = s.weekdayClose || '22:00';
+            const eOpen  = s.weekendOpen  || '11:00';
+            const eClose = s.weekendClose || '23:00';
+            return {
+                mon: { enabled: true, open: wOpen, close: wClose },
+                tue: { enabled: true, open: wOpen, close: wClose },
+                wed: { enabled: true, open: wOpen, close: wClose },
+                thu: { enabled: true, open: wOpen, close: wClose },
+                fri: { enabled: true, open: wOpen, close: wClose },
+                sat: { enabled: true, open: eOpen, close: eClose },
+                sun: { enabled: true, open: eOpen, close: eClose },
+                holidays: { enabled: false, open: '11:00', close: '22:00' }
+            };
+        }
+
+        // ===== IMAGE UPLOAD =====
         async function handleImageUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -689,7 +760,6 @@ const firebaseConfig = {
                 event.target.value = '';
                 return;
             }
-            
             if (!currentStore?.id) {
                 showToast('❌ Aguarde carregar a loja');
                 event.target.value = '';
@@ -716,14 +786,11 @@ const firebaseConfig = {
             disableUploadButton(true);
 
             try {
-                // Resize e converte pra base64
                 const base64 = await resizeImageToBase64(file, 600, 600);
-                
                 currentImageBase64 = base64;
                 updateImagePreview(base64);
                 setUploadStatus('✓ Imagem processada', 'success');
                 showToast('✓ Imagem carregada! Clique em Salvar');
-                
             } catch (err) {
                 console.error('Erro upload:', err);
                 setUploadStatus(`Erro: ${err.message}`, 'error');
@@ -745,25 +812,16 @@ const firebaseConfig = {
                         let height = img.height;
 
                         if (width > height) {
-                            if (width > maxWidth) {
-                                height *= maxWidth / width;
-                                width = maxWidth;
-                            }
+                            if (width > maxWidth) { height *= maxWidth / width; width = maxWidth; }
                         } else {
-                            if (height > maxHeight) {
-                                width *= maxHeight / height;
-                                height = maxHeight;
-                            }
+                            if (height > maxHeight) { width *= maxHeight / height; height = maxHeight; }
                         }
 
                         canvas.width = width;
                         canvas.height = height;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
-
-                        // Converte pra base64
-                        const base64 = canvas.toDataURL('image/jpeg', 0.9);
-                        resolve(base64);
+                        resolve(canvas.toDataURL('image/jpeg', 0.9));
                     };
                     img.onerror = () => reject(new Error('Erro ao carregar imagem'));
                     img.src = e.target.result;
@@ -775,9 +833,7 @@ const firebaseConfig = {
 
         function removeImage() {
             if (!currentImageBase64) return;
-            
             if (!confirm('Remover imagem da loja?')) return;
-            
             currentImageBase64 = null;
             updateImagePreview(null);
             setUploadStatus('', '');
@@ -787,16 +843,22 @@ const firebaseConfig = {
         function updateImagePreview(base64) {
             const preview = document.getElementById('storeImagePreview');
             const removeBtn = document.getElementById('removeBtn');
-            
+
             if (!base64) {
-                preview.innerHTML = `<div class="image-placeholder">Sem imagem<br>faça upload abaixo</div>`;
+                preview.innerHTML = `<div class="logo-placeholder">Sem imagem</div>`;
                 removeBtn.style.display = 'none';
                 return;
             }
-            
-            preview.innerHTML = `<img src="${base64}" alt="Logo" 
-                onerror="this.remove();document.getElementById('storeImagePreview').innerHTML='<div class=image-placeholder>Erro ao carregar</div>';">`;
-            removeBtn.style.display = 'block';
+
+            const img = new Image();
+            img.alt = 'Logo';
+            img.onerror = () => {
+                preview.innerHTML = `<div class="logo-placeholder">Erro ao carregar</div>`;
+            };
+            img.src = base64;
+            preview.innerHTML = '';
+            preview.appendChild(img);
+            removeBtn.style.display = 'inline-flex';
         }
 
         function setUploadStatus(text, type) {
@@ -808,81 +870,19 @@ const firebaseConfig = {
         function disableUploadButton(disabled) {
             const btn = document.getElementById('uploadBtn');
             btn.disabled = disabled;
-            if (disabled) {
-                btn.innerHTML = '<div class="spinner"></div> Processando...';
-            } else {
-                btn.innerHTML = '📁 Escolher Imagem';
-            }
+            btn.innerHTML = disabled
+                ? '<div class="spinner"></div>'
+                : `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                       <polyline points="17 8 12 3 7 8"/>
+                       <line x1="12" y1="3" x2="12" y2="15"/>
+                   </svg>`;
         }
 
-        // ===== COOLDOWN =====
-        function checkCooldown() {
-            const lastChange = currentStore.deliveryTypeLastChanged?.toDate?.() || 
-                              (currentStore.deliveryTypeLastChanged ? new Date(currentStore.deliveryTypeLastChanged) : null);
-            
-            if (!lastChange) return enableDeliveryCards();
-            
-            const cooldownMs = (currentStore.deliveryCooldownMinutes || 50) * 60 * 1000;
-            const elapsed = Date.now() - lastChange.getTime();
-            const remaining = cooldownMs - elapsed;
-
-            if (remaining <= 0) {
-                enableDeliveryCards();
-                return;
-            }
-
-            const currentType = currentStore.deliveryType || 'app';
-            const otherCard = currentType === 'app' ? 'deliveryOwn' : 'deliveryApp';
-            
-            document.getElementById(otherCard).classList.add('disabled');
-            document.getElementById('cooldownInfo').style.display = 'block';
-            
-            updateCooldownDisplay(remaining);
-            
-            if (cooldownInterval) clearInterval(cooldownInterval);
-            cooldownInterval = setInterval(() => {
-                const check = cooldownMs - (Date.now() - lastChange.getTime());
-                if (check <= 0) {
-                    clearInterval(cooldownInterval);
-                    enableDeliveryCards();
-                } else {
-                    updateCooldownDisplay(check);
-                }
-            }, 1000);
-        }
-
-        function updateCooldownDisplay(ms) {
-            const mins = Math.floor(ms / 60000);
-            const secs = Math.floor((ms % 60000) / 1000);
-            document.getElementById('cooldownTime').textContent = 
-                `${mins}m ${secs.toString().padStart(2, '0')}s`;
-        }
-
-        function enableDeliveryCards() {
-            document.getElementById('deliveryApp').classList.remove('disabled');
-            document.getElementById('deliveryOwn').classList.remove('disabled');
-            document.getElementById('cooldownInfo').style.display = 'none';
-        }
-
-        function selectDeliveryType(type, save = true) {
-            if (save && currentStore) {
-                const card = type === 'app' ? 'deliveryApp' : 'deliveryOwn';
-                if (document.getElementById(card).classList.contains('disabled')) {
-                    showToast('⏰ Aguarde o cooldown terminar');
-                    return;
-                }
-            }
-
-            ['deliveryApp', 'deliveryOwn'].forEach(id => 
-                document.getElementById(id).classList.remove('selected')
-            );
-            document.getElementById(type === 'app' ? 'deliveryApp' : 'deliveryOwn').classList.add('selected');
-        }
-
+        // ===== TOGGLES =====
         function toggleSetting(setting) {
             const toggle = document.getElementById(`${setting}Toggle`);
             if (!toggle) return;
-
             toggle.classList.toggle('active');
 
             if (setting === 'uiSound') {
@@ -899,12 +899,13 @@ const firebaseConfig = {
                 if (!currentStore?.id) { showToast('Loja não carregada'); return; }
                 const data = {
                     name: (document.getElementById('storeName').value || '').trim(),
+                    phone: (document.getElementById('storePhone').value || '').trim(),
+                    cnpj: (document.getElementById('storeCnpj').value || '').trim(),
                     category: document.getElementById('storeCategory').value,
                     description: (document.getElementById('storeDescription').value || '').trim(),
                     deliveryTime: (document.getElementById('storeDeliveryTime').value || '').trim(),
                     deliveryFee: parseFloat(document.getElementById('storeDeliveryFee').value) || 0,
                     address: (document.getElementById('storeAddress').value || '').trim(),
-                    phone: (document.getElementById('storePhone').value || '').trim(),
                     imageUrl: currentImageBase64 || '',
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
@@ -917,37 +918,21 @@ const firebaseConfig = {
             try {
                 if (!currentStore?.id) { showToast('Loja não carregada'); return; }
 
-                const newType = document.getElementById('deliveryApp').classList.contains('selected') ? 'app' : 'own';
-                const typeChanged = newType !== (currentStore.deliveryType || 'app');
+                const hours = {};
+                DAYS.forEach(d => { hours[d.key] = getDayState(d.key); });
 
                 const updateData = {
                     imageUrl: currentImageBase64 || '',
-                    deliveryCooldownMinutes: parseInt(document.getElementById('deliveryCooldown').value) || 50,
                     settings: {
                         soundEnabled: document.getElementById('soundToggle').classList.contains('active'),
                         uiSoundEnabled: document.getElementById('uiSoundToggle').classList.contains('active'),
                         autoAccept: document.getElementById('autoAcceptToggle').classList.contains('active'),
-                        weekdayOpen: document.getElementById('weekdayOpen').value,
-                        weekdayClose: document.getElementById('weekdayClose').value,
-                        weekendOpen: document.getElementById('weekendOpen').value,
-                        weekendClose: document.getElementById('weekendClose').value
+                        hours
                     },
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
 
-                if (typeChanged) {
-                    updateData.deliveryType = newType;
-                    updateData.deliveryTypeLastChanged = firebase.firestore.FieldValue.serverTimestamp();
-                }
-
                 await db.collection('stores').doc(currentStore.id).update(updateData);
-                
-                currentStore.deliveryType = newType;
-                if (typeChanged) {
-                    currentStore.deliveryTypeLastChanged = new Date();
-                    checkCooldown();
-                }
-
                 showToast('✓ Configurações salvas!');
             } catch (err) { console.error(err); showToast('✗ Erro ao salvar'); }
         }
