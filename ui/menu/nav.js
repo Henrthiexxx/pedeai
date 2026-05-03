@@ -4,21 +4,22 @@
   const nav = document.createElement('nav');
   nav.id = 'internalBottomNav';
   nav.className = 'internal-bottom-nav';
+  const cfg = window.internalNavConfig || {};
 
   nav.innerHTML = `
-    <button class="internal-nav-btn" onclick="history.back()">
-      <span>←</span>
-      <small>Voltar</small>
+    <button class="internal-nav-btn" onclick="history.back()" title="${cfg.backTitle || cfg.backLabel || 'Voltar'}">
+      <span>${cfg.backIcon || '←'}</span>
+      <small>${cfg.backLabel || 'Voltar'}</small>
     </button>
 
-    <button class="internal-nav-btn" onclick="window.internalActionOne?.()">
-      <span>＋</span>
-      <small>Ação 1</small>
+    <button class="internal-nav-btn" onclick="window.internalActionOne?.()" title="${cfg.actionOneTitle || cfg.actionOneLabel || 'Ação 1'}">
+      <span>${cfg.actionOneIcon || '＋'}</span>
+      <small>${cfg.actionOneLabel || 'Ação 1'}</small>
     </button>
 
-    <button class="internal-nav-btn" onclick="window.internalActionTwo?.()">
-      <span>⋯</span>
-      <small>Ação 2</small>
+    <button class="internal-nav-btn" onclick="window.internalActionTwo?.()" title="${cfg.actionTwoTitle || cfg.actionTwoLabel || 'Ação 2'}">
+      <span>${cfg.actionTwoIcon || '⋯'}</span>
+      <small>${cfg.actionTwoLabel || 'Ação 2'}</small>
     </button>
   `;
 
