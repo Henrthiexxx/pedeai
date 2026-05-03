@@ -109,8 +109,21 @@
         .invoice-row-value.positive{color:var(--green)}
         .invoice-row-value.negative{color:var(--red)}
         .invoice-row-value.highlight{color:var(--orange);font-size:1.05rem}
+        .invoice-row.meta{padding:10px 0}
+        .invoice-row.meta .invoice-row-label,
+        .invoice-row.meta .invoice-row-value{font-size:.76rem;color:var(--text-2);font-weight:500}
 
         .invoice-divider{border:none;border-top:1px dashed var(--border);margin:4px 0}
+        .fee-explanation{
+            margin-top:16px;padding:14px 16px;background:var(--bg-2);
+            border:1px solid var(--border);border-radius:var(--rs);font-size:.76rem;
+            color:var(--text-1);line-height:1.55
+        }
+        .fee-explanation strong{color:var(--text-0)}
+        .fee-formula{
+            margin-top:8px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+            color:var(--text-2);font-size:.72rem;word-break:break-word
+        }
         .invoice-total{
             display:flex;justify-content:space-between;align-items:center;gap:12px;
             padding:18px 22px;background:var(--bg-2);border-top:1px solid var(--border)
@@ -413,7 +426,7 @@
             const end = new Date(year, month + 1, 1);
 
             const cached = getCache();
-            if (cached) {
+            if (cached && cached.transparencyVersion === 1) {
                 try {
                     const storeDoc = await db.collection('stores').doc(storeId).get();
                     const lastOrderAt = storeDoc.data()?.lastOrderAt?.toMillis?.() || null;
@@ -437,17 +450,32 @@
 
                 const orders = snap.docs.map(d => d.data());
                 const valid = orders.filter(o => o.status !== 'cancelled');
+                const pdvOrders = valid.filter(o => o.source === 'pdv');
+                const appOrders = valid.filter(o => o.source !== 'pdv');
 
                 const orderCount = valid.length;
                 const totalSales = valid.reduce((s, o) => s + (o.total || 0), 0);
+                const appOrderCount = appOrders.length;
+                const pdvOrderCount = pdvOrders.length;
+                const appSales = appOrders.reduce((s, o) => s + (o.total || 0), 0);
+                const pdvSales = pdvOrders.reduce((s, o) => s + (o.total || 0), 0);
+                const pdvLocalTaxTotal = pdvOrders.reduce((s, o) => s + (o.localTax || 0), 0);
                 const deliveryEarnings = valid.reduce((s, o) => s + (o.deliveryFee || 0), 0);
                 const baseAmount = totalSales - deliveryEarnings;
+                const feeType = storeData.feeType || 'percent';
+                const feeValue = feeType === 'fixed' ? (storeData.feeFixed || 0) : (storeData.feePercent || 10);
 
                 let platformFee = 0;
-                if (storeData.feeType === 'fixed') platformFee = orderCount * (storeData.feeFixed || 0);
-                else platformFee = baseAmount * ((storeData.feePercent || 10) / 100);
+                if (feeType === 'fixed') platformFee = orderCount * feeValue;
+                else platformFee = baseAmount * (feeValue / 100);
 
-                const data = { orderCount, totalSales, deliveryEarnings, baseAmount, platformFee, month, year };
+                const data = {
+                    orderCount, appOrderCount, pdvOrderCount,
+                    totalSales, appSales, pdvSales, pdvLocalTaxTotal,
+                    deliveryEarnings, baseAmount, platformFee,
+                    feeType, feeValue, month, year,
+                    transparencyVersion: 1
+                };
                 setCache(data);
                 renderInvoice(data);
                 showCacheStatus(false);
@@ -456,9 +484,10 @@
                 await db.collection('invoices').doc(invoiceId).set({
                     storeId, storeName: storeData.name || '',
                     month: month + 1, year,
-                    orderCount, totalSales, deliveryEarnings, baseAmount, platformFee,
-                    feeType: storeData.feeType || 'percent',
-                    feeValue: storeData.feeType === 'fixed' ? (storeData.feeFixed || 0) : (storeData.feePercent || 10),
+                    orderCount, appOrderCount, pdvOrderCount,
+                    totalSales, appSales, pdvSales, pdvLocalTaxTotal,
+                    deliveryEarnings, baseAmount, platformFee,
+                    feeType, feeValue,
                     status: 'open',
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 }, { merge: true });
@@ -472,6 +501,15 @@
 
         function renderInvoice(data) {
             const { orderCount, totalSales, deliveryEarnings, baseAmount, platformFee, month, year } = data;
+            const appOrderCount = data.appOrderCount || 0;
+            const pdvOrderCount = data.pdvOrderCount || 0;
+            const appSales = data.appSales || 0;
+            const pdvSales = data.pdvSales || 0;
+            const pdvLocalTaxTotal = data.pdvLocalTaxTotal || 0;
+            const feeType = data.feeType || storeData.feeType || 'percent';
+            const feeValue = Number.isFinite(parseFloat(data.feeValue))
+                ? parseFloat(data.feeValue)
+                : (feeType === 'fixed' ? (storeData.feeFixed || 0) : (storeData.feePercent || 10));
             const names = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
             document.getElementById('invoicePeriod').textContent = `${names[month]} ${year}`;
@@ -479,22 +517,37 @@
             document.getElementById('totalSales').textContent = fmtCurrency(totalSales);
             document.getElementById('invoiceTotal').textContent = fmtCurrency(platformFee);
 
-            const feeLabel = storeData.feeType === 'fixed'
-                ? `${fmtCurrency(storeData.feeFixed || 0)} × ${orderCount} pedidos`
-                : `${storeData.feePercent || 10}% sobre ${fmtCurrency(baseAmount)}`;
+            const feeLabel = feeType === 'fixed'
+                ? `${fmtCurrency(feeValue)} × ${orderCount} pedidos`
+                : `${feeValue}% sobre ${fmtCurrency(baseAmount)}`;
+            const formula = feeType === 'fixed'
+                ? `${fmtCurrency(feeValue)} x ${orderCount} pedidos = ${fmtCurrency(platformFee)}`
+                : `${fmtCurrency(baseAmount)} x ${feeValue}% = ${fmtCurrency(platformFee)}`;
 
             document.getElementById('invoiceBody').innerHTML = `
                 <div class="invoice-row">
                     <span class="invoice-row-label">Total vendido</span>
                     <span class="invoice-row-value positive">${fmtCurrency(totalSales)}</span>
                 </div>
+                <div class="invoice-row meta">
+                    <span class="invoice-row-label">Vendas pelo app</span>
+                    <span class="invoice-row-value">${fmtCurrency(appSales)} · ${appOrderCount} pedidos</span>
+                </div>
+                <div class="invoice-row meta">
+                    <span class="invoice-row-label">Vendas pelo PDV</span>
+                    <span class="invoice-row-value">${fmtCurrency(pdvSales)} · ${pdvOrderCount} vendas</span>
+                </div>
+                <div class="invoice-row meta">
+                    <span class="invoice-row-label">Taxa PDV cobrada do cliente</span>
+                    <span class="invoice-row-value">${fmtCurrency(pdvLocalTaxTotal)}</span>
+                </div>
                 <div class="invoice-row">
-                    <span class="invoice-row-label">Valor em entregas</span>
+                    <span class="invoice-row-label">Entrega recebida pela loja</span>
                     <span class="invoice-row-value" style="color:var(--blue);">- ${fmtCurrency(deliveryEarnings)}</span>
                 </div>
                 <hr class="invoice-divider">
                 <div class="invoice-row">
-                    <span class="invoice-row-label">Base para cálculo</span>
+                    <span class="invoice-row-label">Base taxável da plataforma</span>
                     <span class="invoice-row-value">${fmtCurrency(baseAmount)}</span>
                 </div>
                 <div class="invoice-row">
@@ -504,6 +557,12 @@
                 <div class="invoice-row">
                     <span class="invoice-row-label">Total de pedidos</span>
                     <span class="invoice-row-value">${orderCount}</span>
+                </div>
+                <div class="fee-explanation">
+                    <strong>Como a cobrança foi calculada:</strong> a plataforma soma os pedidos não cancelados do mês,
+                    separa as vendas do app e do PDV, remove o valor de entrega da base e aplica o acordo atual da loja.
+                    A taxa PDV exibida acima é a taxa cobrada do cliente no PDV e fica visível para conferência.
+                    <div class="fee-formula">${formula}</div>
                 </div>
             `;
 
