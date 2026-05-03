@@ -5,6 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Configurações - Pedra Delivery</title>
     <meta name="theme-color" content="#0a0a0c">
+    <script>
+        (function(){
+            var keys = ['pedrad-theme','theme','appTheme','data-theme','color-theme','pedrad_theme'];
+            var theme = 'dark';
+            for (var i = 0; i < keys.length; i++) {
+                try {
+                    var value = localStorage.getItem(keys[i]);
+                    if (value === 'light' || value === 'dark') { theme = value; break; }
+                } catch (_) {}
+            }
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="ui/menu/nav.css">
     <style>
@@ -294,6 +307,11 @@
             gap: 14px;
         }
 
+        .form-input.invalid {
+            border-color: var(--red);
+            box-shadow: 0 0 0 3px var(--red-bg), inset 0 1px 2px rgba(0,0,0,.06);
+        }
+
         .bottom-save { margin-top: 18px; }
 
         .toast { max-width: min(92vw, 440px); }
@@ -403,7 +421,7 @@
 
             <div class="form-group">
                 <label class="form-label">Telefone / WhatsApp</label>
-                <input type="tel" class="form-input" id="storePhone" placeholder="(00) 00000-0000">
+                <input type="tel" class="form-input" id="storePhone" placeholder="(99) 1 2345 6578" maxlength="16" inputmode="numeric" autocomplete="tel" oninput="handlePhoneInput(this)" onblur="validatePhoneField(true)">
             </div>
 
             <div class="form-group">
@@ -431,15 +449,9 @@
                 <textarea class="form-input" id="storeDescription" placeholder="Fale sobre sua loja..."></textarea>
             </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Tempo de entrega</label>
-                    <input type="text" class="form-input" id="storeDeliveryTime" placeholder="30-45 min">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Taxa de entrega (R$)</label>
-                    <input type="number" class="form-input" id="storeDeliveryFee" placeholder="5.00" step="0.50">
-                </div>
+            <div class="form-group">
+                <label class="form-label">Tempo de entrega</label>
+                <input type="text" class="form-input" id="storeDeliveryTime" placeholder="30-45 min">
             </div>
 
             <div class="form-group">
@@ -521,7 +533,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script>
         // ===== THEME SYNC =====
-        const THEME_KEYS = ['theme', 'appTheme', 'pedrad_theme', 'color-theme', 'data-theme'];
+        const THEME_KEYS = ['pedrad-theme', 'theme', 'appTheme', 'data-theme', 'color-theme', 'pedrad_theme'];
 
         function readParentTheme() {
             try {
@@ -582,6 +594,41 @@
         let currentImageBase64 = null;
         const UI_SOUND_KEY = 'pedrad_ui_sounds';
 
+        function formatPhone(value) {
+            const digits = String(value || '').replace(/\D/g, '').slice(0, 11);
+            const ddd = digits.slice(0, 2);
+            const prefix = digits.slice(2, 3);
+            const first = digits.slice(3, 7);
+            const second = digits.slice(7, 11);
+
+            if (digits.length <= 2) return ddd ? `(${ddd}` : '';
+            if (digits.length <= 3) return `(${ddd}) ${prefix}`;
+            if (digits.length <= 7) return `(${ddd}) ${prefix} ${first}`;
+            return `(${ddd}) ${prefix} ${first} ${second}`;
+        }
+
+        function isValidPhone(value) {
+            return /^\(\d{2}\) \d \d{4} \d{4}$/.test(String(value || '').trim());
+        }
+
+        function handlePhoneInput(input) {
+            input.value = formatPhone(input.value);
+        }
+
+        function validatePhoneField(showMessage = false) {
+            const input = document.getElementById('storePhone');
+            if (!input) return false;
+
+            input.value = formatPhone(input.value);
+            const ok = isValidPhone(input.value);
+            input.classList.toggle('invalid', !ok && !!input.value.trim());
+
+            if (!ok && showMessage) {
+                showToast('Telefone deve seguir o padrão (99) 1 2345 6578');
+            }
+            return ok;
+        }
+
         // ===== DAYS DEFINITION =====
         const DAYS = [
             { key: 'mon',      label: 'Segunda-feira' },
@@ -590,8 +637,7 @@
             { key: 'thu',      label: 'Quinta-feira'  },
             { key: 'fri',      label: 'Sexta-feira'   },
             { key: 'sat',      label: 'Sábado'        },
-            { key: 'sun',      label: 'Domingo'       },
-            { key: 'holidays', label: 'Feriados'      }
+            { key: 'sun',      label: 'Domingo'       }
         ];
 
         function buildDayRows() {
@@ -706,12 +752,11 @@
 
         function loadStoreUI() {
             document.getElementById('storeName').value = currentStore.name || '';
-            document.getElementById('storePhone').value = currentStore.phone || '';
+            document.getElementById('storePhone').value = formatPhone(currentStore.phone || '');
             document.getElementById('storeCnpj').value = currentStore.cnpj || '';
             document.getElementById('storeCategory').value = currentStore.category || 'Hambúrgueres';
             document.getElementById('storeDescription').value = currentStore.description || '';
             document.getElementById('storeDeliveryTime').value = currentStore.deliveryTime || '';
-            document.getElementById('storeDeliveryFee').value = currentStore.deliveryFee ?? '';
             document.getElementById('storeAddress').value = currentStore.address || '';
 
             currentImageBase64 = currentStore.imageUrl || null;
@@ -745,8 +790,7 @@
                 thu: { enabled: true, open: wOpen, close: wClose },
                 fri: { enabled: true, open: wOpen, close: wClose },
                 sat: { enabled: true, open: eOpen, close: eClose },
-                sun: { enabled: true, open: eOpen, close: eClose },
-                holidays: { enabled: false, open: '11:00', close: '22:00' }
+                sun: { enabled: true, open: eOpen, close: eClose }
             };
         }
 
@@ -897,6 +941,8 @@
         async function saveStoreInfo() {
             try {
                 if (!currentStore?.id) { showToast('Loja não carregada'); return; }
+                if (!validatePhoneField(true)) return;
+
                 const data = {
                     name: (document.getElementById('storeName').value || '').trim(),
                     phone: (document.getElementById('storePhone').value || '').trim(),
@@ -904,7 +950,6 @@
                     category: document.getElementById('storeCategory').value,
                     description: (document.getElementById('storeDescription').value || '').trim(),
                     deliveryTime: (document.getElementById('storeDeliveryTime').value || '').trim(),
-                    deliveryFee: parseFloat(document.getElementById('storeDeliveryFee').value) || 0,
                     address: (document.getElementById('storeAddress').value || '').trim(),
                     imageUrl: currentImageBase64 || '',
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
