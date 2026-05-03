@@ -268,7 +268,7 @@
                 <div class="nav-item" onclick="openPopup('layout-editor.html')"><span class="icon">◫</span> Layout da Loja</div>
                 <div class="nav-item" onclick="openPopup('meu-entregador.html')"><span class="icon">↗</span> Meu Entregador</div>
                 <div class="nav-item" onclick="openPopup('fatura-loja.html')"><span class="icon">▤</span> Minha Fatura</div>
-                <div class="nav-item" onclick="openPopup('AdsShop.html')"><span class="icon">◈</span> Serviços</div>
+                <div class="nav-item" onclick="showComingSoon()"><span class="icon">◈</span> Serviços</div>
             </div>
             <div class="nav-section">
                 <div class="nav-section-title">Conta</div>
@@ -310,7 +310,6 @@
                 <span class="section-count" id="activeCount" style="display:none">0</span>
             </div>
             <div id="activeOrdersList"></div>
-            <div class="history-link" onclick="navigateTo('history')">Ver histórico da semana →</div>
         </div>
 
         <!-- HISTORY -->
@@ -594,7 +593,7 @@
 (function(){
   const KS=['pedrad_system_version','system_version','app_version','pedrad_version'];
   function rv(){
-    try{if(typeof window.PEDRA DELIVERY_SYSTEM_VERSION==='string'&&window.PEDRA DELIVERY_SYSTEM_VERSION.trim())return window.PEDRA DELIVERY_SYSTEM_VERSION.trim();for(const k of KS){const v=localStorage.getItem(k);if(v?.trim())return v.trim();}}catch{}
+    try{if(typeof window.PEDRA_DELIVERY_SYSTEM_VERSION==='string'&&window.PEDRA_DELIVERY_SYSTEM_VERSION.trim())return window.PEDRA_DELIVERY_SYSTEM_VERSION.trim();for(const k of KS){const v=localStorage.getItem(k);if(v?.trim())return v.trim();}}catch{}
     return 'v0.1.14';
   }
   function render(){const el=document.getElementById('systemVersionLabel');if(el)el.textContent=rv();}

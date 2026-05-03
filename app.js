@@ -81,6 +81,11 @@ function showToast(msg) {
     t._timer = setTimeout(() => t.classList.remove('show'), 3000);
 }
 
+function showComingSoon() {
+    showToast('Disponível em breve!');
+    closeSidebar();
+}
+
 // ── Confirm Modal ──
 function showConfirm(title, text, onOk, okText = 'Confirmar') {
     const el = document.getElementById('confirmModal');
