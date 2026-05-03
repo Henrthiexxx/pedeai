@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>PDV Local — Pedrad</title>
+<title>PDV Local — Pedra Delivery</title>
 <link rel="stylesheet" href="style.css">
 <style>
 html,body{height:100%;overflow:hidden}
@@ -313,7 +313,7 @@ async function finalizeSale(){
         localTaxType:taxType,
         total,
         deliveryFee:0,
-        deliveryMode:'local',noDelivery:true,
+        orderType:'local',deliveryMode:'local',deliveryPool:'none',dispatchVersion:2,dispatchState:'not_applicable',noDelivery:true,
         paymentMethod:'local',
         userName:'PDV Local',
         createdAt:firebase.firestore.FieldValue.serverTimestamp(),
@@ -351,7 +351,7 @@ async function launchAsOrder(){
         localTaxType:taxType,
         total,
         deliveryFee:0,
-        deliveryMode:'local',noDelivery:true,
+        orderType:'local',deliveryMode:'local',deliveryPool:'none',dispatchVersion:2,dispatchState:'not_applicable',noDelivery:true,
         paymentMethod:'local',
         userName:'PDV Local',
         createdAt:firebase.firestore.FieldValue.serverTimestamp(),

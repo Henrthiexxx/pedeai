@@ -499,7 +499,7 @@ function renderOrderCard(order) {
     const fee = order.deliveryFee || 0;
     const sub = (order.total || 0) - fee;
     const notes = order.notes || order.observation || '';
-    const isPickup = order.deliveryMode === 'pickup';
+    const isPickup = order.orderType === 'pickup' || order.deliveryMode === 'pickup';
 
     // Phone
     const rawPhone = order.userPhone || order.phone || order.customerPhone || '';
@@ -594,15 +594,17 @@ function getOrderActions(order) {
     const b = (cls, label, status) =>
         `<button class="btn ${cls} btn-sm" onclick="event.stopPropagation();updateOrder('${id}','${status}')">${label}</button>`;
 
-    const isLocal = order.source === 'pdv' || order.deliveryMode === 'local';
+    const orderType = order.orderType || order.deliveryMode;
+    const isLocal = order.source === 'pdv' || orderType === 'local';
+    const isPickup = orderType === 'pickup';
 
     const map = {
         pending: b('btn-success','✓ Aceitar','confirmed') + b('btn-danger','✗ Recusar','cancelled'),
         confirmed: b('btn-primary','🍳 Preparar','preparing'),
         preparing: b('btn-warning','✓ Pronto','ready'),
-        ready: isLocal
+        ready: isLocal || isPickup
             ? b('btn-success','✓ Entregue','delivered')
-            : b('btn-success','🛵 Saiu','delivering'),
+            : '',
         delivering: b('btn-success','✓ Entregue','delivered')
     };
     return map[order.status] || '';
@@ -738,7 +740,7 @@ function renderHistoryCard(order) {
                 <div class="hc-meta">
                     <span>${time}</span>
                     <span>•</span>
-                    <span>${order.deliveryMode === 'pickup' ? 'Retirada' : 'Entrega'}</span>
+                    <span>${(order.orderType || order.deliveryMode) === 'pickup' ? 'Retirada' : 'Entrega'}</span>
                     <span>•</span>
                     <span>${(order.items||[]).length} itens</span>
                 </div>

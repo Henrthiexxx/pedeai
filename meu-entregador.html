@@ -4,300 +4,476 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Meu Entregador</title>
-    <meta name="theme-color" content="#000000">
+    <meta name="theme-color" content="#0a0a0c">
+    <link rel="stylesheet" href="style.css">
+    <script>
+        (function(){
+            const root = document.documentElement;
+            const THEME_KEYS = ['theme','appTheme','pedrad_theme','pedra_theme'];
+
+            function normalizeTheme(value){
+                return value === 'light' ? 'light' : 'dark';
+            }
+
+            function readStoredTheme(){
+                try{
+                    for(const key of THEME_KEYS){
+                        const value = localStorage.getItem(key);
+                        if(value === 'light' || value === 'dark') return value;
+                    }
+                }catch(err){}
+                return null;
+            }
+
+            function readExternalTheme(){
+                const candidates = [];
+                try{
+                    if(window.opener && !window.opener.closed) candidates.push(window.opener.document.documentElement);
+                }catch(err){}
+                try{
+                    if(window.parent && window.parent !== window) candidates.push(window.parent.document.documentElement);
+                }catch(err){}
+
+                for(const el of candidates){
+                    try{
+                        const value = el.getAttribute('data-theme') || el.dataset.theme;
+                        if(value === 'light' || value === 'dark') return value;
+                    }catch(err){}
+                }
+                return null;
+            }
+
+            function applyTheme(value){
+                const theme = normalizeTheme(value);
+                root.setAttribute('data-theme', theme);
+                const meta = document.querySelector('meta[name="theme-color"]');
+                if(meta) meta.setAttribute('content', theme === 'light' ? '#f5f5f7' : '#0a0a0c');
+            }
+
+            function syncTheme(){
+                applyTheme(readExternalTheme() || readStoredTheme() || root.getAttribute('data-theme') || 'dark');
+            }
+
+            syncTheme();
+            window.addEventListener('DOMContentLoaded', syncTheme, { once:true });
+            window.addEventListener('storage', syncTheme);
+            setInterval(syncTheme, 700);
+        })();
+    </script>
     <style>
-        :root {
-            --primary: #ffffff;
-            --bg: #000000;
-            --bg-card: #0a0a0a;
-            --bg-input: #111111;
-            --text: #ffffff;
-            --text-muted: #737373;
-            --border: #1e1e1e;
-            --danger: #ef4444;
-            --success: #22c55e;
-            --warning: #f59e0b;
-            --radius: 10px;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg); color: var(--text);
-            padding: 16px; max-width: 600px; margin: 0 auto;
-            min-height: 100vh;
+        body{
+            min-height:100dvh;
+            padding:20px;
+            max-width:680px;
+            margin:0 auto;
+            background:radial-gradient(ellipse at 50% 0%,var(--bg-2) 0%,var(--bg-0) 72%);
         }
 
-        /* ── Header ── */
-        .page-header {
-            display: flex; align-items: center; gap: 12px;
-            padding-bottom: 16px; margin-bottom: 16px;
-            border-bottom: 1px solid var(--border);
-        }
-        .page-header h1 {
-            font-size: 0.85rem; font-weight: 400;
-            letter-spacing: 1.5px; text-transform: uppercase; flex: 1;
+        .popup-page{
+            width:100%;
+            padding-bottom:12px;
         }
 
-        /* ── Cards ── */
-        .card {
-            background: var(--bg-card); border: 1px solid var(--border);
-            border-radius: var(--radius); padding: 16px; margin-bottom: 12px;
-        }
-        .card-title {
-            font-size: 0.7rem; font-weight: 600; letter-spacing: 1px;
-            text-transform: uppercase; color: var(--text-muted);
-            margin-bottom: 14px;
+        .popup-header{
+            display:flex;
+            align-items:center;
+            gap:12px;
+            padding:2px 2px 16px;
+            margin-bottom:18px;
+            border-bottom:1px solid var(--border);
         }
 
-        /* ── Token Input ── */
-        .token-row {
-            display: flex; gap: 8px; align-items: stretch;
-        }
-        .token-input {
-            flex: 1; min-width: 0; padding: 12px 14px; border-radius: 8px;
-            border: 1px solid var(--border); background: var(--bg-input);
-            color: var(--text); font-size: 0.95rem; font-family: 'SF Mono', 'Fira Code', monospace;
-            letter-spacing: 2px; text-transform: uppercase;
-        }
-        .token-input:focus { outline: none; border-color: var(--text-muted); }
-        .token-input::placeholder { letter-spacing: 0; text-transform: none; font-family: inherit; color: #404040; }
-
-        .token-btn {
-            flex-shrink: 0;
-            padding: 12px 18px; border-radius: 8px;
-            border: 1px solid var(--primary); background: var(--primary);
-            color: #000; font-size: 0.75rem; font-weight: 700;
-            cursor: pointer; text-transform: uppercase; letter-spacing: 1px;
-            white-space: nowrap; transition: all 0.15s;
-        }
-        .token-btn:active { opacity: 0.7; transform: scale(0.97); }
-        .token-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-
-        .token-hint {
-            margin-top: 10px; font-size: 0.7rem; color: var(--text-muted);
-            line-height: 1.5; padding: 10px 12px;
-            background: rgba(255,255,255,0.02); border-radius: 6px;
-            border-left: 2px solid var(--border);
+        .popup-title{
+            font-size:.9rem;
+            font-weight:700;
+            letter-spacing:.08em;
+            text-transform:uppercase;
         }
 
-        /* ── Info Banner ── */
-        .info-banner {
-            display: flex; align-items: flex-start; gap: 10px;
-            padding: 12px; border-radius: 8px; margin-bottom: 12px;
-            background: rgba(59,130,246,0.06); border: 1px solid rgba(59,130,246,0.15);
-        }
-        .info-banner .icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
-        .info-banner .text { font-size: 0.72rem; color: var(--text-muted); line-height: 1.5; }
-        .info-banner .text b { color: var(--text); font-weight: 600; }
-
-        /* ── Driver List ── */
-        .driver-item {
-            display: flex; align-items: flex-start; gap: 12px;
-            padding: 14px; background: var(--bg-input);
-            border: 1px solid var(--border); border-radius: 8px;
-            margin-bottom: 8px; transition: border-color 0.2s;
-        }
-        .driver-item:last-child { margin-bottom: 0; }
-        .driver-item:hover { border-color: #333; }
-
-        .d-avatar {
-            width: 42px; height: 42px; border-radius: 50%;
-            background: var(--border); display: flex; align-items: center;
-            justify-content: center; font-size: 1.1rem; flex-shrink: 0;
-            overflow: hidden;
-        }
-        .d-avatar img { width: 100%; height: 100%; object-fit: cover; }
-
-        .d-body { flex: 1; min-width: 0; }
-        .d-name { font-size: 0.88rem; font-weight: 600; margin-bottom: 2px; }
-        .d-meta { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 1px; }
-        .d-token { font-size: 0.65rem; color: #525252; font-family: monospace; letter-spacing: 1px; }
-
-        /* ── Ações (coluna direita) — agora em coluna para caber no mobile ── */
-        .d-right {
-            display: flex; flex-direction: column;
-            align-items: flex-end; gap: 8px; flex-shrink: 0;
+        .popup-card{
+            background:var(--bg-1);
+            border:1px solid var(--border);
+            border-radius:var(--r);
+            padding:18px;
+            margin-bottom:14px;
+            box-shadow:var(--sh-md);
         }
 
-        .status-dot {
-            width: 8px; height: 8px; border-radius: 50%;
-            display: inline-block; margin-right: 5px;
-        }
-        .status-dot.online  { background: var(--success); box-shadow: 0 0 6px rgba(34,197,94,0.4); }
-        .status-dot.offline { background: #404040; }
-        .status-dot.busy    { background: var(--warning); box-shadow: 0 0 6px rgba(245,158,11,0.3); }
-
-        .status-label {
-            font-size: 0.65rem; color: var(--text-muted);
-            text-transform: uppercase; letter-spacing: 0.5px;
-            white-space: nowrap;
+        .popup-card-title{
+            font-size:.7rem;
+            font-weight:700;
+            letter-spacing:.1em;
+            text-transform:uppercase;
+            color:var(--text-2);
+            margin-bottom:14px;
         }
 
-        .remove-btn {
-            padding: 5px 10px; border-radius: 6px;
-            border: 1px solid rgba(239,68,68,0.25); background: rgba(239,68,68,0.08);
-            color: var(--danger); font-size: 0.6rem; cursor: pointer;
-            text-transform: uppercase; letter-spacing: 0.5px;
-            transition: all 0.15s; font-weight: 600; white-space: nowrap;
-        }
-        .remove-btn:hover  { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.4); }
-        .remove-btn:active { transform: scale(0.95); }
-
-        /* ── App Eligible Toggle ── */
-        .eligible-row {
-            display: flex; align-items: center; gap: 6px;
-            justify-content: flex-end;
-        }
-        .eligible-label {
-            font-size: 0.6rem; color: var(--text-muted);
-            text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;
-        }
-        .toggle-switch {
-            position: relative; width: 36px; height: 20px; flex-shrink: 0;
-        }
-        .toggle-switch input { opacity: 0; width: 0; height: 0; }
-        .toggle-slider {
-            position: absolute; inset: 0;
-            background: #2a2a2a; border: 1px solid #333;
-            border-radius: 20px; cursor: pointer; transition: .2s;
-        }
-        .toggle-slider::before {
-            content: ''; position: absolute;
-            width: 14px; height: 14px; left: 2px; bottom: 2px;
-            background: #555; border-radius: 50%; transition: .2s;
-        }
-        .toggle-switch input:checked + .toggle-slider {
-            background: rgba(34,197,94,0.25);
-            border-color: rgba(34,197,94,0.5);
-        }
-        .toggle-switch input:checked + .toggle-slider::before {
-            background: var(--success);
-            transform: translateX(16px);
+        .info-banner{
+            display:flex;
+            align-items:flex-start;
+            gap:12px;
+            padding:14px;
+            border-radius:var(--rs);
+            margin-bottom:14px;
+            background:var(--blue-bg);
+            border:1px solid var(--blue-b);
+            box-shadow:var(--sh-sm);
         }
 
-        /* ── Count Badge ── */
-        .driver-count {
-            display: inline-flex; align-items: center; gap: 6px;
-            font-size: 0.7rem; color: var(--text-muted);
-        }
-        .driver-count .num {
-            background: rgba(255,255,255,0.08); border: 1px solid var(--border);
-            border-radius: 6px; padding: 2px 8px; font-weight: 700;
-            font-size: 0.75rem; color: var(--text);
+        .info-banner .icon{
+            width:34px;
+            height:34px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            background:var(--bg-2);
+            border:1px solid var(--border);
+            border-radius:var(--rs);
+            flex-shrink:0;
         }
 
-        /* ── Empty ── */
-        .empty {
-            text-align: center; padding: 32px 16px; color: var(--text-muted);
+        .info-banner .text{
+            font-size:.78rem;
+            color:var(--text-1);
+            line-height:1.6;
         }
-        .empty-icon  { font-size: 2rem; margin-bottom: 8px; opacity: 0.5; }
-        .empty-title { font-size: 0.85rem; color: var(--text); margin-bottom: 4px; }
-        .empty-sub   { font-size: 0.72rem; line-height: 1.5; }
 
-        /* ── Confirm Popup ── */
-        .confirm-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.85);
-            z-index: 999; display: none; align-items: center;
-            justify-content: center; padding: 20px;
+        .info-banner .text b{
+            color:var(--text-0);
         }
-        .confirm-overlay.show { display: flex; }
-        .confirm-box {
-            background: var(--bg-card); border: 1px solid var(--border);
-            border-radius: 14px; max-width: 340px; width: 100%; overflow: hidden;
-        }
-        .confirm-body { padding: 24px; text-align: center; }
-        .confirm-title { font-size: 0.95rem; font-weight: 600; margin-bottom: 8px; }
-        .confirm-text  { font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; }
-        .confirm-actions { display: flex; border-top: 1px solid var(--border); }
-        .confirm-actions button {
-            flex: 1; padding: 14px; border: none; background: transparent;
-            font-size: 0.85rem; cursor: pointer; transition: background 0.15s;
-        }
-        .confirm-cancel { color: var(--text-muted); }
-        .confirm-cancel:hover { background: rgba(255,255,255,0.03); }
-        .confirm-danger { color: var(--danger); font-weight: 600; border-left: 1px solid var(--border) !important; }
-        .confirm-danger:hover { background: rgba(239,68,68,0.08); }
 
-        /* ── Toast ── */
-        .toast {
-            position: fixed; bottom: 20px; left: 50%;
-            transform: translateX(-50%) translateY(80px);
-            background: var(--bg-card); padding: 12px 24px; border-radius: 8px;
-            border: 1px solid var(--border); z-index: 300; opacity: 0;
-            transition: all 0.3s; font-size: 0.82rem; max-width: 90vw; text-align: center;
+        .token-row{
+            display:flex;
+            gap:10px;
+            align-items:stretch;
         }
-        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
-        .loading { text-align: center; padding: 40px; color: var(--text-muted); }
-        .spinner {
-            width: 24px; height: 24px; border: 2px solid var(--border);
-            border-top-color: var(--primary); border-radius: 50%;
-            animation: spin 0.7s linear infinite; margin: 0 auto 8px;
+        .token-row .form-input{
+            flex:1;
+            min-width:0;
+            text-transform:uppercase;
+            letter-spacing:2px;
+            font-family:'SF Mono','Fira Code',monospace;
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .token-row .form-input::placeholder{
+            text-transform:none;
+            letter-spacing:0;
+            font-family:var(--font);
+        }
+
+        .token-hint{
+            margin-top:10px;
+            font-size:.74rem;
+            color:var(--text-2);
+            line-height:1.6;
+            padding:12px 14px;
+            background:var(--bg-2);
+            border:1px solid var(--border);
+            border-radius:var(--rs);
+        }
+
+        .card-top{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:10px;
+            margin-bottom:14px;
+        }
+
+        .driver-count{
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            font-size:.74rem;
+            color:var(--text-2);
+        }
+
+        .driver-count .num{
+            min-width:28px;
+            height:28px;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            padding:0 10px;
+            background:var(--bg-2);
+            border:1px solid var(--border);
+            border-radius:999px;
+            color:var(--text-0);
+            font-weight:700;
+            box-shadow:var(--sh-sm);
+        }
+
+        .driver-item{
+            display:flex;
+            align-items:flex-start;
+            gap:12px;
+            padding:14px;
+            background:var(--bg-2);
+            border:1px solid var(--border);
+            border-radius:var(--rs);
+            box-shadow:var(--sh-sm);
+            transition:all .2s;
+            margin-bottom:10px;
+        }
+
+        .driver-item:last-child{
+            margin-bottom:0;
+        }
+
+        .driver-item:hover{
+            border-color:var(--border-h);
+            box-shadow:var(--sh-md);
+            transform:translateY(-1px);
+        }
+
+        .d-avatar{
+            width:44px;
+            height:44px;
+            border-radius:12px;
+            background:var(--bg-3);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:1.05rem;
+            flex-shrink:0;
+            overflow:hidden;
+            border:1px solid var(--border);
+            box-shadow:var(--sh-sm);
+        }
+
+        .d-avatar img{
+            width:100%;
+            height:100%;
+            object-fit:cover;
+        }
+
+        .d-body{
+            flex:1;
+            min-width:0;
+        }
+
+        .d-name{
+            font-size:.9rem;
+            font-weight:600;
+            margin-bottom:4px;
+        }
+
+        .d-meta{
+            font-size:.74rem;
+            color:var(--text-2);
+            margin-bottom:3px;
+        }
+
+        .d-token{
+            font-size:.68rem;
+            color:var(--text-3);
+            font-family:'SF Mono','Fira Code',monospace;
+            letter-spacing:1px;
+            word-break:break-all;
+        }
+
+        .d-right{
+            display:flex;
+            flex-direction:column;
+            align-items:flex-end;
+            gap:8px;
+            flex-shrink:0;
+        }
+
+        .status-label{
+            font-size:.66rem;
+            color:var(--text-2);
+            text-transform:uppercase;
+            letter-spacing:.06em;
+            white-space:nowrap;
+            display:flex;
+            align-items:center;
+            gap:6px;
+        }
+
+        .status-dot{
+            width:8px;
+            height:8px;
+            border-radius:50%;
+            display:inline-block;
+        }
+
+        .status-dot.online{background:var(--green);box-shadow:0 0 10px rgba(52,211,153,.35)}
+        .status-dot.offline{background:var(--text-3)}
+        .status-dot.busy{background:var(--orange);box-shadow:0 0 10px rgba(251,191,36,.28)}
+
+        .remove-btn{
+            min-width:auto;
+        }
+
+        .fav-chip{
+            display:inline-flex;
+            align-items:center;
+            gap:5px;
+            background:var(--bg-2);
+            border:1px solid var(--border);
+            border-radius:8px;
+            padding:5px 10px;
+            cursor:pointer;
+            transition:.15s;
+        }
+
+        .fav-chip:hover{
+            border-color:var(--border-h);
+        }
+
+        .fav-chip-token{
+            font-family:'SF Mono','Fira Code',monospace;
+            font-size:.78rem;
+            letter-spacing:1px;
+            color:var(--text-0);
+        }
+
+        .fav-chip-name{
+            font-size:.68rem;
+            color:var(--text-2);
+        }
+
+        .fav-chip-remove{
+            font-size:.75rem;
+            color:var(--text-3);
+            margin-left:2px;
+            line-height:1;
+        }
+
+        .fav-chip-remove:hover{
+            color:var(--red);
+        }
+
+        .empty{
+            text-align:center;
+            padding:34px 16px;
+            color:var(--text-2);
+            border:1px dashed var(--border);
+            border-radius:var(--rs);
+            background:var(--bg-2);
+        }
+
+        .empty-icon{
+            font-size:2rem;
+            margin-bottom:8px;
+            opacity:.55;
+        }
+
+        .empty-title{
+            font-size:.9rem;
+            color:var(--text-0);
+            margin-bottom:4px;
+            font-weight:600;
+        }
+
+        .empty-sub{
+            font-size:.76rem;
+            line-height:1.6;
+        }
+
+        .loading{
+            text-align:center;
+            padding:48px 20px;
+            color:var(--text-2);
+        }
+
+        .spinner{
+            width:26px;
+            height:26px;
+            border:2px solid var(--border);
+            border-top-color:var(--accent);
+            border-radius:50%;
+            animation:spin .7s linear infinite;
+            margin:0 auto 10px;
+        }
+
+        @keyframes spin{to{transform:rotate(360deg)}}
+
+        @media(max-width:560px){
+            body{ padding:14px; }
+            .popup-card{ padding:14px; }
+            .token-row{ flex-direction:column; }
+            .token-row .btn{ width:100%; }
+            .driver-item{ flex-direction:column; }
+            .d-right{ width:100%; align-items:stretch; }
+            .status-label{ justify-content:space-between; }
+            .remove-btn{ width:100%; }
+        }
     </style>
 </head>
 <body>
     <div class="toast" id="toast"></div>
 
-    <div class="page-header">
-        <h1>🛵 Meus Entregadores</h1>
-    </div>
-
-    <div id="loadingState" class="loading">
-        <div class="spinner"></div>
-        <div>Carregando...</div>
-    </div>
-
-    <div id="mainContent" style="display:none;">
-
-        <div class="info-banner">
-            <div class="icon">ℹ️</div>
-            <div class="text">
-                <b>Como funciona:</b> Peça ao entregador o <b>token</b> dele (visível no app do entregador).
-                Cole aqui para vincular. Pedidos da sua loja irão <b>apenas</b> para entregadores vinculados.
-                Sem nenhum vínculo, os pedidos vão para todos os entregadores livres da plataforma.
-            </div>
+    <div class="popup-page">
+        <div class="popup-header">
+            <div class="popup-title">Meus Entregadores</div>
         </div>
 
-        <div class="card">
-            <div class="card-title">Vincular Entregador</div>
-            <div class="token-row">
-                <input type="text" class="token-input" id="tokenInput"
-                    placeholder="Cole o token aqui" maxlength="20"
-                    autocomplete="off" spellcheck="false">
-                <button class="token-btn" id="linkBtn" onclick="linkDriver()">Vincular</button>
-            </div>
-            <div class="token-hint">
-                O entregador encontra o token no app dele, em <b>Meu Perfil</b>.
-                Cada token é único e identifica um entregador.
-            </div>
+        <div id="loadingState" class="loading">
+            <div class="spinner"></div>
+            <div>Carregando...</div>
         </div>
 
-        <div class="card">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-                <div class="card-title" style="margin-bottom:0;">Entregadores Vinculados</div>
-                <div class="driver-count"><span class="num" id="driverCount">0</span></div>
+        <div id="mainContent" style="display:none;">
+            <div class="info-banner">
+                <div class="icon">ℹ️</div>
+                <div class="text">
+                    <b>Como funciona:</b> Peça ao entregador o <b>token</b> dele (visível no app do entregador, em Meu Perfil).
+                    Cole aqui para vincular. Pedidos da sua loja irão <b>apenas</b> para entregadores vinculados.
+                    Sem nenhum vínculo, os pedidos vão para todos os entregadores livres da plataforma.
+                </div>
             </div>
-            <div id="driversList">
-                <div class="empty">
-                    <div class="empty-icon">🛵</div>
-                    <div class="empty-title">Nenhum entregador vinculado</div>
-                    <div class="empty-sub">Insira um token acima para vincular.<br>Enquanto não houver vínculo, pedidos irão para todos os entregadores livres.</div>
+
+            <div class="popup-card">
+                <div class="popup-card-title">Vincular Entregador</div>
+
+                <div id="favoritesRow" style="display:none;flex-wrap:wrap;gap:8px;margin-bottom:12px;"></div>
+
+                <div class="token-row">
+                    <input
+                        type="text"
+                        class="form-input"
+                        id="tokenInput"
+                        placeholder="Cole o token aqui"
+                        maxlength="20"
+                        autocomplete="off"
+                        spellcheck="false"
+                    >
+                    <button class="btn btn-primary" id="linkBtn" onclick="linkDriver()">Vincular</button>
+                </div>
+                <div class="token-hint">
+                    O entregador encontra o token no app dele, em <b>Meu Perfil</b>.
+                    Tokens salvos aparecem acima para vincular rapidamente.
+                </div>
+            </div>
+
+            <div class="popup-card">
+                <div class="card-top">
+                    <div class="popup-card-title" style="margin-bottom:0;">Entregadores Vinculados</div>
+                    <div class="driver-count"><span class="num" id="driverCount">0</span></div>
+                </div>
+                <div id="driversList">
+                    <div class="empty">
+                        <div class="empty-icon">🛵</div>
+                        <div class="empty-title">Nenhum entregador vinculado</div>
+                        <div class="empty-sub">Insira um token acima para vincular.<br>Enquanto não houver vínculo, pedidos irão para todos os entregadores livres.</div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="confirm-overlay" id="confirmOverlay">
-        <div class="confirm-box">
-            <div class="confirm-body">
-                <div class="confirm-title">Desvincular entregador?</div>
-                <div class="confirm-text" id="confirmText">Este entregador não receberá mais pedidos da sua loja.</div>
+    <div class="modal" id="confirmOverlay">
+        <div class="modal-box" style="max-width:340px;">
+            <div class="modal-body" style="text-align:center;">
+                <div class="modal-title" style="margin-bottom:8px;">Desvincular entregador?</div>
+                <div class="text-sm text-muted" id="confirmText" style="line-height:1.6;">Este entregador não receberá mais pedidos da sua loja.</div>
             </div>
-            <div class="confirm-actions">
-                <button class="confirm-cancel" onclick="closeConfirm()">Cancelar</button>
-                <button class="confirm-danger" id="confirmBtn" onclick="confirmRemove()">Desvincular</button>
+            <div class="modal-footer" style="justify-content:stretch;">
+                <button class="btn btn-ghost" style="flex:1;" onclick="closeConfirm()">Cancelar</button>
+                <button class="btn btn-danger" style="flex:1;" id="confirmBtn" onclick="confirmRemove()">Desvincular</button>
             </div>
         </div>
     </div>
@@ -325,20 +501,56 @@
             || localStorage.getItem('CURRENT_STORE_ID')
             || localStorage.getItem('storeId');
 
+        const FAV_KEY = 'pedrad_fav_tokens_' + (currentStoreId || '');
+
         if (!currentStoreId) {
             document.getElementById('loadingState').innerHTML =
-                '<div style="color:#ef4444;font-size:0.85rem;">Loja não encontrada.<br>Feche e reabra o painel.</div>';
+                '<div style="color:var(--red);font-size:.85rem;">Loja não encontrada.<br>Feche e reabra o painel.</div>';
         } else {
             currentStore = { id: currentStoreId };
             document.getElementById('loadingState').style.display = 'none';
             document.getElementById('mainContent').style.display = 'block';
             listenDrivers();
+            renderFavorites();
         }
 
-        // ── VINCULAR ──
+        // ==================== FAVORITES ====================
+        function loadFavorites() {
+            try { return JSON.parse(localStorage.getItem(FAV_KEY) || '[]'); } catch { return []; }
+        }
+
+        function saveFavorite(token, name) {
+            const favs = loadFavorites();
+            if (favs.find(f => f.token === token)) return;
+            favs.unshift({ token, name });
+            localStorage.setItem(FAV_KEY, JSON.stringify(favs.slice(0, 10)));
+            renderFavorites();
+        }
+
+        function removeFavorite(token) {
+            const favs = loadFavorites().filter(f => f.token !== token);
+            localStorage.setItem(FAV_KEY, JSON.stringify(favs));
+            renderFavorites();
+        }
+
+        function renderFavorites() {
+            const row = document.getElementById('favoritesRow');
+            const favs = loadFavorites();
+            if (!favs.length) { row.style.display = 'none'; return; }
+            row.style.display = 'flex';
+            row.innerHTML = favs.map(f => `
+                <div class="fav-chip" onclick="document.getElementById('tokenInput').value='${esc(f.token)}'" title="Clique para usar">
+                    <span class="fav-chip-token">${esc(f.token)}</span>
+                    <span class="fav-chip-name">${esc(f.name)}</span>
+                    <span class="fav-chip-remove" onclick="event.stopPropagation();removeFavorite('${esc(f.token)}')" title="Remover">×</span>
+                </div>
+            `).join('');
+        }
+
+        // ==================== LINK ====================
         async function linkDriver() {
             const input = document.getElementById('tokenInput');
-            const btn   = document.getElementById('linkBtn');
+            const btn = document.getElementById('linkBtn');
             const token = (input.value || '').trim().toUpperCase();
 
             if (!token) { showToast('Digite um token'); return; }
@@ -346,9 +558,14 @@
             if (!currentStore) { showToast('Loja não carregada'); return; }
 
             const alreadyLinked = linkedDrivers.find(d => (d.driverToken || '').toUpperCase() === token);
-            if (alreadyLinked) { showToast('Este entregador já está vinculado'); input.value = ''; return; }
+            if (alreadyLinked) {
+                showToast('Este entregador já está vinculado');
+                input.value = '';
+                return;
+            }
 
-            btn.disabled = true; btn.textContent = '...';
+            btn.disabled = true;
+            btn.textContent = '...';
 
             try {
                 const snap = await db.collection('drivers')
@@ -359,29 +576,37 @@
                     return;
                 }
 
-                const driverDoc  = snap.docs[0];
+                const driverDoc = snap.docs[0];
                 const driverData = driverDoc.data();
                 const existingStores = driverData.linkedStores || [];
 
-                if (existingStores.length > 0) {
-                    showToast(existingStores.includes(currentStore.id)
-                        ? 'Já vinculado à sua loja'
-                        : '❌ Este entregador já pertence a outra loja');
+                if (existingStores.length > 0 && !existingStores.includes(currentStore.id)) {
+                    showToast('Este entregador já pertence a outra loja');
                     input.value = '';
                     return;
                 }
 
                 await db.collection('drivers').doc(driverDoc.id).update({
-                    linkedStores: firebase.firestore.FieldValue.arrayUnion(currentStore.id)
+                    linkedStores:   firebase.firestore.FieldValue.arrayUnion(currentStore.id),
+                    linkedStoreId:  currentStore.id,
+                    storeId:        currentStore.id,
+                    driverType:     'store',
+                    appEligible:    false
                 });
 
+                const driverName = driverData.name || token;
                 input.value = '';
-                showToast('✓ ' + (driverData.name || 'Entregador') + ' vinculado!');
+                showToast('✓ ' + driverName + ' vinculado!');
+
+                // Salvar como favorito automaticamente
+                saveFavorite(token, driverName);
 
             } catch (err) {
-                console.error(err); showToast('Erro ao vincular');
+                console.error(err);
+                showToast('Erro ao vincular');
             } finally {
-                btn.disabled = false; btn.textContent = 'Vincular';
+                btn.disabled = false;
+                btn.textContent = 'Vincular';
             }
         }
 
@@ -391,7 +616,7 @@
             });
         });
 
-        // ── LISTENER ──
+        // ==================== LISTENERS ====================
         function listenDrivers() {
             if (unsubDrivers) unsubDrivers();
             unsubDrivers = db.collection('drivers')
@@ -405,7 +630,7 @@
                 });
         }
 
-        // ── RENDER ──
+        // ==================== RENDER ====================
         function renderDrivers() {
             const container = document.getElementById('driversList');
             document.getElementById('driverCount').textContent = linkedDrivers.length;
@@ -424,12 +649,10 @@
                     ? `<img src="${d.photoUrl}" onerror="this.parentElement.innerHTML='🛵'">`
                     : '🛵';
 
-                const online = d.online === true || d.status === 'online' || d.available === true;
-                const busy   = d.currentOrderId || d.idleState === 'STORE_ACTIVE' || d.idleState === 'APP_ON_TRIP';
+                const online = d.online === true;
+                const busy   = !!(d.currentOrderId);
                 const statusCls = busy ? 'busy' : (online ? 'online' : 'offline');
                 const statusTxt = busy ? 'Em entrega' : (online ? 'Online' : 'Offline');
-
-                const eligible = d.appEligible !== false; // default true
 
                 return `
                 <div class="driver-item">
@@ -443,40 +666,21 @@
                         <div class="status-label">
                             <span class="status-dot ${statusCls}"></span>${statusTxt}
                         </div>
-                        <div class="eligible-row">
-                            <span class="eligible-label">App</span>
-                            <label class="toggle-switch" title="${eligible ? 'Habilitado no app' : 'Desabilitado no app'}">
-                                <input type="checkbox" ${eligible ? 'checked' : ''}
-                                    onchange="toggleEligible('${d.id}', this.checked)">
-                                <span class="toggle-slider"></span>
-                            </label>
-                        </div>
-                        <button class="remove-btn" onclick="askRemove('${d.id}', '${esc(d.name || 'Entregador')}')">Desvincular</button>
+                        <button class="btn btn-sm btn-danger remove-btn" onclick="askRemove('${d.id}', '${esc(d.name || 'Entregador')}')">Desvincular</button>
                     </div>
                 </div>`;
             }).join('');
         }
 
-        // ── TOGGLE appEligible ──
-        async function toggleEligible(driverId, value) {
-            try {
-                await db.collection('drivers').doc(driverId).update({ appEligible: value });
-                showToast(value ? '✓ Habilitado no app' : 'Desabilitado no app');
-            } catch (err) {
-                console.error(err); showToast('Erro ao atualizar');
-            }
-        }
-
-        // ── REMOVER ──
+        // ==================== REMOVE ====================
         function askRemove(driverId, driverName) {
             pendingRemoveId = driverId;
-            document.getElementById('confirmText').textContent =
-                `"${driverName}" não receberá mais pedidos da sua loja.`;
-            document.getElementById('confirmOverlay').classList.add('show');
+            document.getElementById('confirmText').textContent = `"${driverName}" não receberá mais pedidos da sua loja.`;
+            document.getElementById('confirmOverlay').classList.add('active');
         }
 
         function closeConfirm() {
-            document.getElementById('confirmOverlay').classList.remove('show');
+            document.getElementById('confirmOverlay').classList.remove('active');
             pendingRemoveId = null;
         }
 
@@ -485,27 +689,90 @@
             const driverId = pendingRemoveId;
             closeConfirm();
             try {
-                await db.collection('drivers').doc(driverId).update({
-                    linkedStores: firebase.firestore.FieldValue.arrayRemove(currentStore.id)
-                });
+                const ref = db.collection('drivers').doc(driverId);
+                const snap = await ref.get();
+                if (!snap.exists) { showToast('Entregador não encontrado'); return; }
+                const data = snap.data();
+                const current = Array.isArray(data.linkedStores) ? data.linkedStores : [];
+                const newStores = current.filter(s => s !== currentStore.id);
+                const update = {
+                    linkedStores: newStores,
+                    linkedStoreId: newStores[0] || null,
+                    storeId: newStores[0] || null
+                };
+                if (newStores.length === 0) {
+                    update.driverType  = 'app';
+                    update.appEligible = true;
+                }
+                await ref.update(update);
                 showToast('✓ Entregador desvinculado');
             } catch (err) {
-                console.error(err); showToast('Erro ao desvincular');
+                console.error(err);
+                showToast('Erro ao desvincular');
             }
         }
 
-        // ── UTILS ──
+        // ==================== UTILS ====================
         function esc(str) {
-            return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;')
-                .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+            return String(str || '')
+                .replace(/&/g,'&amp;')
+                .replace(/</g,'&lt;')
+                .replace(/>/g,'&gt;')
+                .replace(/\"/g,'&quot;')
+                .replace(/'/g,'&#039;');
         }
 
         function showToast(msg) {
             const t = document.getElementById('toast');
-            t.textContent = msg; t.classList.add('show');
+            t.textContent = msg;
+            t.classList.add('show');
             clearTimeout(window._tt);
             window._tt = setTimeout(() => t.classList.remove('show'), 2800);
         }
+        // Chame SEMPRE que desvincular um entregador de loja.
+// Limpa todos os resíduos de vínculo em um só lugar.
+async function unlinkDriverFromStore(driverId, storeId) {
+  if (!driverId) return;
+  const ref = db.collection('drivers').doc(driverId);
+  const snap = await ref.get();
+  if (!snap.exists) return;
+
+  const d = snap.data() || {};
+  const update = {};
+
+  // linkedStores[] — remove só o storeId específico, mantém outros vínculos
+  if (Array.isArray(d.linkedStores) && storeId) {
+    const filtered = d.linkedStores.filter(id => String(id) !== String(storeId));
+    update.linkedStores = filtered;
+  }
+
+  // Se o vínculo "principal" é esse storeId, limpa
+  if (!storeId || String(d.linkedStoreId) === String(storeId)) {
+    update.linkedStoreId = firebase.firestore.FieldValue.delete();
+  }
+  if (!storeId || String(d.storeId) === String(storeId)) {
+    update.storeId = firebase.firestore.FieldValue.delete();
+  }
+
+  // Se depois disso não sobrou vínculo nenhum, tira o driverType 'store'
+  const remaining = new Set();
+  if (Array.isArray(update.linkedStores)) {
+    update.linkedStores.forEach(id => remaining.add(String(id)));
+  } else if (Array.isArray(d.linkedStores)) {
+    d.linkedStores.forEach(id => remaining.add(String(id)));
+  }
+  if (update.linkedStoreId === undefined && d.linkedStoreId) remaining.add(String(d.linkedStoreId));
+  if (update.storeId === undefined && d.storeId) remaining.add(String(d.storeId));
+
+  if (remaining.size === 0 && d.driverType === 'store') {
+    update.driverType = firebase.firestore.FieldValue.delete();
+  }
+
+  update.appEligible = remaining.size === 0; // sem vínculo → elegível ao app
+  update.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+
+  await ref.update(update);
+}
     </script>
 </body>
 </html>

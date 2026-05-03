@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <script>
+    (function () {
+      var t = localStorage.getItem("theme") || "dark";
+      document.documentElement.setAttribute("data-theme", t);
+    })();
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Finalizar Pedido</title>
+
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+
+    :root,[data-theme="dark"]{
+      --bg:#09090b;
+      --bg-card:#0f0f12;
+      --bg-input:#18181b;
+      --bg-elevated:#1c1c20;
+      --bg-secondary:#141418;
+      --text:#fafafa;
+      --text-secondary:#d4d4d8;
+      --text-muted:#71717a;
+      --border:#27272a;
+      --border-hover:#3f3f46;
+      --primary:#fff;
+      --accent:#a78bfa;
+      --accent-rgb:167,139,250;
+      --danger:#f87171;
+      --success:#4ade80;
+      --warning:#fbbf24;
+      --glass-bg:rgba(24,24,27,.72);
+      --glass-border:rgba(255,255,255,.08);
+      --glass-blur:18px;
+      --shadow-sm:0 1px 3px rgba(0,0,0,.4);
+      --shadow-md:0 4px 12px rgba(0,0,0,.5);
+      --radius:12px;
+      --transition:.22s cubic-bezier(.4,0,.2,1);
+      --primary-soft:rgba(255,255,255,.06);
+      --primary-soft-2:rgba(255,255,255,.03);
+    }
+
+    [data-theme="light"]{
+      --bg:#f4f4f5;
+      --bg-card:#ffffff;
+      --bg-input:#f0f0f2;
+      --bg-elevated:#ffffff;
+      --bg-secondary:#f7f7f8;
+      --text:#18181b;
+      --text-secondary:#3f3f46;
+      --text-muted:#71717a;
+      --border:#e4e4e7;
+      --border-hover:#d4d4d8;
+      --primary:#18181b;
+      --accent:#7c3aed;
+      --accent-rgb:124,58,237;
+      --danger:#dc2626;
+      --success:#16a34a;
+      --warning:#d97706;
+      --glass-bg:rgba(255,255,255,.7);
+      --glass-border:rgba(0,0,0,.06);
+      --glass-blur:18px;
+      --shadow-sm:0 1px 3px rgba(0,0,0,.06);
+      --shadow-md:0 4px 12px rgba(0,0,0,.08);
+      --radius:12px;
+      --transition:.22s cubic-bezier(.4,0,.2,1);
+      --primary-soft:rgba(24,24,27,.06);
+      --primary-soft-2:rgba(24,24,27,.03);
+    }
+
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      padding:0;
+      max-width:680px;
+      margin:0 auto;
+    }
+
+    .header{
+      position:sticky;
+      top:0;
+      z-index:100;
+      background:rgba(10,10,10,.92);
+      backdrop-filter:blur(10px);
+      border-bottom:1px solid var(--border);
+      padding:14px 18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    [data-theme="light"] .header,
+    [data-theme="light"] .footer{
+      background:rgba(255,255,255,.88);
+    }
+
+    .header-title{
+      font-size:1.05rem;
+      font-weight:800;
+      letter-spacing:.2px;
+    }
+
+    .header-actions{
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+
+    .content{padding:18px}
+
+    .section{
+      background:var(--bg-card);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:16px;
+      margin-bottom:14px;
+      box-shadow:0 10px 26px rgba(0,0,0,.18);
+    }
+
+    .section-title{
+      font-weight:900;
+      margin-bottom:12px;
+      font-size:.9rem;
+      letter-spacing:.9px;
+      text-transform:uppercase;
+      color:var(--text);
+      opacity:.92;
+    }
+
+    .cart-item{
+      display:flex;
+      gap:12px;
+      padding:12px 0;
+      border-bottom:1px solid var(--border);
+    }
+
+    .cart-item:last-child{border-bottom:none}
+
+    .cart-item-info{flex:1;min-width:0}
+
+    .cart-item-name{
+      font-weight:800;
+      margin-bottom:4px;
+    }
+
+    .cart-item-meta{
+      font-size:.86rem;
+      color:var(--text-muted);
+      line-height:1.35rem;
+    }
+
+    .cart-item-price{
+      text-align:right;
+      white-space:nowrap;
+      font-weight:900;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.03);
+      border-radius:999px;
+      padding:6px 10px;
+      font-size:.78rem;
+      color:var(--text-muted);
+      margin-top:8px;
+    }
+
+    .radio-cards{display:grid;gap:10px}
+
+    .radio-card{
+      padding:14px;
+      background:var(--bg-secondary);
+      border:1px solid var(--border);
+      border-radius:12px;
+      cursor:pointer;
+      transition:.15s;
+    }
+
+    .radio-card:hover{
+      border-color:var(--primary);
+      background:var(--primary-soft-2);
+      transform:translateY(-1px);
+    }
+
+    .radio-card.selected{
+      border-color:var(--primary);
+      background:var(--primary-soft);
+      box-shadow:0 0 0 1px rgba(255,255,255,.18) inset;
+    }
+
+    .radio-card-title{
+      font-weight:900;
+      margin-bottom:4px;
+    }
+
+    .radio-card-desc{
+      font-size:.85rem;
+      color:var(--text-muted);
+    }
+
+    .payment-methods{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:8px;
+    }
+
+    .payment-method{
+      padding:12px;
+      background:var(--bg-secondary);
+      border:1px solid var(--border);
+      border-radius:12px;
+      cursor:pointer;
+      text-align:center;
+      font-size:.9rem;
+      font-weight:900;
+      letter-spacing:.2px;
+      transition:.15s;
+      user-select:none;
+    }
+
+    .payment-method:hover{
+      border-color:var(--primary);
+      background:var(--primary-soft-2);
+      transform:translateY(-1px);
+    }
+
+    .payment-method.selected{
+      border-color:var(--primary);
+      background:var(--primary-soft);
+      box-shadow:0 0 0 1px rgba(255,255,255,.18) inset;
+    }
+
+    .form-group{margin-top:12px}
+
+    .form-label{
+      display:block;
+      font-size:.85rem;
+      margin-bottom:8px;
+      color:var(--text-muted);
+      font-weight:800;
+      letter-spacing:.2px;
+    }
+
+    .form-input{
+      width:100%;
+      padding:12px 14px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background:var(--bg-secondary);
+      color:var(--text);
+      font-size:1rem;
+      transition:.15s;
+    }
+
+    .form-input:focus{
+      outline:none;
+      border-color:var(--primary);
+      box-shadow:0 0 0 3px rgba(255,255,255,.08);
+    }
+
+    .address-card{
+      padding:12px;
+      background:var(--bg-secondary);
+      border:1px solid var(--border);
+      border-radius:12px;
+      margin-bottom:8px;
+      cursor:pointer;
+      transition:.15s;
+    }
+
+    .address-card:hover{
+      border-color:var(--primary);
+      background:var(--primary-soft-2);
+      transform:translateY(-1px);
+    }
+
+    .address-card.selected{
+      border-color:var(--primary);
+      background:var(--primary-soft);
+      box-shadow:0 0 0 1px rgba(255,255,255,.18) inset;
+    }
+
+    .address-label{
+      font-weight:900;
+      margin-bottom:4px;
+    }
+
+    .address-text{
+      font-size:.9rem;
+      color:var(--text-muted);
+      line-height:1.35rem;
+    }
+
+    .totals{
+      background:var(--bg-secondary);
+      border-radius:12px;
+      padding:14px;
+      border:1px solid rgba(255,255,255,.06);
+    }
+
+    .total-row{
+      display:flex;
+      justify-content:space-between;
+      padding:8px 0;
+      color:var(--text-muted);
+      font-weight:700;
+    }
+
+    .total-row.main{
+      border-top:1px solid var(--border);
+      margin-top:8px;
+      padding-top:14px;
+      color:var(--text);
+      font-size:1.15rem;
+      font-weight:900;
+    }
+
+    .footer{
+      position:sticky;
+      bottom:0;
+      background:rgba(10,10,10,.92);
+      backdrop-filter:blur(10px);
+      padding:14px 18px;
+      border-top:1px solid var(--border);
+    }
+
+    .btn{
+      padding:14px 16px;
+      border-radius:14px;
+      border:1px solid transparent;
+      font-size:1rem;
+      font-weight:900;
+      cursor:pointer;
+      transition:.15s;
+      width:100%;
+    }
+
+    .btn-primary{
+      background:#ffffff;
+      color:#000;
+      border-color:rgba(255,255,255,.12);
+    }
+
+    .btn-primary:hover{
+      filter:brightness(1.02);
+      transform:translateY(-1px);
+    }
+
+    .btn-primary:active{transform:translateY(0)}
+    .btn-primary:disabled{
+      opacity:.55;
+      cursor:not-allowed;
+      transform:none;
+    }
+
+    .modal-ui{
+      position:fixed;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      background:rgba(0,0,0,.55);
+      z-index:99999;
+      padding:16px;
+    }
+
+    .modal-ui.show{display:flex}
+
+    .modal-card{
+      width:min(520px,100%);
+      background:var(--bg-card);
+      border:1px solid var(--border);
+      border-radius:18px;
+      box-shadow:0 18px 60px rgba(0,0,0,.35);
+      padding:16px;
+    }
+
+    .modal-title{
+      font-weight:900;
+      letter-spacing:.2px;
+      margin-bottom:8px;
+    }
+
+    .modal-text{
+      color:var(--text-muted);
+      line-height:1.45;
+      margin-bottom:14px;
+      white-space:pre-wrap;
+      overflow-wrap:anywhere;
+    }
+
+    .modal-actions{
+      display:flex;
+      gap:10px;
+      justify-content:flex-end;
+    }
+
+    .btn-ui{
+      height:42px;
+      padding:0 14px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background:var(--bg-secondary);
+      color:var(--text);
+      font-weight:900;
+      cursor:pointer;
+      transition:.15s;
+    }
+
+    .btn-ui:hover{
+      border-color:var(--primary);
+      background:var(--primary-soft-2);
+      transform:translateY(-1px);
+    }
+
+    .btn-ui:active{transform:translateY(0)}
+
+    .btn-ui.primary{
+      background:#ffffff;
+      color:#000;
+      border-color:rgba(255,255,255,.12);
+    }
+
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:20px;
+      transform:translateX(-50%);
+      background:rgba(17,17,17,.92);
+      border:1px solid var(--border);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:14px;
+      display:none;
+      z-index:99999;
+      max-width:min(520px,calc(100% - 24px));
+      box-shadow:0 10px 28px rgba(0,0,0,.25);
+      font-weight:900;
+      font-size:.9rem;
+    }
+
+    .toast.show{display:block}
+
+    @media (max-width:520px){
+      .payment-methods{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="header">
+    <div class="header-title">Finalizar Pedido</div>
+    <div class="header-actions"></div>
+  </div>
+
+  <div class="content">
+    <div class="section">
+      <div class="section-title">Seu pedido</div>
+      <div id="cartItems"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Tipo de pedido</div>
+      <div class="radio-cards">
+        <div class="radio-card selected" id="deliveryOption" onclick="selectDeliveryMode('delivery')">
+          <div class="radio-card-title">Entrega</div>
+          <div class="radio-card-desc">Receber no endereço</div>
+        </div>
+        <div class="radio-card" id="pickupOption" onclick="selectDeliveryMode('pickup')">
+          <div class="radio-card-title">Retirada</div>
+          <div class="radio-card-desc">Buscar na loja</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" id="addressSection">
+      <div class="section-title">Endereço de entrega</div>
+      <div id="addressList"></div>
+      <div style="margin-top:10px;display:flex;gap:10px">
+        <button class="btn-ui" type="button" onclick="window.location.href='address.html'">Gerenciar endereços</button>
+        <button class="btn-ui primary" type="button" onclick="hardRefreshAddresses()">Atualizar</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Pagamento</div>
+      <div class="payment-methods">
+        <div class="payment-method selected" data-method="pix" onclick="selectPayment('pix')">PIX</div>
+        <div class="payment-method" data-method="credit" onclick="selectPayment('credit')">Crédito</div>
+        <div class="payment-method" data-method="debit" onclick="selectPayment('debit')">Débito</div>
+        <div class="payment-method" data-method="cash" onclick="selectPayment('cash')">Dinheiro</div>
+        <div class="payment-method" data-method="picpay" onclick="selectPayment('picpay')">PicPay</div>
+        <div class="payment-method" data-method="food_voucher" onclick="selectPayment('food_voucher')">Vale</div>
+      </div>
+
+      <div class="form-group" id="changeInput" style="display:none;">
+        <label class="form-label">Troco para quanto?</label>
+        <input type="number" class="form-input" id="changeFor" placeholder="0" step="1" min="0">
+      </div>
+    </div>
+
+    <div class="section">
+      <label class="form-label">Observações (opcional)</label>
+      <textarea class="form-input" id="notes" placeholder="Ex: Sem cebola..." style="min-height:90px;"></textarea>
+    </div>
+
+    <div class="section">
+      <div class="totals">
+        <div class="total-row"><span>Subtotal</span><span id="subtotal">R$ 0,00</span></div>
+        <div class="total-row" id="deliveryFeeRow"><span>Taxa de entrega</span><span id="deliveryFee">R$ 0,00</span></div>
+        <div class="total-row main"><span>Total</span><span id="total">R$ 0,00</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <button class="btn btn-primary" id="finishBtn" onclick="finishOrder()">Finalizar pedido</button>
+  </div>
+
+  <div id="uiModal" class="modal-ui" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true">
+      <div class="modal-title" id="uiModalTitle">Aviso</div>
+      <div class="modal-text" id="uiModalText"></div>
+      <div class="modal-actions">
+        <button class="btn-ui" id="uiModalCancel" type="button" style="display:none">Cancelar</button>
+        <button class="btn-ui primary" id="uiModalOk" type="button">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="checkout.js"></script>
+</body>
+</html>

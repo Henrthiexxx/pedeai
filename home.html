@@ -262,17 +262,17 @@
             </div>
             <div class="nav-section">
                 <div class="nav-section-title">Cardápio</div>
-                <div class="nav-item" onclick="goToInternalPage('products.html')"><span class="icon">◉</span> Produtos</div>
-                <div class="nav-item" onclick="goToInternalPage('batch-editor.html')"><span class="icon">⊕</span> Cadastro em Lote</div>
-                <div class="nav-item" onclick="goToInternalPage('categories.html')"><span class="icon">▦</span> Categorias</div>
-                <div class="nav-item" onclick="goToInternalPage('layout-editor.html')"><span class="icon">◫</span> Layout da Loja</div>
-                <div class="nav-item" onclick="goToInternalPage('meu-entregador.html')"><span class="icon">↗</span> Meu Entregador</div>
-                <div class="nav-item" onclick="goToInternalPage('fatura-loja.html')"><span class="icon">▤</span> Minha Fatura</div>
-                <div class="nav-item" onclick="goToInternalPage('AdsShop.html')"><span class="icon">◈</span> Serviços</div>
+                <div class="nav-item" onclick="openPopup('products.html')"><span class="icon">◉</span> Produtos</div>
+                <div class="nav-item" onclick="openPopup('batch-editor.html')"><span class="icon">⊕</span> Cadastro em Lote</div>
+                <div class="nav-item" onclick="openPopup('categories.html')"><span class="icon">▦</span> Categorias</div>
+                <div class="nav-item" onclick="openPopup('layout-editor.html')"><span class="icon">◫</span> Layout da Loja</div>
+                <div class="nav-item" onclick="openPopup('meu-entregador.html')"><span class="icon">↗</span> Meu Entregador</div>
+                <div class="nav-item" onclick="openPopup('fatura-loja.html')"><span class="icon">▤</span> Minha Fatura</div>
+                <div class="nav-item" onclick="openPopup('AdsShop.html')"><span class="icon">◈</span> Serviços</div>
             </div>
             <div class="nav-section">
                 <div class="nav-section-title">Conta</div>
-                <div class="nav-item" onclick="goToInternalPage('config.html')"><span class="icon">⚙</span> Configurações</div>
+                <div class="nav-item" onclick="openPopup('config.html')"><span class="icon">⚙</span> Configurações</div>
                 <div class="nav-item" onclick="handleLogout()"><span class="icon">→</span> Sair</div>
             </div>
         </nav>
@@ -422,24 +422,6 @@
             window.location.replace('login.html');
         };
     });
-})();
-</script>
-
-
-<script>
-/* ===== Navegação direta das páginas internas =====
-   Mantém o bottom-nav da home intacto. O menu lateral apenas redireciona. */
-(function () {
-    window.goToInternalPage = function (url) {
-        if (!url || typeof url !== 'string') return;
-        try {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('overlay');
-            if (sidebar) sidebar.classList.remove('open');
-            if (overlay) overlay.classList.remove('show', 'active');
-        } catch (_) {}
-        window.location.href = url;
-    };
 })();
 </script>
 
@@ -612,7 +594,7 @@
 (function(){
   const KS=['pedrad_system_version','system_version','app_version','pedrad_version'];
   function rv(){
-    try{if(typeof window.PEDRAD_SYSTEM_VERSION==='string'&&window.PEDRAD_SYSTEM_VERSION.trim())return window.PEDRAD_SYSTEM_VERSION.trim();for(const k of KS){const v=localStorage.getItem(k);if(v?.trim())return v.trim();}}catch{}
+    try{if(typeof window.PEDRA DELIVERY_SYSTEM_VERSION==='string'&&window.PEDRA DELIVERY_SYSTEM_VERSION.trim())return window.PEDRA DELIVERY_SYSTEM_VERSION.trim();for(const k of KS){const v=localStorage.getItem(k);if(v?.trim())return v.trim();}}catch{}
     return 'v0.1.14';
   }
   function render(){const el=document.getElementById('systemVersionLabel');if(el)el.textContent=rv();}
