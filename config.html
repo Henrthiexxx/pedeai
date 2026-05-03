@@ -602,15 +602,59 @@
 
         window.internalActionTwo = previewStore;
 
-        function previewStore() {
+        async function previewStore() {
             if (!currentStore?.id) {
                 showToast('Aguarde carregar a loja');
                 return;
             }
 
-            const url = new URL('../pedeaicliente-main/store.html', window.location.href);
-            url.searchParams.set('id', currentStore.id);
-            window.open(url.href, '_blank', 'noopener');
+            const target = window.open('about:blank', '_blank');
+            if (target) target.opener = null;
+            const url = await resolveStorePreviewUrl(currentStore.id);
+
+            if (target) {
+                target.location.href = url;
+            } else {
+                window.location.href = url;
+            }
+        }
+
+        function getStorePreviewCandidates(storeId) {
+            const encodedId = encodeURIComponent(storeId);
+            const origin = window.location.origin;
+            const currentPath = window.location.pathname;
+            const panelPath = currentPath.includes('/pedeai/') ? '/pedeai/' : currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
+            const rootPath = panelPath.replace(/\/pedeai\/?$/, '/');
+            const raw = [
+                `${origin}${rootPath}pedeaicliente/store.html?id=${encodedId}`,
+                `${origin}${rootPath}pedeaicliente-main/store.html?id=${encodedId}`,
+                new URL('../pedeaicliente/store.html', window.location.href).href + `?id=${encodedId}`,
+                new URL('../pedeaicliente-main/store.html', window.location.href).href + `?id=${encodedId}`
+            ];
+            return [...new Set(raw)];
+        }
+
+        async function canOpenPage(url) {
+            try {
+                const res = await fetch(url, { method: 'GET', cache: 'no-store', credentials: 'same-origin' });
+                if (!res.ok) return false;
+                const html = await res.text();
+                return /id=["']storeContent["']|function\s+goInfo\(\)|id=["']productModal["']/i.test(html)
+                    && !/Página não encontrada/i.test(html);
+            } catch (_) {
+                return false;
+            }
+        }
+
+        async function resolveStorePreviewUrl(storeId) {
+            const candidates = getStorePreviewCandidates(storeId);
+            for (const candidate of candidates) {
+                if (await canOpenPage(candidate)) return candidate;
+            }
+
+            const fallback = new URL('404.html', window.location.href);
+            fallback.searchParams.set('from', 'preview-store');
+            return fallback.href;
         }
 
         function formatPhone(value) {
