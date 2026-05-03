@@ -450,7 +450,17 @@ function renderDashboard() {
     // Active orders list
     const container = document.getElementById('activeOrdersList');
     if (activeOrders.length === 0) {
-        container.innerHTML = `<div class="empty-state"><div class="empty-icon">✨</div><div class="empty-text">Nenhum pedido ativo</div></div>`;
+        const logo = currentStore?.imageUrl
+            ? `<img class="store-empty-watermark" src="${esc(currentStore.imageUrl)}" alt="">`
+            : '';
+        container.innerHTML = `
+            <div class="empty-state store-empty-state">
+                ${logo}
+                <div class="empty-content">
+                    <div class="empty-icon">✨</div>
+                    <div class="empty-text">Nenhum pedido ativo</div>
+                </div>
+            </div>`;
         return;
     }
 

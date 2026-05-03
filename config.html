@@ -312,8 +312,6 @@
             box-shadow: 0 0 0 3px var(--red-bg), inset 0 1px 2px rgba(0,0,0,.06);
         }
 
-        .bottom-save { margin-top: 18px; }
-
         .toast { max-width: min(92vw, 440px); }
 
         .spinner {
@@ -459,7 +457,6 @@
                 <input type="text" class="form-input" id="storeAddress" placeholder="Rua, número - Bairro">
             </div>
 
-            <button class="btn btn-primary btn-block" onclick="saveStoreInfo()">Salvar informações</button>
         </div>
 
         <!-- ===== HORÁRIO DE FUNCIONAMENTO ===== -->
@@ -525,7 +522,6 @@
             </div>
         </div>
 
-        <button class="btn btn-primary btn-block bottom-save" onclick="saveAllSettings()">Salvar todas configurações</button>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -595,67 +591,12 @@
         const UI_SOUND_KEY = 'pedrad_ui_sounds';
 
         window.internalNavConfig = {
-            actionTwoIcon: '◉',
-            actionTwoLabel: 'Ver loja',
-            actionTwoTitle: 'Pré-visualizar loja'
+            single: true,
+            singleIcon: '✓',
+            singleLabel: 'Salvar configurações',
+            singleTitle: 'Salvar configurações',
+            singleAction: 'window.saveAllSettings?.()'
         };
-
-        window.internalActionTwo = previewStore;
-
-        async function previewStore() {
-            if (!currentStore?.id) {
-                showToast('Aguarde carregar a loja');
-                return;
-            }
-
-            const target = window.open('about:blank', '_blank');
-            if (target) target.opener = null;
-            const url = await resolveStorePreviewUrl(currentStore.id);
-
-            if (target) {
-                target.location.href = url;
-            } else {
-                window.location.href = url;
-            }
-        }
-
-        function getStorePreviewCandidates(storeId) {
-            const encodedId = encodeURIComponent(storeId);
-            const origin = window.location.origin;
-            const currentPath = window.location.pathname;
-            const panelPath = currentPath.includes('/pedeai/') ? '/pedeai/' : currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
-            const rootPath = panelPath.replace(/\/pedeai\/?$/, '/');
-            const raw = [
-                `${origin}${rootPath}pedeaicliente/store.html?id=${encodedId}`,
-                `${origin}${rootPath}pedeaicliente-main/store.html?id=${encodedId}`,
-                new URL('../pedeaicliente/store.html', window.location.href).href + `?id=${encodedId}`,
-                new URL('../pedeaicliente-main/store.html', window.location.href).href + `?id=${encodedId}`
-            ];
-            return [...new Set(raw)];
-        }
-
-        async function canOpenPage(url) {
-            try {
-                const res = await fetch(url, { method: 'GET', cache: 'no-store', credentials: 'same-origin' });
-                if (!res.ok) return false;
-                const html = await res.text();
-                return /id=["']storeContent["']|function\s+goInfo\(\)|id=["']productModal["']/i.test(html)
-                    && !/Página não encontrada/i.test(html);
-            } catch (_) {
-                return false;
-            }
-        }
-
-        async function resolveStorePreviewUrl(storeId) {
-            const candidates = getStorePreviewCandidates(storeId);
-            for (const candidate of candidates) {
-                if (await canOpenPage(candidate)) return candidate;
-            }
-
-            const fallback = new URL('404.html', window.location.href);
-            fallback.searchParams.set('from', 'preview-store');
-            return fallback.href;
-        }
 
         function formatPhone(value) {
             const digits = String(value || '').replace(/\D/g, '').slice(0, 11);
@@ -1001,12 +942,15 @@
         }
 
         // ===== SAVE =====
-        async function saveStoreInfo() {
+        async function saveAllSettings() {
             try {
                 if (!currentStore?.id) { showToast('Loja não carregada'); return; }
                 if (!validatePhoneField(true)) return;
 
-                const data = {
+                const hours = {};
+                DAYS.forEach(d => { hours[d.key] = getDayState(d.key); });
+
+                const updateData = {
                     name: (document.getElementById('storeName').value || '').trim(),
                     phone: (document.getElementById('storePhone').value || '').trim(),
                     cnpj: (document.getElementById('storeCnpj').value || '').trim(),
@@ -1014,22 +958,6 @@
                     description: (document.getElementById('storeDescription').value || '').trim(),
                     deliveryTime: (document.getElementById('storeDeliveryTime').value || '').trim(),
                     address: (document.getElementById('storeAddress').value || '').trim(),
-                    imageUrl: currentImageBase64 || '',
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                };
-                await db.collection('stores').doc(currentStore.id).update(data);
-                showToast('✓ Informações salvas!');
-            } catch (err) { console.error(err); showToast('✗ Erro ao salvar'); }
-        }
-
-        async function saveAllSettings() {
-            try {
-                if (!currentStore?.id) { showToast('Loja não carregada'); return; }
-
-                const hours = {};
-                DAYS.forEach(d => { hours[d.key] = getDayState(d.key); });
-
-                const updateData = {
                     imageUrl: currentImageBase64 || '',
                     settings: {
                         soundEnabled: document.getElementById('soundToggle').classList.contains('active'),
