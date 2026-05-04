@@ -24,6 +24,7 @@ let historyFilter = 'all';
 
 // Listeners cleanup
 let _unsubOrders = null;
+let _unsubPendingOrders = null;
 let _unsubStore = null;
 
 // Notification
@@ -67,6 +68,14 @@ function getStatusLabel(s) {
 }
 
 const ACTIVE_STATUSES = ['pending','confirmed','preparing','ready','delivering'];
+const STATUS_FLOW = ['pending','confirmed','preparing','ready','delivering','delivered'];
+const STATUS_FORWARD_LABELS = {
+    confirmed: '✓ Aceitar',
+    preparing: '🍳 Preparar',
+    ready: '✓ Pronto',
+    delivering: '🛵 Saiu',
+    delivered: '✓ Entregue'
+};
 
 function getUniversalStoreId() {
     return currentStore?.id || localStorage.getItem('currentStoreId') || null;
@@ -82,7 +91,7 @@ function showToast(msg) {
 }
 
 function showComingSoon() {
-    showToast('Disponível em breve!');
+    showToast('Disponivel em breve!');
     closeSidebar();
 }
 
@@ -232,6 +241,7 @@ function showApp() {
 // ══════════════════════════════════════════════
 
 function cleanup() {
+    if (_unsubPendingOrders) { _unsubPendingOrders(); _unsubPendingOrders = null; }
     if (_unsubOrders) { _unsubOrders(); _unsubOrders = null; }
     if (_unsubStore) { _unsubStore(); _unsubStore = null; }
     stopNotifLoop();
@@ -322,14 +332,67 @@ function checkSuspension() {
 }
 
 // ══════════════════════════════════════════════
-//  ORDERS — SINGLE SNAPSHOT (apenas ativos)
+//  ORDERS — REALTIME LISTENERS
 // ══════════════════════════════════════════════
 
+function upsertActiveOrder(order) {
+    const idx = activeOrders.findIndex(o => o.id === order.id);
+    if (idx === -1) activeOrders.unshift(order);
+    else activeOrders[idx] = order;
+}
+
+function removeActiveOrder(orderId) {
+    activeOrders = activeOrders.filter(o => o.id !== orderId);
+}
+
+function handlePendingOrder(order) {
+    const isNew = !knownOrderIds.has(order.id);
+    knownOrderIds.add(order.id);
+    upsertActiveOrder(order);
+
+    if (isNew) {
+        startNotifLoop(order.id);
+        showNotifPopup(order.id, order.userName || 'Cliente', order.total || 0);
+        showToast('Novo pedido recebido!');
+        sendBrowserNotif(order);
+    }
+}
+
 function startOrdersListener() {
+    if (!currentStore?.id) return;
+    if (_unsubPendingOrders) _unsubPendingOrders();
     if (_unsubOrders) _unsubOrders();
 
     if (window.Android) Android.setStoreId(currentStore.id);
 
+    // Listener prioritário: consulta pequena, dedicada só a pedido novo pendente.
+    _unsubPendingOrders = db.collection('orders')
+        .where('storeId', '==', currentStore.id)
+        .where('status', '==', 'pending')
+        .onSnapshot(snap => {
+            let changed = false;
+
+            snap.docChanges().forEach(ch => {
+                const order = { id: ch.doc.id, ...ch.doc.data() };
+
+                if (ch.type === 'added') {
+                    handlePendingOrder(order);
+                    changed = true;
+                } else if (ch.type === 'modified') {
+                    upsertActiveOrder(order);
+                    changed = true;
+                } else if (ch.type === 'removed') {
+                    clearAlert(order.id);
+                }
+            });
+
+            if (changed) renderDashboard();
+        }, err => {
+            console.error('pendingOrdersSnapshot:', err);
+            showToast('Erro no listener de pedidos novos');
+        });
+
+    // Listener geral: mantém a tela sincronizada quando o status muda.
     _unsubOrders = db.collection('orders')
         .where('storeId', '==', currentStore.id)
         .where('status', 'in', ACTIVE_STATUSES)
@@ -338,36 +401,28 @@ function startOrdersListener() {
                 const order = { id: ch.doc.id, ...ch.doc.data() };
 
                 if (ch.type === 'added') {
-                    const isNew = !knownOrderIds.has(order.id);
-                    knownOrderIds.add(order.id);
-
-                    // Evita duplicata no array
-                    if (!activeOrders.find(o => o.id === order.id)) {
-                        activeOrders.unshift(order);
-                    }
-
-                    if (isNew && order.status === 'pending') {
-                        startNotifLoop(order.id);
-                        showNotifPopup(order.id, order.userName || 'Cliente', order.total || 0);
-                        showToast('Novo pedido recebido!');
-                        sendBrowserNotif(order);
-                    }
+                    if (order.status !== 'pending') knownOrderIds.add(order.id);
+                    upsertActiveOrder(order);
                 } else if (ch.type === 'modified') {
                     const idx = activeOrders.findIndex(o => o.id === order.id);
                     if (idx !== -1) {
                         const old = activeOrders[idx].status;
-                        activeOrders[idx] = order;
+                        upsertActiveOrder(order);
                         if (old === 'pending' && order.status !== 'pending') clearAlert(order.id);
+                    } else {
+                        upsertActiveOrder(order);
                     }
                 } else if (ch.type === 'removed') {
-                    // Saiu do snapshot = saiu de status ativo (delivered/cancelled)
-                    activeOrders = activeOrders.filter(o => o.id !== order.id);
+                    removeActiveOrder(order.id);
                     clearAlert(order.id);
                 }
             });
 
             renderDashboard();
-        }, err => console.error('ordersSnapshot:', err));
+        }, err => {
+            console.error('ordersSnapshot:', err);
+            showToast('Erro ao sincronizar pedidos');
+        });
 }
 
 // ══════════════════════════════════════════════
@@ -388,7 +443,9 @@ async function loadHistory() {
             .get();
 
         historyOrders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        snap.docs.forEach(d => knownOrderIds.add(d.id));
+        historyOrders
+            .filter(o => o.status !== 'pending')
+            .forEach(o => knownOrderIds.add(o.id));
         renderHistory();
     } catch(err) { console.error('loadHistory:', err); }
 }
@@ -608,21 +665,18 @@ function getOrderActions(order) {
     const id = order.id;
     const b = (cls, label, status) =>
         `<button class="btn ${cls} btn-sm" onclick="event.stopPropagation();updateOrder('${id}','${status}')">${label}</button>`;
+    const currentIdx = STATUS_FLOW.indexOf(order.status);
+    if (currentIdx === -1 || order.status === 'delivered' || order.status === 'cancelled') return '';
+    if (order.status === 'pending') {
+        return b('btn-success','✓ Aceitar','confirmed') + b('btn-danger','✗ Recusar','cancelled');
+    }
 
-    const orderType = order.orderType || order.deliveryMode;
-    const isLocal = order.source === 'pdv' || orderType === 'local';
-    const isPickup = orderType === 'pickup';
-
-    const map = {
-        pending: b('btn-success','✓ Aceitar','confirmed') + b('btn-danger','✗ Recusar','cancelled'),
-        confirmed: b('btn-primary','🍳 Preparar','preparing'),
-        preparing: b('btn-warning','✓ Pronto','ready'),
-        ready: isLocal || isPickup
-            ? b('btn-success','✓ Entregue','delivered')
-            : '',
-        delivering: b('btn-success','✓ Entregue','delivered')
-    };
-    return map[order.status] || '';
+    const next = STATUS_FLOW[currentIdx + 1];
+    if (!next || next === 'pending') return '';
+    const label = STATUS_FORWARD_LABELS[next];
+    if (!label) return '';
+    const cls = next === 'delivered' ? 'btn-success' : next === 'delivering' ? 'btn-success' : next === 'ready' ? 'btn-warning' : 'btn-primary';
+    return b(cls, label, next);
 }
 
 async function updateOrder(orderId, status) {
