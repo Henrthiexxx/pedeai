@@ -783,7 +783,7 @@
 
             try {
                 const base64 = shouldUseTinySvgTransform()
-                    ? await resizeImageTo48Svg(file)
+                    ? await resizeImageTo128Svg(file)
                     : await resizeImageToBase64(file, 600, 600);
                 currentImageBase64 = base64;
                 updateImagePreview(base64);
@@ -841,24 +841,24 @@
             return isPcApp() || isMobileDevice();
         }
 
-        async function resizeImageTo48Svg(file) {
+        async function resizeImageTo128Svg(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        canvas.width = 48;
-                        canvas.height = 48;
+                        canvas.width = 128;
+                        canvas.height = 128;
                         const side = Math.min(img.width, img.height);
                         const sx = (img.width - side) / 2;
                         const sy = (img.height - side) / 2;
                         const ctx = canvas.getContext('2d');
                         ctx.imageSmoothingEnabled = true;
                         ctx.imageSmoothingQuality = 'high';
-                        ctx.drawImage(img, sx, sy, side, side, 0, 0, 48, 48);
-                        const jpeg48 = canvas.toDataURL('image/jpeg', 0.9);
-                        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48"><image href="${jpeg48}" x="0" y="0" width="48" height="48" preserveAspectRatio="none"/></svg>`;
+                        ctx.drawImage(img, sx, sy, side, side, 0, 0, 128, 128);
+                        const jpeg128 = canvas.toDataURL('image/jpeg', 0.9);
+                        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><image href="${jpeg128}" x="0" y="0" width="128" height="128" preserveAspectRatio="none"/></svg>`;
                         resolve(`data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svg)))}`);
                     };
                     img.onerror = () => reject(new Error('Erro ao carregar imagem'));

@@ -345,7 +345,7 @@ async function handleFile(file){
     if(file.size>3*1024*1024){toast('Máximo de 3 MB');return}
     try{
         toast('Processando imagem...');
-        const b64=shouldUseTinySvgTransform()?await resizeImage48Svg(file):await resizeImage(file);
+        const b64=shouldUseTinySvgTransform()?await resizeImage128Svg(file):await resizeImage(file);
         document.getElementById('imageData').value=b64;
         document.getElementById('imageUrl').value='';
         const box=document.getElementById('imgPreview');
@@ -383,21 +383,21 @@ function shouldUseTinySvgTransform(){
     return isPcApp()||isMobileDevice();
 }
 
-function resizeImage48Svg(file){
+function resizeImage128Svg(file){
     return new Promise((res,rej)=>{
         const r=new FileReader();
         r.onload=e=>{
             const img=new Image();
             img.onload=()=>{
                 const c=document.createElement('canvas');
-                c.width=48;c.height=48;
+                c.width=128;c.height=128;
                 const s=Math.min(img.width,img.height),x=(img.width-s)/2,y=(img.height-s)/2;
                 const ctx=c.getContext('2d');
                 ctx.imageSmoothingEnabled=true;
                 ctx.imageSmoothingQuality='high';
-                ctx.drawImage(img,x,y,s,s,0,0,48,48);
-                const jpeg48=c.toDataURL('image/jpeg',.9);
-                const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48"><image href="${jpeg48}" x="0" y="0" width="48" height="48" preserveAspectRatio="none"/></svg>`;
+                ctx.drawImage(img,x,y,s,s,0,0,128,128);
+                const jpeg128=c.toDataURL('image/jpeg',.9);
+                const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><image href="${jpeg128}" x="0" y="0" width="128" height="128" preserveAspectRatio="none"/></svg>`;
                 res(`data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svg)))}`);
             };
             img.onerror=()=>rej();img.src=e.target.result;
