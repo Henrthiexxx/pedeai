@@ -5,19 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Configurações - Pedra Delivery</title>
     <meta name="theme-color" content="#0a0a0c">
-    <script>
-        (function(){
-            var keys = ['pedrad-theme','theme','appTheme','data-theme','color-theme','pedrad_theme'];
-            var theme = 'dark';
-            for (var i = 0; i < keys.length; i++) {
-                try {
-                    var value = localStorage.getItem(keys[i]);
-                    if (value === 'light' || value === 'dark') { theme = value; break; }
-                } catch (_) {}
-            }
-            document.documentElement.setAttribute('data-theme', theme);
-        })();
-    </script>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="ui/menu/nav.css">
     <style>
@@ -307,10 +294,7 @@
             gap: 14px;
         }
 
-        .form-input.invalid {
-            border-color: var(--red);
-            box-shadow: 0 0 0 3px var(--red-bg), inset 0 1px 2px rgba(0,0,0,.06);
-        }
+        .bottom-save { margin-top: 18px; }
 
         .toast { max-width: min(92vw, 440px); }
 
@@ -353,6 +337,7 @@
             .day-row .closed-label { grid-area: times; }
         }
     </style>
+    <link rel="stylesheet" href="modules/popup-desktop.css">
 </head>
 <body>
     <div class="toast" id="toast"></div>
@@ -419,7 +404,7 @@
 
             <div class="form-group">
                 <label class="form-label">Telefone / WhatsApp</label>
-                <input type="tel" class="form-input" id="storePhone" placeholder="(99) 1 2345 6578" maxlength="16" inputmode="numeric" autocomplete="tel" oninput="handlePhoneInput(this)" onblur="validatePhoneField(true)">
+                <input type="tel" class="form-input" id="storePhone" placeholder="(00) 00000-0000">
             </div>
 
             <div class="form-group">
@@ -447,9 +432,11 @@
                 <textarea class="form-input" id="storeDescription" placeholder="Fale sobre sua loja..."></textarea>
             </div>
 
-            <div class="form-group">
-                <label class="form-label">Tempo de entrega</label>
-                <input type="text" class="form-input" id="storeDeliveryTime" placeholder="30-45 min">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Tempo de entrega</label>
+                    <input type="text" class="form-input" id="storeDeliveryTime" placeholder="30-45 min">
+                </div>
             </div>
 
             <div class="form-group">
@@ -457,6 +444,7 @@
                 <input type="text" class="form-input" id="storeAddress" placeholder="Rua, número - Bairro">
             </div>
 
+            <button class="btn btn-primary btn-block" onclick="saveStoreInfo()">Salvar informações</button>
         </div>
 
         <!-- ===== HORÁRIO DE FUNCIONAMENTO ===== -->
@@ -522,6 +510,7 @@
             </div>
         </div>
 
+        <button class="btn btn-primary btn-block bottom-save" onclick="saveAllSettings()">Salvar todas configurações</button>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -529,7 +518,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script>
         // ===== THEME SYNC =====
-        const THEME_KEYS = ['pedrad-theme', 'theme', 'appTheme', 'data-theme', 'color-theme', 'pedrad_theme'];
+        const THEME_KEYS = ['theme', 'appTheme', 'pedrad_theme', 'color-theme', 'data-theme'];
 
         function readParentTheme() {
             try {
@@ -590,49 +579,6 @@
         let currentImageBase64 = null;
         const UI_SOUND_KEY = 'pedrad_ui_sounds';
 
-        window.internalNavConfig = {
-            single: true,
-            singleIcon: '✓',
-            singleLabel: 'Salvar configurações',
-            singleTitle: 'Salvar configurações',
-            singleAction: 'window.saveAllSettings?.()'
-        };
-
-        function formatPhone(value) {
-            const digits = String(value || '').replace(/\D/g, '').slice(0, 11);
-            const ddd = digits.slice(0, 2);
-            const prefix = digits.slice(2, 3);
-            const first = digits.slice(3, 7);
-            const second = digits.slice(7, 11);
-
-            if (digits.length <= 2) return ddd ? `(${ddd}` : '';
-            if (digits.length <= 3) return `(${ddd}) ${prefix}`;
-            if (digits.length <= 7) return `(${ddd}) ${prefix} ${first}`;
-            return `(${ddd}) ${prefix} ${first} ${second}`;
-        }
-
-        function isValidPhone(value) {
-            return /^\(\d{2}\) \d \d{4} \d{4}$/.test(String(value || '').trim());
-        }
-
-        function handlePhoneInput(input) {
-            input.value = formatPhone(input.value);
-        }
-
-        function validatePhoneField(showMessage = false) {
-            const input = document.getElementById('storePhone');
-            if (!input) return false;
-
-            input.value = formatPhone(input.value);
-            const ok = isValidPhone(input.value);
-            input.classList.toggle('invalid', !ok && !!input.value.trim());
-
-            if (!ok && showMessage) {
-                showToast('Telefone deve seguir o padrão (99) 1 2345 6578');
-            }
-            return ok;
-        }
-
         // ===== DAYS DEFINITION =====
         const DAYS = [
             { key: 'mon',      label: 'Segunda-feira' },
@@ -641,7 +587,8 @@
             { key: 'thu',      label: 'Quinta-feira'  },
             { key: 'fri',      label: 'Sexta-feira'   },
             { key: 'sat',      label: 'Sábado'        },
-            { key: 'sun',      label: 'Domingo'       }
+            { key: 'sun',      label: 'Domingo'       },
+            { key: 'holidays', label: 'Feriados'      }
         ];
 
         function buildDayRows() {
@@ -756,7 +703,7 @@
 
         function loadStoreUI() {
             document.getElementById('storeName').value = currentStore.name || '';
-            document.getElementById('storePhone').value = formatPhone(currentStore.phone || '');
+            document.getElementById('storePhone').value = currentStore.phone || '';
             document.getElementById('storeCnpj').value = currentStore.cnpj || '';
             document.getElementById('storeCategory').value = currentStore.category || 'Hambúrgueres';
             document.getElementById('storeDescription').value = currentStore.description || '';
@@ -794,7 +741,8 @@
                 thu: { enabled: true, open: wOpen, close: wClose },
                 fri: { enabled: true, open: wOpen, close: wClose },
                 sat: { enabled: true, open: eOpen, close: eClose },
-                sun: { enabled: true, open: eOpen, close: eClose }
+                sun: { enabled: true, open: eOpen, close: eClose },
+                holidays: { enabled: false, open: '11:00', close: '22:00' }
             };
         }
 
@@ -834,7 +782,9 @@
             disableUploadButton(true);
 
             try {
-                const base64 = await resizeImageToBase64(file, 600, 600);
+                const base64 = shouldUseTinySvgTransform()
+                    ? await resizeImageTo48Svg(file)
+                    : await resizeImageToBase64(file, 600, 600);
                 currentImageBase64 = base64;
                 updateImagePreview(base64);
                 setUploadStatus('✓ Imagem processada', 'success');
@@ -870,6 +820,46 @@
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
                         resolve(canvas.toDataURL('image/jpeg', 0.9));
+                    };
+                    img.onerror = () => reject(new Error('Erro ao carregar imagem'));
+                    img.src = e.target.result;
+                };
+                reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function isPcApp() {
+            return !!window.PedraElectron;
+        }
+
+        function isMobileDevice() {
+            return /android|iphone|ipad|ipod/i.test(navigator.userAgent || '');
+        }
+
+        function shouldUseTinySvgTransform() {
+            return isPcApp() || isMobileDevice();
+        }
+
+        async function resizeImageTo48Svg(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = 48;
+                        canvas.height = 48;
+                        const side = Math.min(img.width, img.height);
+                        const sx = (img.width - side) / 2;
+                        const sy = (img.height - side) / 2;
+                        const ctx = canvas.getContext('2d');
+                        ctx.imageSmoothingEnabled = true;
+                        ctx.imageSmoothingQuality = 'high';
+                        ctx.drawImage(img, sx, sy, side, side, 0, 0, 48, 48);
+                        const jpeg48 = canvas.toDataURL('image/jpeg', 0.9);
+                        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48"><image href="${jpeg48}" x="0" y="0" width="48" height="48" preserveAspectRatio="none"/></svg>`;
+                        resolve(`data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svg)))}`);
                     };
                     img.onerror = () => reject(new Error('Erro ao carregar imagem'));
                     img.src = e.target.result;
@@ -942,15 +932,10 @@
         }
 
         // ===== SAVE =====
-        async function saveAllSettings() {
+        async function saveStoreInfo() {
             try {
                 if (!currentStore?.id) { showToast('Loja não carregada'); return; }
-                if (!validatePhoneField(true)) return;
-
-                const hours = {};
-                DAYS.forEach(d => { hours[d.key] = getDayState(d.key); });
-
-                const updateData = {
+                const data = {
                     name: (document.getElementById('storeName').value || '').trim(),
                     phone: (document.getElementById('storePhone').value || '').trim(),
                     cnpj: (document.getElementById('storeCnpj').value || '').trim(),
@@ -958,6 +943,22 @@
                     description: (document.getElementById('storeDescription').value || '').trim(),
                     deliveryTime: (document.getElementById('storeDeliveryTime').value || '').trim(),
                     address: (document.getElementById('storeAddress').value || '').trim(),
+                    imageUrl: currentImageBase64 || '',
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                await db.collection('stores').doc(currentStore.id).update(data);
+                showToast('✓ Informações salvas!');
+            } catch (err) { console.error(err); showToast('✗ Erro ao salvar'); }
+        }
+
+        async function saveAllSettings() {
+            try {
+                if (!currentStore?.id) { showToast('Loja não carregada'); return; }
+
+                const hours = {};
+                DAYS.forEach(d => { hours[d.key] = getDayState(d.key); });
+
+                const updateData = {
                     imageUrl: currentImageBase64 || '',
                     settings: {
                         soundEnabled: document.getElementById('soundToggle').classList.contains('active'),
@@ -980,6 +981,6 @@
             setTimeout(() => toast.classList.remove('show'), 3000);
         }
     </script>
-    <script src="ui/menu/nav.js"></script>
+    
 </body>
 </html>
