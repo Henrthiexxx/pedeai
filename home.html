@@ -234,7 +234,7 @@
 
 <!-- ══════════ MAIN APP ══════════ -->
 <div id="mainApp">
-    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+    <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
 
     <!-- Sidebar → Bottom Drawer -->
     <aside class="sidebar" id="sidebar">
@@ -252,10 +252,10 @@
         <nav class="sidebar-nav">
             <div class="nav-section">
                 <div class="nav-section-title">Principal</div>
-                <div class="nav-item" data-page="dashboard" onclick="navigateTo('dashboard'); toggleSidebar()">
+                <div class="nav-item" data-page="dashboard" onclick="navigateTo('dashboard')">
                     <span class="icon">⊞</span> Painel
                 </div>
-                <div class="nav-item" data-page="history" onclick="navigateTo('history'); toggleSidebar()">
+                <div class="nav-item" data-page="history" onclick="navigateTo('history')">
                     <span class="icon">☰</span> Histórico
                     <span class="nav-badge" id="pendingBadge" style="display:none">0</span>
                 </div>
@@ -263,6 +263,7 @@
             <div class="nav-section">
                 <div class="nav-section-title">Cardápio</div>
                 <div class="nav-item" onclick="openPopup('products.html')"><span class="icon">◉</span> Produtos</div>
+                <div class="nav-item" onclick="location.href='promocoes.html'"><span class="icon">%</span> Promoções</div>
                 <div class="nav-item" onclick="openPopup('batch-editor.html')"><span class="icon">⊕</span> Cadastro em Lote</div>
                 <div class="nav-item" onclick="openPopup('categories.html')"><span class="icon">▦</span> Categorias</div>
                 <div class="nav-item" onclick="openPopup('layout-editor.html')"><span class="icon">◫</span> Layout da Loja</div>
