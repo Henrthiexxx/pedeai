@@ -473,6 +473,7 @@ function navigateTo(page) {
 }
 
 function toggleSidebar() {
+    if (Date.now() < (window.__suppressMenuToggleUntil || 0)) return;
     document.getElementById('sidebar').classList.toggle('open');
     document.getElementById('overlay').classList.toggle('show');
 }
@@ -491,11 +492,16 @@ function setupMobileOutsideClickClose() {
         if (!isMobile || !sidebar.classList.contains('open')) return;
         if (sidebar.contains(event.target)) return;
         if (menuToggle && menuToggle.contains(event.target)) return;
+
+        // Evita "tap-through": toque que fecha e imediatamente reabre no botão do menu.
+        window.__suppressMenuToggleUntil = Date.now() + 420;
+        if (event.cancelable) event.preventDefault();
+        event.stopPropagation();
         closeSidebar();
     };
 
     document.addEventListener('click', maybeClose, true);
-    document.addEventListener('touchstart', maybeClose, { capture: true, passive: true });
+    document.addEventListener('touchstart', maybeClose, { capture: true, passive: false });
 }
 
 setupMobileOutsideClickClose();
