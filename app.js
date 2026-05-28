@@ -481,6 +481,25 @@ function closeSidebar() {
     document.getElementById('overlay').classList.remove('show');
 }
 
+function setupMobileOutsideClickClose() {
+    const sidebar = document.getElementById('sidebar');
+    const menuToggle = document.querySelector('.menu-toggle');
+    if (!sidebar) return;
+
+    const maybeClose = (event) => {
+        const isMobile = window.matchMedia('(max-width: 1023px)').matches;
+        if (!isMobile || !sidebar.classList.contains('open')) return;
+        if (sidebar.contains(event.target)) return;
+        if (menuToggle && menuToggle.contains(event.target)) return;
+        closeSidebar();
+    };
+
+    document.addEventListener('click', maybeClose, true);
+    document.addEventListener('touchstart', maybeClose, { capture: true, passive: true });
+}
+
+setupMobileOutsideClickClose();
+
 // ══════════════════════════════════════════════
 //  DASHBOARD RENDER
 // ══════════════════════════════════════════════
@@ -568,8 +587,7 @@ function renderOrderCard(order) {
                         cash:'💵 Dinheiro', picpay:'💚 PicPay', food_voucher:'🎫 Vale Alimentação' };
     const payMethod = payLabels[order.paymentMethod] || order.paymentMethod || '—';
     const change = order.needChange && order.changeFor ? 'Troco p/ ' + formatCurrency(order.changeFor) : '';
-    const fee = order.deliveryFee || 0;
-    const sub = (order.total || 0) - fee;
+    const sub = order.subtotal ?? order.total ?? 0;
     const notes = order.notes || order.observation || '';
     const isPickup = order.orderType === 'pickup' || order.deliveryMode === 'pickup';
 
@@ -636,7 +654,6 @@ function renderOrderCard(order) {
                     ${change ? `<div class="order-change">${change}</div>` : ''}
                     <div class="order-totals">
                         <div class="order-total-row"><span>Subtotal</span><span>${formatCurrency(sub)}</span></div>
-                        ${fee > 0 ? `<div class="order-total-row"><span>Entrega</span><span>${formatCurrency(fee)}</span></div>` : ''}
                         <div class="order-total-row final"><span>Total</span><span>${formatCurrency(order.total)}</span></div>
                     </div>
                 </div>
@@ -782,8 +799,7 @@ function renderHistoryCard(order) {
     const time = date.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
     const customer = order.userName || order.customerName || 'Cliente';
     const sClass = order.status === 'cancelled' ? 'cancelled' : 'delivered';
-    const fee = order.deliveryFee || 0;
-    const sub = (order.total || 0) - fee;
+    const sub = order.subtotal ?? order.total ?? 0;
     const payLabels = { pix:'💠 PIX', credit:'💳 Crédito', debit:'💳 Débito',
                         cash:'💵 Dinheiro', picpay:'💚 PicPay', food_voucher:'🎫 Vale Alimentação' };
     const pay = payLabels[order.paymentMethod] || order.paymentMethod || '—';
@@ -829,7 +845,6 @@ function renderHistoryCard(order) {
                     <div class="order-section-label">Pagamento · ${pay}</div>
                     <div class="order-totals">
                         <div class="order-total-row"><span>Subtotal</span><span>${formatCurrency(sub)}</span></div>
-                        ${fee > 0 ? `<div class="order-total-row"><span>Entrega</span><span>${formatCurrency(fee)}</span></div>` : ''}
                         <div class="order-total-row final"><span>Total</span><span>${formatCurrency(order.total)}</span></div>
                     </div>
                 </div>
