@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Compartilhar Loja - Pedra Delivery</title>
+  <meta name="theme-color" content="#0a0a0c">
+  <script>
+    (function(){
+      var keys=['pedrad-theme','theme','appTheme','data-theme','color-theme','pedrad_theme'];
+      var theme='dark';
+      for(var i=0;i<keys.length;i++){
+        try{
+          var v=localStorage.getItem(keys[i]);
+          if(v==='light'||v==='dark'){theme=v;break;}
+        }catch(_){ }
+      }
+      document.documentElement.setAttribute('data-theme',theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body{
+      min-height:100vh;
+      padding-top:env(safe-area-inset-top);
+      padding-bottom:calc(env(safe-area-inset-bottom) + 24px);
+      background:radial-gradient(ellipse at 50% 0%,var(--bg-2) 0%,var(--bg-0) 68%);
+    }
+    .container{max-width:720px;margin:0 auto;padding:20px}
+    .page-header{display:flex;align-items:center;gap:12px;margin-bottom:22px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+    .page-header h1{font-size:1.04rem;font-weight:600;letter-spacing:-.02em}
+    .card{background:var(--bg-1);border:1px solid var(--border);border-radius:var(--r);padding:18px;box-shadow:var(--sh-sm);margin-bottom:14px}
+    .store-name{font-size:1rem;font-weight:700;letter-spacing:-.02em;color:var(--text-0)}
+    .store-sub{font-size:.8rem;color:var(--text-2);margin-top:4px;line-height:1.45}
+    .link-wrap{display:flex;gap:8px;align-items:stretch;margin-top:14px}
+    .link-input{flex:1;min-height:44px;border:1px solid var(--border);background:var(--bg-2);color:var(--text-0);border-radius:12px;padding:10px 12px;font-size:.8rem}
+    .link-input:focus{outline:none;border-color:var(--border-h)}
+    .btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+    .btn{min-height:42px;padding:0 12px;border-radius:10px;border:1px solid var(--border);background:var(--bg-2);color:var(--text-0);font-size:.8rem;font-weight:600;cursor:pointer}
+    .btn:hover{border-color:var(--border-h);background:var(--bg-3)}
+    .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-t)}
+    .btn.full{grid-column:1 / -1}
+    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
+    .chip{font-size:.72rem;padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:var(--bg-2);color:var(--text-2)}
+    .muted{font-size:.74rem;color:var(--text-2);line-height:1.5}
+  </style>
+</head>
+<body>
+  <div class="toast" id="toast"></div>
+
+  <div class="container">
+    <div class="page-header">
+      <button class="btn" type="button" onclick="goBack()">Voltar</button>
+      <h1>Compartilhar Loja</h1>
+    </div>
+
+    <div class="card">
+      <div class="store-name" id="storeName">Carregando...</div>
+      <div class="store-sub">Use este link para levar o cliente direto para a sua loja no app do cliente.</div>
+
+      <div class="link-wrap">
+        <input id="storeLink" class="link-input" type="text" readonly>
+      </div>
+
+      <div class="btn-grid">
+        <button class="btn primary" type="button" onclick="copyLink()">Copiar Link</button>
+        <button class="btn" type="button" onclick="shareNative()">Compartilhar</button>
+        <button class="btn" type="button" onclick="shareWhatsapp()">WhatsApp</button>
+        <button class="btn" type="button" onclick="openLink()">Abrir Link</button>
+        <button class="btn full" type="button" onclick="regenerateWithFirebaseApp()">Gerar com firebaseapp.com</button>
+      </div>
+
+      <div class="row">
+        <span class="chip" id="baseChip">base: -</span>
+        <span class="chip" id="storeChip">loja: -</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="muted">
+        Dica: você pode compartilhar em redes sociais, status e bio. O cliente abre o link e cai direto na sua vitrine.
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script>
+    const DEFAULT_CLIENT_BASE = 'https://pedrad-814d0.web.app';
+    const FIREBASEAPP_CLIENT_BASE = 'https://pedrad-814d0.firebaseapp.com';
+
+    let currentStoreId = null;
+    let currentStoreName = 'Minha Loja';
+    let currentLink = '';
+    let currentBase = '';
+
+    function toast(msg){
+      const t=document.getElementById('toast');
+      if(!t) return;
+      t.textContent=msg;
+      t.classList.add('show');
+      clearTimeout(t._timer);
+      t._timer=setTimeout(()=>t.classList.remove('show'),2200);
+    }
+
+    function goBack(){
+      if(window.parent!==window) window.parent.postMessage('closePopup','*');
+      else history.back();
+    }
+
+    function sanitizeBase(url){
+      return String(url||'').replace(/\/$/, '');
+    }
+
+    function buildStoreLink(base, storeId){
+      return sanitizeBase(base) + '/store.html?id=' + encodeURIComponent(storeId);
+    }
+
+    function resolveClientBase(){
+      const fromLocal = localStorage.getItem('pedrad_cliente_base_url') || localStorage.getItem('pedrad_client_base_url');
+      return sanitizeBase(fromLocal || DEFAULT_CLIENT_BASE);
+    }
+
+    async function loadStore(){
+      currentStoreId = localStorage.getItem('currentStoreId');
+      if(!currentStoreId){
+        document.getElementById('storeName').textContent = 'Loja não encontrada';
+        document.getElementById('storeLink').value = '';
+        toast('Faça login novamente para carregar a loja.');
+        return;
+      }
+
+      currentBase = resolveClientBase();
+      currentLink = buildStoreLink(currentBase, currentStoreId);
+
+      document.getElementById('storeLink').value = currentLink;
+      document.getElementById('storeChip').textContent = 'loja: ' + currentStoreId;
+      document.getElementById('baseChip').textContent = 'base: ' + currentBase;
+
+      try{
+        const doc = await db.collection('stores').doc(currentStoreId).get();
+        if(doc.exists){
+          const data = doc.data() || {};
+          currentStoreName = data.name || data.storeName || currentStoreName;
+        }
+      }catch(_){ }
+
+      document.getElementById('storeName').textContent = currentStoreName;
+    }
+
+    async function copyLink(){
+      if(!currentLink){ toast('Link indisponível.'); return; }
+      try{
+        await navigator.clipboard.writeText(currentLink);
+        toast('Link copiado!');
+      }catch(_){
+        const input=document.getElementById('storeLink');
+        input.focus();
+        input.select();
+        document.execCommand('copy');
+        toast('Link copiado!');
+      }
+    }
+
+    async function shareNative(){
+      if(!currentLink){ toast('Link indisponível.'); return; }
+      const text = 'Peça agora na minha loja ' + currentStoreName + ' no Pedra Delivery: ' + currentLink;
+      if(navigator.share){
+        try{
+          await navigator.share({ title:'Minha loja no Pedra Delivery', text, url: currentLink });
+          return;
+        }catch(_){ }
+      }
+      await copyLink();
+    }
+
+    function shareWhatsapp(){
+      if(!currentLink){ toast('Link indisponível.'); return; }
+      const text = encodeURIComponent('Peça agora na minha loja ' + currentStoreName + ' no Pedra Delivery: ' + currentLink);
+      window.open('https://wa.me/?text=' + text, '_blank');
+    }
+
+    function openLink(){
+      if(!currentLink){ toast('Link indisponível.'); return; }
+      window.open(currentLink, '_blank');
+    }
+
+    function regenerateWithFirebaseApp(){
+      if(!currentStoreId){ toast('Loja não encontrada.'); return; }
+      currentBase = FIREBASEAPP_CLIENT_BASE;
+      currentLink = buildStoreLink(currentBase, currentStoreId);
+      document.getElementById('storeLink').value = currentLink;
+      document.getElementById('baseChip').textContent = 'base: ' + currentBase;
+      try{ localStorage.setItem('pedrad_cliente_base_url', currentBase); }catch(_){ }
+      toast('Link atualizado para firebaseapp.com');
+    }
+
+    document.addEventListener('DOMContentLoaded', loadStore);
+  </script>
+</body>
+</html>

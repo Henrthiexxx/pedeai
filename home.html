@@ -70,7 +70,8 @@
             .main-content { margin-left: 0 !important; }
             .sidebar { transform: translateY(105%) !important; }
             .sidebar.open { transform: translateY(0) !important; }
-            .menu-toggle, .overlay { display: none !important; }
+            .menu-toggle { display: none !important; }
+            .overlay { z-index: 250 !important; }
         }
 
         .main-content {
@@ -264,9 +265,8 @@
                 <div class="nav-section-title">Cardápio</div>
                 <div class="nav-item" onclick="openPopup('products.html')"><span class="icon">◉</span> Produtos</div>
                 <div class="nav-item" onclick="location.href='promocoes.html'"><span class="icon">%</span> Promoções</div>
-                <div class="nav-item" onclick="openPopup('batch-editor.html')"><span class="icon">⊕</span> Cadastro em Lote</div>
                 <div class="nav-item" onclick="openPopup('categories.html')"><span class="icon">▦</span> Categorias</div>
-                <div class="nav-item" onclick="openPopup('layout-editor.html')"><span class="icon">◫</span> Layout da Loja</div>
+                <div class="nav-item" onclick="openPopup('compartilhar.html')"><span class="icon">⤴</span> Compartilhar Loja</div>
                 <div class="nav-item" onclick="openPopup('meu-entregador.html')"><span class="icon">↗</span> Meu Entregador</div>
                 <div class="nav-item" onclick="openPopup('fatura-loja.html')"><span class="icon">▤</span> Minha Fatura</div>
                 <div class="nav-item" onclick="showComingSoon()"><span class="icon">◈</span> Serviços</div>
@@ -416,10 +416,21 @@
     window.addEventListener('load', () => {
         const _orig = window.handleLogout;
         window.handleLogout = async function () {
-            try {
-                await firebase.auth().signOut();
-            } catch (_) {}
-            window.location.replace('login.html');
+            const doSignOut = async function () {
+                try {
+                    await firebase.auth().signOut();
+                } catch (_) {}
+                window.location.replace('login.html');
+            };
+
+            if (typeof window.showConfirm === 'function') {
+                window.showConfirm('Sair da conta?', 'Você será desconectado.', doSignOut, 'Sair');
+                return;
+            }
+
+            if (window.confirm('Sair da conta? Você será desconectado.')) {
+                await doSignOut();
+            }
         };
     });
 })();
