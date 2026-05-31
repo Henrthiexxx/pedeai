@@ -63,15 +63,13 @@
       </div>
 
       <div class="btn-grid">
-        <button class="btn primary" type="button" onclick="copyLink()">Copiar Link</button>
-        <button class="btn" type="button" onclick="shareNative()">Compartilhar</button>
-        <button class="btn" type="button" onclick="shareWhatsapp()">WhatsApp</button>
-        <button class="btn" type="button" onclick="openLink()">Abrir Link</button>
-        <button class="btn full" type="button" onclick="regenerateWithFirebaseApp()">Gerar com firebaseapp.com</button>
+        <button class="btn primary full" type="button" onclick="shareWhatsapp()">Compartilhar no WhatsApp</button>
       </div>
 
+      <label for="waMessage" class="store-sub" style="display:block;margin-top:14px">Mensagem do WhatsApp</label>
+      <textarea id="waMessage" class="link-input" style="min-height:96px;resize:vertical" placeholder="Digite a mensagem que será enviada"></textarea>
+
       <div class="row">
-        <span class="chip" id="baseChip">base: -</span>
         <span class="chip" id="storeChip">loja: -</span>
       </div>
     </div>
@@ -88,8 +86,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js"></script>
   <script>
-    const DEFAULT_CLIENT_BASE = 'https://pedrad-814d0.web.app';
-    const FIREBASEAPP_CLIENT_BASE = 'https://pedrad-814d0.firebaseapp.com';
+    const OFFICIAL_CLIENT_BASE = 'https://www.pedradelivery.com.br';
 
     let currentStoreId = null;
     let currentStoreName = 'Minha Loja';
@@ -119,8 +116,7 @@
     }
 
     function resolveClientBase(){
-      const fromLocal = localStorage.getItem('pedrad_cliente_base_url') || localStorage.getItem('pedrad_client_base_url');
-      return sanitizeBase(fromLocal || DEFAULT_CLIENT_BASE);
+      return sanitizeBase(OFFICIAL_CLIENT_BASE);
     }
 
     async function loadStore(){
@@ -137,7 +133,6 @@
 
       document.getElementById('storeLink').value = currentLink;
       document.getElementById('storeChip').textContent = 'loja: ' + currentStoreId;
-      document.getElementById('baseChip').textContent = 'base: ' + currentBase;
 
       try{
         const doc = await db.collection('stores').doc(currentStoreId).get();
@@ -148,53 +143,22 @@
       }catch(_){ }
 
       document.getElementById('storeName').textContent = currentStoreName;
-    }
-
-    async function copyLink(){
-      if(!currentLink){ toast('Link indisponível.'); return; }
-      try{
-        await navigator.clipboard.writeText(currentLink);
-        toast('Link copiado!');
-      }catch(_){
-        const input=document.getElementById('storeLink');
-        input.focus();
-        input.select();
-        document.execCommand('copy');
-        toast('Link copiado!');
-      }
-    }
-
-    async function shareNative(){
-      if(!currentLink){ toast('Link indisponível.'); return; }
-      const text = 'Peça agora na minha loja ' + currentStoreName + ' no Pedra Delivery: ' + currentLink;
-      if(navigator.share){
-        try{
-          await navigator.share({ title:'Minha loja no Pedra Delivery', text, url: currentLink });
-          return;
-        }catch(_){ }
-      }
-      await copyLink();
+      const saved = localStorage.getItem('pedrad_whatsapp_share_message') || '';
+      const defaultMsg = 'Peça agora na minha loja ' + currentStoreName + ' no Pedra Delivery: {link}';
+      const waField = document.getElementById('waMessage');
+      waField.value = saved || defaultMsg;
+      waField.addEventListener('input', () => {
+        localStorage.setItem('pedrad_whatsapp_share_message', waField.value);
+      });
     }
 
     function shareWhatsapp(){
       if(!currentLink){ toast('Link indisponível.'); return; }
-      const text = encodeURIComponent('Peça agora na minha loja ' + currentStoreName + ' no Pedra Delivery: ' + currentLink);
+      const raw = (document.getElementById('waMessage')?.value || '').trim();
+      const base = raw || ('Peça agora na minha loja ' + currentStoreName + ' no Pedra Delivery: {link}');
+      const message = base.includes('{link}') ? base.replaceAll('{link}', currentLink) : (base + ' ' + currentLink);
+      const text = encodeURIComponent(message);
       window.open('https://wa.me/?text=' + text, '_blank');
-    }
-
-    function openLink(){
-      if(!currentLink){ toast('Link indisponível.'); return; }
-      window.open(currentLink, '_blank');
-    }
-
-    function regenerateWithFirebaseApp(){
-      if(!currentStoreId){ toast('Loja não encontrada.'); return; }
-      currentBase = FIREBASEAPP_CLIENT_BASE;
-      currentLink = buildStoreLink(currentBase, currentStoreId);
-      document.getElementById('storeLink').value = currentLink;
-      document.getElementById('baseChip').textContent = 'base: ' + currentBase;
-      try{ localStorage.setItem('pedrad_cliente_base_url', currentBase); }catch(_){ }
-      toast('Link atualizado para firebaseapp.com');
     }
 
     document.addEventListener('DOMContentLoaded', loadStore);
