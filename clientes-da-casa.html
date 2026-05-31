@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clientes da Casa</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --card: #111a2b;
+      --muted: #98a4ba;
+      --text: #ebf1ff;
+      --line: rgba(255,255,255,.1);
+      --primary: #2dd4bf;
+      --danger: #ef4444;
+      --warn: #f59e0b;
+      --gold: #fbbf24;
+    }
+    html[data-theme="light"] {
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --muted: #5b6473;
+      --text: #141a24;
+      --line: rgba(14,24,42,.12);
+      --primary: #0d9488;
+      --danger: #dc2626;
+      --warn: #b45309;
+      --gold: #b45309;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Inter", system-ui, -apple-system, sans-serif;
+      background: radial-gradient(circle at top right, rgba(45,212,191,.16), transparent 38%), var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 20px; }
+    .head { display:flex;justify-content:space-between;align-items:flex-start;gap:12px; margin-bottom:16px; }
+    .title { font-size: 1.4rem; font-weight: 800; display:flex; align-items:center; gap:8px; }
+    .sub { color: var(--muted); font-size: .9rem; margin-top:2px; }
+    .store-chip {
+      display:inline-flex; align-items:center; gap:6px; margin-top:6px;
+      background: rgba(45,212,191,.12); color: var(--primary);
+      border:1px solid var(--line); padding:4px 10px; border-radius:999px;
+      font-size:.82rem; font-weight:700;
+    }
+    .stats { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+    .stat {
+      flex:1; min-width:140px; background: var(--card); border:1px solid var(--line);
+      border-radius:12px; padding:12px 14px;
+    }
+    .stat .n { font-size:1.5rem; font-weight:800; }
+    .stat .l { color:var(--muted); font-size:.78rem; }
+    .grid { display:grid; grid-template-columns: 340px 1fr; gap: 16px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 10px 24px rgba(0,0,0,.14);
+    }
+    .label { display:block; font-size:.82rem; color:var(--muted); margin-bottom:6px; }
+    .input, .select {
+      width:100%;
+      background: transparent;
+      color: var(--text);
+      border:1px solid var(--line);
+      border-radius:10px;
+      padding:10px 11px;
+      outline:none;
+    }
+    .input:focus, .select:focus { border-color: var(--primary); }
+    .row { display:flex; gap:8px; }
+    .btn {
+      border:1px solid var(--line);
+      background: transparent;
+      color: var(--text);
+      border-radius:10px;
+      padding:9px 12px;
+      cursor:pointer;
+      font-weight:600;
+      display:inline-flex; align-items:center; gap:6px;
+    }
+    .btn:hover { border-color: var(--primary); }
+    .btn.primary { background: var(--primary); color:#05211d; border-color: transparent; }
+    .btn.warn { color: var(--warn); }
+    .btn.danger { color: #fff; background: var(--danger); border-color: transparent; }
+    .btn.sm { padding:6px 10px; font-size:.85rem; }
+    .actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+    .toolbar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:10px; }
+    .toolbar .input { flex:1; min-width:180px; }
+    .list { display:flex; flex-direction:column; gap:10px; max-height: 66vh; overflow:auto; }
+    .item { border:1px solid var(--line); border-radius: 12px; padding: 12px; display:flex; gap:12px; }
+    .avatar {
+      width:44px; height:44px; flex:0 0 44px; border-radius:50%;
+      background: linear-gradient(135deg, var(--primary), #6366f1);
+      color:#05211d; display:flex; align-items:center; justify-content:center;
+      font-weight:800; font-size:1.05rem;
+    }
+    .item-body { flex:1; min-width:0; }
+    .item-top { display:flex; justify-content:space-between; gap:8px; align-items:flex-start; }
+    .name { font-weight:800; font-size:1.02rem; }
+    .meta { color:var(--muted); font-size:.82rem; margin-top:4px; }
+    .contact { font-size:.86rem; margin-top:4px; }
+    .pill {
+      display:inline-flex; align-items:center; gap:4px; padding:3px 8px; border-radius:999px; font-size:.72rem;
+      border:1px solid var(--line); color: var(--muted); white-space:nowrap;
+    }
+    .pill.vip { background: rgba(251,191,36,.15); color: var(--gold); border-color: transparent; font-weight:700; }
+    .empty { text-align:center; color:var(--muted); padding:24px; border:1px dashed var(--line); border-radius:12px; }
+    .hint { color: var(--muted); font-size:.8rem; margin-top:10px; }
+    input[type="file"] { display:none; }
+    @media (max-width: 920px) { .grid { grid-template-columns: 1fr; } .list { max-height: unset; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="head">
+      <div>
+        <div class="title">👥 Clientes da Casa</div>
+        <div class="sub">Sua base de clientes fiéis, salva com segurança neste computador.</div>
+        <div class="store-chip" id="storeChip">🏪 Carregando loja…</div>
+      </div>
+      <button class="btn" onclick="goBack()">✕ Fechar</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="n" id="statTotal">0</div><div class="l">Clientes cadastrados</div></div>
+      <div class="stat"><div class="n" id="statPurchases">0</div><div class="l">Compras reconhecidas</div></div>
+      <div class="stat"><div class="n" id="statVip">0</div><div class="l">Clientes VIP (5+ compras)</div></div>
+    </div>
+
+    <div class="grid">
+      <section class="card">
+        <div style="font-weight:700;margin-bottom:10px" id="formTitle">Cadastrar cliente</div>
+
+        <label class="label">Identificar por</label>
+        <select id="idType" class="select">
+          <option value="phone">📱 Telefone</option>
+          <option value="uid">🆔 Conta do aplicativo</option>
+          <option value="name">🔤 Nome</option>
+        </select>
+
+        <label class="label" style="margin-top:10px" id="idValueLabel">Telefone</label>
+        <input id="idValue" class="input" placeholder="Ex: (65) 99999-0000" />
+
+        <label class="label" style="margin-top:10px">Como você chama este cliente</label>
+        <input id="alias" class="input" placeholder="Ex: Seu João da esquina" />
+
+        <label class="label" style="margin-top:10px">Nome completo (opcional)</label>
+        <input id="baseName" class="input" placeholder="Ex: João Pereira" />
+
+        <div class="actions">
+          <button class="btn primary" id="saveBtn" onclick="saveCustomer()">💾 Salvar</button>
+          <button class="btn warn" onclick="clearForm()">Limpar</button>
+        </div>
+        <div class="hint">🔒 Tudo fica salvo neste computador, separado por loja. Nada é enviado para a internet.</div>
+      </section>
+
+      <section class="card">
+        <div class="toolbar">
+          <input id="search" class="input" placeholder="🔎 Buscar por nome, apelido ou telefone" oninput="render()" />
+          <button class="btn sm" onclick="exportJson()" title="Baixar backup completo (.json)">⬇ Backup</button>
+          <button class="btn sm" onclick="exportCsv()" title="Baixar planilha (.csv)">📊 CSV</button>
+          <button class="btn sm" onclick="document.getElementById('importFile').click()" title="Importar backup">⬆ Importar</button>
+          <button class="btn sm danger" onclick="clearAll()" title="Apagar todos os clientes desta loja">🗑 Limpar tudo</button>
+          <input type="file" id="importFile" accept="application/json,.json" onchange="importJson(event)" />
+        </div>
+        <div class="list" id="list"></div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const HOUSE_PREFIX = 'pedrad_house_customers_v1:';
+    const ALIAS_PREFIX = 'pedrad_house_customer_aliases_v1:';
+    const params = new URLSearchParams(location.search);
+    const storeId = params.get('storeId') || localStorage.getItem('currentStoreId') || '';
+    const storeName = params.get('storeName')
+      || localStorage.getItem('currentStoreName')
+      || (window.parent && window.parent !== window ? null : '')
+      || '';
+
+    let house = {};
+    let aliases = {};
+    let editingKey = '';
+
+    function customersApi() {
+      return window.PedraElectron?.customers || window.parent?.PedraElectron?.customers || null;
+    }
+
+    function goBack() {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage('closePopup', '*');
+        return;
+      }
+      history.back();
+    }
+
+    function esc(v) {
+      const d = document.createElement('div');
+      d.textContent = String(v || '');
+      return d.innerHTML;
+    }
+
+    function applyTheme() {
+      const t = localStorage.getItem('pedrad-theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', t);
+    }
+
+    function formatPhone(phone) {
+      const c = String(phone || '').replace(/\D/g, '');
+      if (c.length === 11) return `(${c.slice(0,2)}) ${c.slice(2,7)}-${c.slice(7)}`;
+      if (c.length === 10) return `(${c.slice(0,2)}) ${c.slice(2,6)}-${c.slice(6)}`;
+      return phone || '';
+    }
+
+    function normalizeId(type, value) {
+      const raw = String(value || '').trim();
+      if (!raw) return '';
+      if (type === 'phone') {
+        const p = raw.replace(/\D/g, '');
+        return p.length >= 10 ? p : '';
+      }
+      if (type === 'name') {
+        return raw
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .toLowerCase()
+          .replace(/\s+/g, ' ')
+          .trim();
+      }
+      return raw;
+    }
+
+    function buildKey(type, value) {
+      const val = normalizeId(type, value);
+      return val ? `${type}:${val}` : '';
+    }
+
+    function typeLabel(type) {
+      return { phone: '📱 Telefone', uid: '🆔 Conta do app', name: '🔤 Nome' }[type] || '👤 Cliente';
+    }
+
+    // Como o identificador deve aparecer (sem expor IDs internos do servidor)
+    function friendlyContact(type, value) {
+      if (type === 'phone') return '📱 ' + formatPhone(value);
+      if (type === 'name') return '🔤 ' + value;
+      if (type === 'uid') return '🆔 Conta vinculada ao aplicativo';
+      return '';
+    }
+
+    function initials(text) {
+      const t = String(text || '').trim();
+      if (!t) return '👤';
+      const parts = t.split(/\s+/).filter(Boolean);
+      const a = parts[0]?.[0] || '';
+      const b = parts.length > 1 ? parts[parts.length - 1][0] : '';
+      return (a + b).toUpperCase() || '👤';
+    }
+
+    async function loadData() {
+      const chip = document.getElementById('storeChip');
+      if (!storeId) {
+        chip.textContent = '⚠ Faça login no painel principal primeiro';
+        return;
+      }
+      chip.textContent = '🏪 ' + (storeName || 'Minha Loja');
+
+      const api = customersApi();
+      if (api?.get) {
+        try {
+          const resp = await api.get({ storeId });
+          house = resp?.customers || {};
+          aliases = resp?.aliases || {};
+          return;
+        } catch (err) {
+          console.warn('loadData (pc):', err);
+        }
+      }
+      // Fallback navegador
+      try { house = JSON.parse(localStorage.getItem(HOUSE_PREFIX + storeId) || '{}') || {}; }
+      catch (_) { house = {}; }
+      try { aliases = JSON.parse(localStorage.getItem(ALIAS_PREFIX + storeId) || '{}') || {}; }
+      catch (_) { aliases = {}; }
+    }
+
+    async function persist() {
+      const api = customersApi();
+      if (api?.set) {
+        try {
+          await api.set({ storeId, customers: house, aliases });
+          return;
+        } catch (err) {
+          console.warn('persist (pc):', err);
+        }
+      }
+      localStorage.setItem(HOUSE_PREFIX + storeId, JSON.stringify(house));
+      localStorage.setItem(ALIAS_PREFIX + storeId, JSON.stringify(aliases));
+    }
+
+    function getRows() {
+      const map = new Map();
+      Object.entries(house || {}).forEach(([key, payload]) => {
+        map.set(key, {
+          key,
+          type: key.split(':')[0] || 'id',
+          value: key.slice((key.indexOf(':') + 1) || 0),
+          baseName: payload?.name || '',
+          alias: aliases[key] || '',
+          orderCount: Number(payload?.orderCount || 0),
+          lastOrderAt: payload?.lastOrderAt || ''
+        });
+      });
+      Object.entries(aliases || {}).forEach(([key, alias]) => {
+        if (!map.has(key)) {
+          map.set(key, {
+            key,
+            type: key.split(':')[0] || 'id',
+            value: key.slice((key.indexOf(':') + 1) || 0),
+            baseName: '',
+            alias: alias || '',
+            orderCount: 0,
+            lastOrderAt: ''
+          });
+        }
+      });
+      return [...map.values()];
+    }
+
+    function updateStats(rows) {
+      const total = rows.length;
+      const purchases = rows.reduce((s, r) => s + (r.orderCount || 0), 0);
+      const vip = rows.filter(r => r.orderCount >= 5).length;
+      document.getElementById('statTotal').textContent = total;
+      document.getElementById('statPurchases').textContent = purchases;
+      document.getElementById('statVip').textContent = vip;
+    }
+
+    function render() {
+      const list = document.getElementById('list');
+      const q = (document.getElementById('search').value || '').toLowerCase().trim();
+      const all = getRows();
+      updateStats(all);
+
+      const rows = all.filter(r => {
+        const txt = `${r.alias} ${r.baseName} ${r.value} ${formatPhone(r.value)}`.toLowerCase();
+        return !q || txt.includes(q);
+      }).sort((a,b) => (b.orderCount - a.orderCount) || String(b.lastOrderAt).localeCompare(String(a.lastOrderAt)));
+
+      if (!rows.length) {
+        list.innerHTML = `<div class="empty">${q ? 'Nenhum cliente encontrado para essa busca.' : 'Nenhum cliente cadastrado nesta loja ainda.<br>Cadastre o primeiro ao lado 👈'}</div>`;
+        return;
+      }
+
+      list.innerHTML = rows.map(r => {
+        const display = r.alias || r.baseName || (r.type === 'phone' ? formatPhone(r.value) : 'Cliente');
+        const when = r.lastOrderAt ? new Date(r.lastOrderAt).toLocaleDateString('pt-BR') : '—';
+        const vip = r.orderCount >= 5 ? '<span class="pill vip">⭐ VIP</span>' : '';
+        const subName = (r.alias && r.baseName && r.alias !== r.baseName)
+          ? `<div class="meta">Nome: ${esc(r.baseName)}</div>` : '';
+        return `<div class="item">
+          <div class="avatar">${esc(initials(display))}</div>
+          <div class="item-body">
+            <div class="item-top">
+              <div>
+                <div class="name">${esc(display)}</div>
+                <div class="contact">${esc(friendlyContact(r.type, r.value))}</div>
+                ${subName}
+                <div class="meta">🛒 ${r.orderCount} compra(s) · Última: ${esc(when)}</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+                <span class="pill">${esc(typeLabel(r.type))}</span>
+                ${vip}
+              </div>
+            </div>
+            <div class="actions" style="margin-top:10px">
+              <button class="btn sm" onclick="editCustomer('${encodeURIComponent(r.key)}')">✏ Editar</button>
+              <button class="btn sm danger" onclick="removeCustomer('${encodeURIComponent(r.key)}')">🗑 Excluir</button>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function syncValueLabel() {
+      const type = document.getElementById('idType').value;
+      const label = document.getElementById('idValueLabel');
+      const input = document.getElementById('idValue');
+      if (type === 'phone') { label.textContent = 'Telefone'; input.placeholder = 'Ex: (65) 99999-0000'; }
+      else if (type === 'uid') { label.textContent = 'Código da conta do aplicativo'; input.placeholder = 'Cole o código da conta'; }
+      else { label.textContent = 'Nome'; input.placeholder = 'Ex: João Pereira'; }
+    }
+
+    function clearForm() {
+      editingKey = '';
+      document.getElementById('formTitle').textContent = 'Cadastrar cliente';
+      document.getElementById('idType').disabled = false;
+      document.getElementById('idValue').disabled = false;
+      document.getElementById('idType').value = 'phone';
+      document.getElementById('idValue').value = '';
+      document.getElementById('alias').value = '';
+      document.getElementById('baseName').value = '';
+      document.getElementById('saveBtn').textContent = '💾 Salvar';
+      syncValueLabel();
+    }
+
+    function editCustomer(rawKey) {
+      const key = decodeURIComponent(String(rawKey || ''));
+      const row = getRows().find(r => r.key === key);
+      if (!row) return;
+      editingKey = key;
+      document.getElementById('formTitle').textContent = 'Editar cliente';
+      document.getElementById('idType').value = row.type;
+      document.getElementById('idValue').value = row.type === 'phone' ? formatPhone(row.value) : row.value;
+      document.getElementById('idType').disabled = true;
+      document.getElementById('idValue').disabled = true;
+      document.getElementById('alias').value = row.alias || '';
+      document.getElementById('baseName').value = row.baseName || '';
+      document.getElementById('saveBtn').textContent = '💾 Atualizar';
+      syncValueLabel();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function saveCustomer() {
+      if (!storeId) { alert('Faça login no painel principal primeiro.'); return; }
+      const type = document.getElementById('idType').value;
+      const value = document.getElementById('idValue').value;
+      const alias = String(document.getElementById('alias').value || '').trim();
+      const baseName = String(document.getElementById('baseName').value || '').trim();
+
+      const key = editingKey || buildKey(type, value);
+      if (!key) {
+        alert(type === 'phone' ? 'Telefone inválido. Informe DDD + número.' : 'Identificador inválido.');
+        return;
+      }
+
+      const prev = house[key] || {};
+      house[key] = {
+        ...prev,
+        name: baseName || prev.name || '',
+        firstOrderAt: prev.firstOrderAt || new Date().toISOString(),
+        lastOrderAt: prev.lastOrderAt || new Date().toISOString(),
+        orderCount: Number(prev.orderCount || 0)
+      };
+
+      if (alias) aliases[key] = alias;
+      else delete aliases[key];
+
+      await persist();
+      clearForm();
+      await loadData();
+      render();
+    }
+
+    async function removeCustomer(rawKey) {
+      const key = decodeURIComponent(String(rawKey || ''));
+      if (!key) return;
+      if (!confirm('Remover este cliente desta loja?')) return;
+      delete house[key];
+      delete aliases[key];
+      await persist();
+      if (editingKey === key) clearForm();
+      await loadData();
+      render();
+    }
+
+    async function clearAll() {
+      if (!storeId) return;
+      const rows = getRows();
+      if (!rows.length) { alert('Não há clientes para apagar.'); return; }
+      if (!confirm(`Apagar TODOS os ${rows.length} clientes desta loja? Faça um backup antes, esta ação não pode ser desfeita.`)) return;
+      house = {};
+      aliases = {};
+      const api = customersApi();
+      if (api?.clear) { try { await api.clear({ storeId }); } catch (_) {} }
+      else await persist();
+      clearForm();
+      await loadData();
+      render();
+    }
+
+    function downloadFile(filename, content, mime) {
+      const blob = new Blob([content], { type: mime });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+    }
+
+    function stamp() {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    function exportJson() {
+      const payload = {
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        storeId,
+        storeName: storeName || '',
+        customers: house,
+        aliases
+      };
+      downloadFile(`clientes-${(storeName || 'loja').replace(/[^a-z0-9]+/gi,'-').toLowerCase()}-${stamp()}.json`,
+        JSON.stringify(payload, null, 2), 'application/json');
+    }
+
+    function exportCsv() {
+      const rows = getRows();
+      if (!rows.length) { alert('Não há clientes para exportar.'); return; }
+      const header = ['Nome/Apelido', 'Nome completo', 'Tipo', 'Contato', 'Compras', 'Ultima compra'];
+      const csvRows = rows.map(r => {
+        const display = r.alias || r.baseName || (r.type === 'phone' ? formatPhone(r.value) : '');
+        const contact = r.type === 'phone' ? formatPhone(r.value) : (r.type === 'uid' ? 'Conta do app' : r.value);
+        const when = r.lastOrderAt ? new Date(r.lastOrderAt).toLocaleDateString('pt-BR') : '';
+        return [display, r.baseName, typeLabel(r.type).replace(/^[^ ]+ /, ''), contact, r.orderCount, when];
+      });
+      const escCsv = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+      const csv = '﻿' + [header, ...csvRows].map(line => line.map(escCsv).join(';')).join('\r\n');
+      downloadFile(`clientes-${(storeName || 'loja').replace(/[^a-z0-9]+/gi,'-').toLowerCase()}-${stamp()}.csv`,
+        csv, 'text/csv;charset=utf-8');
+    }
+
+    function importJson(event) {
+      const file = event.target.files && event.target.files[0];
+      event.target.value = '';
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const data = JSON.parse(reader.result);
+          const incCustomers = data?.customers && typeof data.customers === 'object' ? data.customers : {};
+          const incAliases = data?.aliases && typeof data.aliases === 'object' ? data.aliases : {};
+          const n = Object.keys(incCustomers).length + Object.keys(incAliases).length;
+          if (!n) { alert('Arquivo sem clientes válidos.'); return; }
+          if (!confirm(`Importar e mesclar ${Object.keys(incCustomers).length} cliente(s) deste arquivo com a base atual?`)) return;
+          house = { ...house, ...incCustomers };
+          aliases = { ...aliases, ...incAliases };
+          await persist();
+          await loadData();
+          render();
+          alert('Importação concluída!');
+        } catch (err) {
+          alert('Arquivo inválido. Selecione um backup .json gerado por este painel.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    document.getElementById('idType').addEventListener('change', syncValueLabel);
+
+    (async function init() {
+      applyTheme();
+      syncValueLabel();
+      await loadData();
+      render();
+    })();
+  </script>
+</body>
+</html>

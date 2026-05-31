@@ -1,0 +1,14 @@
+const{contextBridge,ipcRenderer}=require('electron');
+contextBridge.exposeInMainWorld('PedraElectron',{
+  getServerInfo:()=>ipcRenderer.invoke('pedra:get-server-info'),
+  sales:{
+    add:(payload)=>ipcRenderer.invoke('pedra:sales:add',payload),
+    list:(query)=>ipcRenderer.invoke('pedra:sales:list',query),
+    clear:()=>ipcRenderer.invoke('pedra:sales:clear')
+  },
+  customers:{
+    get:(query)=>ipcRenderer.invoke('pedra:customers:get',query),
+    set:(payload)=>ipcRenderer.invoke('pedra:customers:set',payload),
+    clear:(query)=>ipcRenderer.invoke('pedra:customers:clear',query)
+  }
+});
