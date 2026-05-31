@@ -27,22 +27,48 @@
       background:radial-gradient(ellipse at 50% 0%,var(--bg-2) 0%,var(--bg-0) 68%);
     }
     .container{max-width:720px;margin:0 auto;padding:20px}
-    .page-header{display:flex;align-items:center;gap:12px;margin-bottom:22px;padding-bottom:14px;border-bottom:1px solid var(--border)}
-    .page-header h1{font-size:1.04rem;font-weight:600;letter-spacing:-.02em}
+    .page-header{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:22px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+    .page-header h1{font-size:1.04rem;font-weight:600;letter-spacing:-.02em;text-align:center}
     .card{background:var(--bg-1);border:1px solid var(--border);border-radius:var(--r);padding:18px;box-shadow:var(--sh-sm);margin-bottom:14px}
-    .store-name{font-size:1rem;font-weight:700;letter-spacing:-.02em;color:var(--text-0)}
-    .store-sub{font-size:.8rem;color:var(--text-2);margin-top:4px;line-height:1.45}
-    .link-wrap{display:flex;gap:8px;align-items:stretch;margin-top:14px}
+    .card{text-align:center}
+    .store-name{font-size:1rem;font-weight:700;letter-spacing:-.02em;color:var(--text-0);text-align:center}
+    .store-sub{font-size:.8rem;color:var(--text-2);margin-top:4px;line-height:1.45;text-align:center}
+    .link-wrap{display:flex;gap:8px;align-items:stretch;justify-content:center;margin-top:14px}
     .link-input{flex:1;min-height:44px;border:1px solid var(--border);background:var(--bg-2);color:var(--text-0);border-radius:12px;padding:10px 12px;font-size:.8rem}
     .link-input:focus{outline:none;border-color:var(--border-h)}
-    .btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+    .btn-grid{display:grid;grid-template-columns:1fr;gap:8px;margin-top:10px;justify-items:center}
     .btn{min-height:42px;padding:0 12px;border-radius:10px;border:1px solid var(--border);background:var(--bg-2);color:var(--text-0);font-size:.8rem;font-weight:600;cursor:pointer}
     .btn:hover{border-color:var(--border-h);background:var(--bg-3)}
     .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-t)}
     .btn.full{grid-column:1 / -1}
-    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
-    .chip{font-size:.72rem;padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:var(--bg-2);color:var(--text-2)}
-    .muted{font-size:.74rem;color:var(--text-2);line-height:1.5}
+    .qr-wrap{
+      display:flex;
+      justify-content:center;
+      margin-top:14px;
+    }
+    .qr-box{
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius:12px;
+      padding:10px;
+      width:220px;
+      height:220px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .qr-box img{
+      width:200px;
+      height:200px;
+      display:block;
+    }
+    .qr-caption{
+      margin-top:8px;
+      text-align:center;
+      font-size:.74rem;
+      color:var(--text-2);
+    }
+    .muted{font-size:.74rem;color:var(--text-2);line-height:1.5;text-align:center}
   </style>
 </head>
 <body>
@@ -66,11 +92,16 @@
         <button class="btn primary full" type="button" onclick="shareWhatsapp()">Compartilhar no WhatsApp</button>
       </div>
 
-      <label for="waMessage" class="store-sub" style="display:block;margin-top:14px">Mensagem do WhatsApp</label>
-      <textarea id="waMessage" class="link-input" style="min-height:96px;resize:vertical" placeholder="Digite a mensagem que será enviada"></textarea>
+      <label for="waMessage" class="store-sub" style="display:block;margin-top:14px;text-align:center">Mensagem do WhatsApp</label>
+      <textarea id="waMessage" class="link-input" style="min-height:96px;resize:vertical;text-align:left" placeholder="Digite a mensagem que será enviada"></textarea>
 
-      <div class="row">
-        <span class="chip" id="storeChip">loja: -</span>
+      <div class="qr-wrap">
+        <div>
+          <div class="qr-box">
+            <img id="storeQr" alt="QR Code da loja">
+          </div>
+          <div class="qr-caption">Escaneie para abrir a loja direto no app</div>
+        </div>
       </div>
     </div>
 
@@ -132,7 +163,8 @@
       currentLink = buildStoreLink(currentBase, currentStoreId);
 
       document.getElementById('storeLink').value = currentLink;
-      document.getElementById('storeChip').textContent = 'loja: ' + currentStoreId;
+      document.getElementById('storeQr').src =
+        'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(currentLink);
 
       try{
         const doc = await db.collection('stores').doc(currentStoreId).get();
