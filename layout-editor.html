@@ -31,6 +31,12 @@ body{padding:0;margin:0;background:var(--bg-0);min-height:100vh}
 .ei-t.on{background:var(--green);border-color:var(--green)}.ei-t.on::after{left:14px;background:#fff}
 .cr{display:flex;gap:5px;flex-wrap:wrap}.cd{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .12s}
 .cd:hover{transform:scale(1.15)}.cd.on{border-color:var(--text-0)}
+.cei{display:flex;align-items:center;gap:6px;padding:6px 8px;background:var(--bg-2);border:1px solid var(--border);border-radius:var(--rx);cursor:grab;font-size:.74rem;user-select:none;transition:all .1s}
+.cei:hover{border-color:var(--border-h)}.cei.dragging{opacity:.3}.cei.drag-over{border-color:var(--green)}
+.cei-num{width:17px;height:17px;border-radius:50%;background:var(--store-accent,var(--accent));color:#fff;font-size:.56rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cei-n{flex:1;font-weight:500}
+.cat-hint{font-size:.62rem;color:var(--text-3);margin-bottom:6px;line-height:1.4}
+.cat-empty{font-size:.68rem;color:var(--text-3);padding:4px 2px;line-height:1.4}
 /* Phone preview */
 .phone{width:260px;height:480px;background:var(--bg);border:2px solid var(--border);border-radius:24px;overflow:hidden;box-shadow:var(--sh-lg);display:flex;flex-direction:column}
 .pn{width:80px;height:16px;background:var(--border);border-radius:0 0 10px 10px;margin:0 auto;flex-shrink:0}
@@ -66,6 +72,7 @@ body{padding:0;margin:0;background:var(--bg-0);min-height:100vh}
 <div class="preview-wrap"><div class="phone"><div class="pn"></div><div class="ps" id="pv"></div></div></div>
 <div class="sec"><div class="sec-t">Template</div><div class="tg" id="tpls"></div></div>
 <div class="sec"><div class="sec-t">Elementos</div><div class="el" id="els"></div></div>
+<div class="sec"><div class="sec-t">Ordem das Categorias</div><div class="cat-hint">Arraste para definir a ordem. A 1ª aparece primeiro na loja.</div><div class="el" id="cats"></div></div>
 <div class="sec"><div class="sec-t">Cor</div><div class="cr" id="clrs"></div></div>
 <div class="sec"><div class="sec-t">Sobre</div><div class="info-text" id="inf"></div></div>
 </div>
@@ -79,6 +86,7 @@ const db=firebase.firestore(),auth=firebase.auth();
 const sid=localStorage.getItem('currentStoreId');
 (function(){var t=localStorage.getItem('pedrad-theme')||'dark';document.documentElement.setAttribute('data-theme',t)})();
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2500)}
+function esc(s){const d=document.createElement('div');d.textContent=String(s==null?'':s);return d.innerHTML}
 function goBack(){if(window.parent!==window)window.parent.postMessage('closePopup','*');else history.back()}
 const ELS=[{id:'icon',n:'Ícone'},{id:'info',n:'Dados'},{id:'search',n:'Busca'},{id:'categories',n:'Categorias'},{id:'featured',n:'Destaques'},{id:'products',n:'Produtos'},{id:'promos',n:'Promoções'}];
 const T={
@@ -89,8 +97,9 @@ const T={
 };
 const CS=['#22c55e','#3b82f6','#f59e0b','#ef4444','#8b5cf6','#ec4899','#14b8a6','#f97316','#e8e8ec','#64748b'];
 let sel='left',ae=['icon','info','categories','products'],de=new Set(['search','featured','promos']),ac='#22c55e',si='',di=null;
+let cats=[],catOrderSaved=[],cdi=null;
 
-function ra(){rt();re();rc();rp();ri()}
+function ra(){rt();re();rcat();rc();rp();ri()}
 function rt(){document.getElementById('tpls').innerHTML=Object.entries(T).map(([k,v])=>`<div class="tc ${sel===k?'on':''}" onclick="at('${k}')"><div class="tc-icon"><div class="tc-dot ${v.ip}"></div></div><div class="tc-n">${v.n}</div><div class="tc-d">${v.d.split('.')[0]}</div></div>`).join('')}
 function ri(){const t=T[sel];document.getElementById('inf').innerHTML=`<strong>${t.n}</strong><br>${t.d}<br><br><span style="color:var(--text-3)">Produtos: ${t.pm} · Categorias: ${t.cm}</span>`}
 function at(k){sel=k;const t=T[k];ae=[...t.els];de=new Set(ELS.map(e=>e.id).filter(id=>!ae.includes(id)));de.delete('products');if(!ae.includes('products'))ae.push('products');ra()}
@@ -108,6 +117,12 @@ ae=ae.filter(x=>x!==id);
 re();rp()}
 function ds(e,i){di=i;e.target.classList.add('dragging')}function den(e){e.preventDefault();e.target.closest('.ei')?.classList.add('drag-over')}function dl(e){e.target.closest('.ei')?.classList.remove('drag-over')}function dn(){di=null;document.querySelectorAll('.ei').forEach(el=>el.classList.remove('dragging','drag-over'))}
 function dr(e,ti){e.preventDefault();if(di===null||di===ti)return;const items=[...document.querySelectorAll('.ei')].map(el=>el.dataset.id);const[m]=items.splice(di,1);items.splice(ti,0,m);ae=items.filter(id=>!de.has(id));re();rp()}
+function rcat(){const el=document.getElementById('cats');if(!el)return;
+if(!cats.length){el.innerHTML='<div class="cat-empty">Nenhuma categoria cadastrada. Cadastre produtos com categorias para ordená-las aqui.</div>';return}
+el.innerHTML=cats.map((c,i)=>`<div class="cei" draggable="true" data-idx="${i}" ondragstart="cds(event,${i})" ondragover="event.preventDefault()" ondragenter="cden(event)" ondragleave="cdl(event)" ondrop="cdr(event,${i})" ondragend="cdn()"><div class="cei-num">${i+1}</div><div class="ei-d">⋮⋮</div><div class="cei-n">${esc(c)}</div></div>`).join('')}
+function cds(e,i){cdi=i;e.target.classList.add('dragging')}function cden(e){e.preventDefault();e.target.closest('.cei')?.classList.add('drag-over')}function cdl(e){e.target.closest('.cei')?.classList.remove('drag-over')}function cdn(){cdi=null;document.querySelectorAll('.cei').forEach(el=>el.classList.remove('dragging','drag-over'))}
+function cdr(e,ti){e.preventDefault();if(cdi===null||cdi===ti)return;const m=cats.splice(cdi,1)[0];cats.splice(ti,0,m);rcat();rp()}
+async function loadCats(){if(!sid)return;try{const snap=await db.collection('products').where('storeId','==',sid).get();const found=[...new Set(snap.docs.map(d=>d.data().category).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));const out=[];catOrderSaved.forEach(c=>{if(found.includes(c)&&!out.includes(c))out.push(c)});found.forEach(c=>{if(!out.includes(c))out.push(c)});cats=out}catch(e){cats=[]}}
 function rc(){document.getElementById('clrs').innerHTML=CS.map(c=>`<div class="cd ${c===ac?'on':''}" style="background:${c}" onclick="sc('${c}')"></div>`).join('');document.documentElement.style.setProperty('--store-accent',ac)}
 function sc(c){ac=c;rc();rp()}
 
@@ -129,9 +144,10 @@ case 'products':h+=rpp(t.pm);break;
 case 'promos':h+='<div class="ppromo"><div class="ppromo-c">Frete grátis +R$50</div></div>';break;
 }});
 s.innerHTML=h}
-function rpc(m){if(m==='none')return'';if(m==='cards')return'<div class="pcards">'+'Lanches,Bebidas,Combos,Porções,Doces,Outros'.split(',').map(c=>'<div class="pcrd">'+c+'</div>').join('')+'</div>';
-if(m==='dir')return'<div class="pdir">'+'Cervejas,Destilados,Vinhos,Sem álcool'.split(',').map(c=>'<div class="pdir-i"><span>'+c+'</span><span class="pdir-a">›</span></div>').join('')+'</div>';
-return'<div class="pcats"><div class="pcat on">Todos</div>'+'Entradas,Pratos,Bebidas,Sobremesas'.split(',').map(c=>'<div class="pcat">'+c+'</div>').join('')+'</div>'}
+function rpc(m){if(m==='none')return'';
+if(m==='cards'){const list=cats.length?cats.slice(0,6):'Lanches,Bebidas,Combos,Porções,Doces,Outros'.split(',');return'<div class="pcards">'+list.map(c=>'<div class="pcrd">'+esc(c)+'</div>').join('')+'</div>'}
+if(m==='dir'){const list=cats.length?cats:'Cervejas,Destilados,Vinhos,Sem álcool'.split(',');return'<div class="pdir">'+list.map(c=>'<div class="pdir-i"><span>'+esc(c)+'</span><span class="pdir-a">›</span></div>').join('')+'</div>'}
+const list=cats.length?cats:'Entradas,Pratos,Bebidas,Sobremesas'.split(',');return'<div class="pcats"><div class="pcat on">Todos</div>'+list.map(c=>'<div class="pcat">'+esc(c)+'</div>').join('')+'</div>'}
 function rpp(m){if(m==='mini')return'<div class="pmini">'+'Água,Refri,Suco,Café,Bolo,Pão'.split(',').map(n=>'<div class="pmc"><div class="pmc-n">'+n+'</div><div class="pmc-p">R$ 5</div><div class="pmc-a">+ carrinho</div></div>').join('')+'</div>';
 if(m==='grid')return'<div class="pgrid">'+'1234'.split('').map(n=>'<div class="pgc"><div class="pgc-i"></div><div class="pgc-b"><div class="pgc-n">Produto '+n+'</div><div class="pgc-p">R$ 19,90</div></div></div>').join('')+'</div>';
 return'<div class="plist">'+'X-Burger,Açaí 500ml,Coca 600ml'.split(',').map(n=>'<div class="pli"><div class="pli-i"></div><div><div class="pli-n">'+n+'</div><div class="pli-p">R$ 24,90</div></div></div>').join('')+'</div>'}
@@ -142,12 +158,12 @@ const out=[...inEls].filter(id=>id!=='banner');
 if(!out.includes('icon'))out.unshift('icon');
 return out;
 }
-async function load(){if(!sid)return;try{const d=await db.collection('stores').doc(sid).get();if(!d.exists)return;const s=d.data();si=s.imageUrl||'';const c=s.layoutConfig;if(!c)return;if(c.template&&T[c.template])sel=c.template;if(c.elements?.length){ae=normalizeElements([...c.elements]);de=new Set(ELS.map(e=>e.id).filter(id=>!ae.includes(id)))}if(c.accentColor)ac=c.accentColor}catch(e){}}
-async function save(){if(!sid){toast('Login necessário');return}const t=T[sel];try{await db.collection('stores').doc(sid).update({layoutConfig:{template:sel,elements:ae,accentColor:ac,iconPos:t.ip,productMode:t.pm,catMode:t.cm,updatedAt:new Date().toISOString()}});toast('Layout salvo!')}catch(e){toast('Erro')}}
+async function load(){if(!sid)return;try{const d=await db.collection('stores').doc(sid).get();if(!d.exists)return;const s=d.data();si=s.imageUrl||'';const c=s.layoutConfig;if(!c)return;if(c.template&&T[c.template])sel=c.template;if(c.elements?.length){ae=normalizeElements([...c.elements]);de=new Set(ELS.map(e=>e.id).filter(id=>!ae.includes(id)))}if(c.accentColor)ac=c.accentColor;if(Array.isArray(c.categoryOrder))catOrderSaved=c.categoryOrder}catch(e){}}
+async function save(){if(!sid){toast('Login necessário');return}const t=T[sel];try{await db.collection('stores').doc(sid).update({layoutConfig:{template:sel,elements:ae,accentColor:ac,iconPos:t.ip,productMode:t.pm,catMode:t.cm,categoryOrder:cats,updatedAt:new Date().toISOString()}});toast('Layout salvo!')}catch(e){toast('Erro')}}
 
 (async()=>{if(!sid){toast('Login necessário');return}
 const u=auth.currentUser||await new Promise(r=>{const un=auth.onAuthStateChanged(x=>{un();r(x)})});
-if(!u){toast('Login necessário');return}await load();ra()})();
+if(!u){toast('Login necessário');return}await load();await loadCats();ra()})();
 </script>
 </body>
 </html>
