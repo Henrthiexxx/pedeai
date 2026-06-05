@@ -14,6 +14,15 @@ firebase.firestore().settings({ experimentalAutoDetectLongPolling: true, useFetc
 const auth = firebase.auth();
 const db = firebase.firestore();
 
+(function loadSecurityMonitor(){
+    if (window.PedraSecurityMonitor || document.querySelector('script[data-pedra-security-monitor]')) return;
+    const script = document.createElement('script');
+    script.src = 'security-monitor.js';
+    script.defer = true;
+    script.dataset.pedraSecurityMonitor = 'true';
+    document.head.appendChild(script);
+})();
+
 // ── State ──
 let currentUser = null;
 let currentStore = null;
@@ -33,10 +42,39 @@ let _pendingAlerts = new Set();
 
 // Phone cache
 const _phoneCache = {};
-let houseCustomersIndex = new Map();
-let houseCustomerAliases = new Map();
-const HOUSE_CUSTOMERS_STORAGE_PREFIX = 'pedrad_house_customers_v1:';
-const HOUSE_CUSTOMERS_ALIASES_STORAGE_PREFIX = 'pedrad_house_customer_aliases_v1:';
+
+const AuthSessionGuard = (() => {
+    let timer = null;
+    let checking = false;
+
+    async function check(user = auth.currentUser) {
+        if (!user || checking) return true;
+        checking = true;
+        try {
+            await user.getIdToken(true);
+            return true;
+        } catch (err) {
+            if (err?.code === 'auth/network-request-failed') return true;
+            console.warn('Sessão inválida ou revogada:', err?.code || err?.message || err);
+            cleanup();
+            try { await auth.signOut(); } catch (_) {}
+            return false;
+        } finally {
+            checking = false;
+        }
+    }
+
+    function start() {
+        if (timer) return;
+        timer = setInterval(() => check(), 60000);
+        window.addEventListener('focus', () => check());
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) check();
+        });
+    }
+
+    return { check, start };
+})();
 
 // ══════════════════════════════════════════════
 //  UTILS
@@ -83,200 +121,6 @@ const STATUS_FORWARD_LABELS = {
 
 function getUniversalStoreId() {
     return currentStore?.id || localStorage.getItem('currentStoreId') || null;
-}
-
-function getHouseCustomersStorageKey(storeId = getUniversalStoreId()) {
-    return storeId ? `${HOUSE_CUSTOMERS_STORAGE_PREFIX}${storeId}` : '';
-}
-
-function getHouseCustomerAliasesStorageKey(storeId = getUniversalStoreId()) {
-    return storeId ? `${HOUSE_CUSTOMERS_ALIASES_STORAGE_PREFIX}${storeId}` : '';
-}
-
-function normalizePhone(value) {
-    const digits = String(value || '').replace(/\D/g, '');
-    return digits.length >= 10 ? digits : '';
-}
-
-function normalizeName(value) {
-    return String(value || '')
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .toLowerCase()
-        .replace(/\s+/g, ' ')
-        .trim();
-}
-
-function extractCustomerKeys(order) {
-    if (!order) return [];
-    const keys = [];
-    const uid = String(order.userId || '').trim();
-    if (uid) keys.push(`uid:${uid}`);
-
-    const phone = normalizePhone(order.userPhone || order.phone || order.customerPhone);
-    if (phone) keys.push(`phone:${phone}`);
-
-    const name = normalizeName(order.userName || order.customerName);
-    if (name) keys.push(`name:${name}`);
-    return [...new Set(keys)];
-}
-
-function isEligibleHousePurchase(order) {
-    return !!order && order.status !== 'pending' && order.status !== 'cancelled';
-}
-
-function houseCustomersApi() {
-    return window.PedraElectron?.customers || null;
-}
-
-function saveHouseCustomersIndex() {
-    const storeId = getUniversalStoreId();
-    if (!storeId) return;
-    const data = Object.fromEntries(houseCustomersIndex.entries());
-    const api = houseCustomersApi();
-    if (api?.set) {
-        Promise.resolve(api.set({ storeId, customers: data }))
-            .catch(err => console.warn('saveHouseCustomersIndex (pc):', err));
-        return;
-    }
-    try {
-        const key = getHouseCustomersStorageKey(storeId);
-        if (key) localStorage.setItem(key, JSON.stringify(data));
-    } catch (err) {
-        console.warn('saveHouseCustomersIndex:', err);
-    }
-}
-
-async function loadHouseCustomersIndex() {
-    houseCustomersIndex = new Map();
-    const storeId = getUniversalStoreId();
-    if (!storeId) return;
-    const api = houseCustomersApi();
-    if (api?.get) {
-        try {
-            const resp = await api.get({ storeId });
-            const parsed = resp?.customers || {};
-            Object.entries(parsed).forEach(([k, v]) => { if (k) houseCustomersIndex.set(k, v || {}); });
-            // Migração única: importa dados antigos do localStorage para o PC.
-            if (!houseCustomersIndex.size) {
-                const migrated = readLegacyHouseStorage(getHouseCustomersStorageKey(storeId));
-                if (migrated) {
-                    Object.entries(migrated).forEach(([k, v]) => { if (k) houseCustomersIndex.set(k, v || {}); });
-                    saveHouseCustomersIndex();
-                }
-            }
-            return;
-        } catch (err) {
-            console.warn('loadHouseCustomersIndex (pc):', err);
-        }
-    }
-    const legacy = readLegacyHouseStorage(getHouseCustomersStorageKey(storeId));
-    if (legacy) Object.entries(legacy).forEach(([k, v]) => { if (k) houseCustomersIndex.set(k, v || {}); });
-}
-
-function readLegacyHouseStorage(key) {
-    try {
-        const raw = key ? localStorage.getItem(key) : null;
-        if (!raw) return null;
-        const parsed = JSON.parse(raw);
-        return (parsed && typeof parsed === 'object') ? parsed : null;
-    } catch (err) {
-        console.warn('readLegacyHouseStorage:', err);
-        return null;
-    }
-}
-
-function saveHouseCustomerAliases() {
-    const storeId = getUniversalStoreId();
-    if (!storeId) return;
-    const data = Object.fromEntries(houseCustomerAliases.entries());
-    const api = houseCustomersApi();
-    if (api?.set) {
-        Promise.resolve(api.set({ storeId, aliases: data }))
-            .catch(err => console.warn('saveHouseCustomerAliases (pc):', err));
-        return;
-    }
-    try {
-        const key = getHouseCustomerAliasesStorageKey(storeId);
-        if (key) localStorage.setItem(key, JSON.stringify(data));
-    } catch (err) {
-        console.warn('saveHouseCustomerAliases:', err);
-    }
-}
-
-async function loadHouseCustomerAliases() {
-    houseCustomerAliases = new Map();
-    const storeId = getUniversalStoreId();
-    if (!storeId) return;
-    const api = houseCustomersApi();
-    if (api?.get) {
-        try {
-            const resp = await api.get({ storeId });
-            const parsed = resp?.aliases || {};
-            Object.entries(parsed).forEach(([k, v]) => { if (k) houseCustomerAliases.set(k, String(v || '')); });
-            if (!houseCustomerAliases.size) {
-                const migrated = readLegacyHouseStorage(getHouseCustomerAliasesStorageKey(storeId));
-                if (migrated) {
-                    Object.entries(migrated).forEach(([k, v]) => { if (k) houseCustomerAliases.set(k, String(v || '')); });
-                    saveHouseCustomerAliases();
-                }
-            }
-            return;
-        } catch (err) {
-            console.warn('loadHouseCustomerAliases (pc):', err);
-        }
-    }
-    const legacy = readLegacyHouseStorage(getHouseCustomerAliasesStorageKey(storeId));
-    if (legacy) Object.entries(legacy).forEach(([k, v]) => { if (k) houseCustomerAliases.set(k, String(v || '')); });
-}
-
-function touchHouseCustomer(order) {
-    if (!isEligibleHousePurchase(order)) return false;
-    const keys = extractCustomerKeys(order);
-    if (!keys.length) return false;
-    const nowIso = new Date().toISOString();
-    const displayName = order.userName || order.customerName || 'Cliente';
-    let changed = false;
-
-    keys.forEach(key => {
-        const prev = houseCustomersIndex.get(key) || {};
-        houseCustomersIndex.set(key, {
-            name: displayName,
-            firstOrderAt: prev.firstOrderAt || nowIso,
-            lastOrderAt: nowIso,
-            orderCount: (Number(prev.orderCount) || 0) + 1
-        });
-        changed = true;
-    });
-    return changed;
-}
-
-function rebuildHouseCustomersFromOrders(orders) {
-    // Preserva clientes cadastrados manualmente (sem pedido no período) ao
-    // recalcular as contagens a partir dos pedidos recentes.
-    const manualEntries = new Map(houseCustomersIndex);
-    houseCustomersIndex = new Map();
-    (orders || []).forEach(order => {
-        if (isEligibleHousePurchase(order)) touchHouseCustomer(order);
-    });
-    manualEntries.forEach((value, key) => {
-        if (!houseCustomersIndex.has(key)) houseCustomersIndex.set(key, value);
-    });
-    saveHouseCustomersIndex();
-}
-
-function isHouseCustomer(order) {
-    const keys = extractCustomerKeys(order);
-    return keys.some(key => houseCustomersIndex.has(key));
-}
-
-function getHouseCustomerAlias(order) {
-    const keys = extractCustomerKeys(order);
-    for (const key of keys) {
-        const alias = String(houseCustomerAliases.get(key) || '').trim();
-        if (alias) return alias;
-    }
-    return '';
 }
 
 // ── Toast ──
@@ -371,33 +215,17 @@ function sendBrowserNotif(order) {
     n.onclick = () => { window.focus(); navigateTo('dashboard'); n.close(); };
 }
 
-async function publishStoreContext() {
-    if (!currentStore?.id) return;
-    try {
-        const pcBaseUrl = await resolvePcBaseUrl();
-        await fetch('/__pedra/store-context', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({
-                storeId: currentStore.id,
-                pcBaseUrl
-            })
-        });
-    } catch (err) {
-        console.warn('Não foi possível publicar contexto da loja para o servidor local:', err);
-    }
-}
-
 // ══════════════════════════════════════════════
 //  AUTH
 // ══════════════════════════════════════════════
 
 auth.onAuthStateChanged(async user => {
     if (user) {
+        if (!await AuthSessionGuard.check(user)) return;
+        AuthSessionGuard.start();
         currentUser = user;
         await loadStore();
         if (currentStore) {
-            publishStoreContext();
             showApp();
             startOrdersListener();
             loadHistory();
@@ -431,8 +259,19 @@ function handleLogout() {
 }
 
 function showAuth() {
-    document.getElementById('authPage').style.display = 'flex';
-    document.getElementById('mainApp').classList.add('hidden');
+  const authPage = document.getElementById("authPage");
+  const mainApp = document.getElementById("mainApp");
+
+  if (authPage) authPage.style.display = "flex";
+  if (mainApp) mainApp.style.display = "none";
+}
+
+function showApp() {
+  const authPage = document.getElementById("authPage");
+  const mainApp = document.getElementById("mainApp");
+
+  if (authPage) authPage.style.display = "none";
+  if (mainApp) mainApp.style.display = "block";
 }
 
 function showApp() {
@@ -454,8 +293,6 @@ function cleanup() {
     activeOrders = [];
     historyOrders = [];
     knownOrderIds.clear();
-    houseCustomersIndex = new Map();
-    houseCustomerAliases = new Map();
     currentStore = null;
     currentUser = null;
 }
@@ -475,9 +312,6 @@ async function loadStore() {
         if (!snap.empty) {
             currentStore = { id: snap.docs[0].id, ...snap.docs[0].data() };
             localStorage.setItem('currentStoreId', currentStore.id);
-            localStorage.setItem('currentStoreName', currentStore.name || '');
-            await loadHouseCustomersIndex();
-            await loadHouseCustomerAliases();
         }
     } catch(err) { console.error('loadStore:', err); }
 }
@@ -653,8 +487,6 @@ async function loadHistory() {
             .get();
 
         historyOrders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        rebuildHouseCustomersFromOrders(historyOrders);
-        await persistHistoryOrdersLocal(historyOrders);
         historyOrders
             .filter(o => o.status !== 'pending')
             .forEach(o => knownOrderIds.add(o.id));
@@ -667,43 +499,6 @@ async function loadHistory() {
 // ══════════════════════════════════════════════
 
 let currentPage = 'dashboard';
-function isPcApp(){return !!window.PedraElectron?.sales?.add}
-function safeIso(v){
-    try{
-        const d=toDate(v);
-        return Number.isNaN(d?.getTime?.())?new Date(0).toISOString():d.toISOString();
-    }catch(e){
-        return new Date(0).toISOString();
-    }
-}
-async function mirrorOrderToLocal(order){
-    if(!isPcApp()||!order?.id||!currentStore?.id)return;
-    try{
-        await window.PedraElectron.sales.add({
-            externalOrderId:order.id,
-            storeId:currentStore.id,
-            source:order.source||'delivery',
-            sourceDetail:order.sourceDetail||'app',
-            status:order.status,
-            paymentMethod:order.paymentMethod||'',
-            userName:order.userName||order.customerName||'Cliente',
-            tableNumber:order.tableNumber||null,
-            subtotal:order.subtotal??order.total??0,
-            total:order.total??0,
-            items:Array.isArray(order.items)?order.items:[],
-            kind:'history',
-            persistedIn:'local-db',
-            syncedFrom:'firestore',
-            createdAtServer:safeIso(order.createdAt),
-            updatedAtServer:safeIso(order.updatedAt||order.createdAt)
-        });
-    }catch(e){console.error('mirrorOrderToLocal:',e)}
-}
-
-async function persistHistoryOrdersLocal(orders){
-    if(!isPcApp()||!Array.isArray(orders)||!orders.length)return;
-    await Promise.allSettled(orders.map(o=>mirrorOrderToLocal(o)));
-}
 
 function navigateTo(page) {
     currentPage = page;
@@ -713,7 +508,7 @@ function navigateTo(page) {
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.querySelector(`.nav-item[data-page="${page}"]`)?.classList.add('active');
 
-    const titles = { dashboard:'Painel Central', history:'Historico' };
+    const titles = { dashboard:'Painel Central', history:'Histórico' };
     document.getElementById('pageTitle').textContent = titles[page] || page;
 
     closeSidebar();
@@ -722,6 +517,7 @@ function navigateTo(page) {
 }
 
 function toggleSidebar() {
+    if (Date.now() < (window.__suppressMenuToggleUntil || 0)) return;
     document.getElementById('sidebar').classList.toggle('open');
     document.getElementById('overlay').classList.toggle('show');
 }
@@ -729,6 +525,30 @@ function closeSidebar() {
     document.getElementById('sidebar').classList.remove('open');
     document.getElementById('overlay').classList.remove('show');
 }
+
+function setupMobileOutsideClickClose() {
+    const sidebar = document.getElementById('sidebar');
+    const menuToggle = document.querySelector('.menu-toggle');
+    if (!sidebar) return;
+
+    const maybeClose = (event) => {
+        const isMobile = window.matchMedia('(max-width: 1023px)').matches;
+        if (!isMobile || !sidebar.classList.contains('open')) return;
+        if (sidebar.contains(event.target)) return;
+        if (menuToggle && menuToggle.contains(event.target)) return;
+
+        // Evita "tap-through": toque que fecha e imediatamente reabre no botão do menu.
+        window.__suppressMenuToggleUntil = Date.now() + 420;
+        if (event.cancelable) event.preventDefault();
+        event.stopPropagation();
+        closeSidebar();
+    };
+
+    document.addEventListener('click', maybeClose, true);
+    document.addEventListener('touchstart', maybeClose, { capture: true, passive: false });
+}
+
+setupMobileOutsideClickClose();
 
 // ══════════════════════════════════════════════
 //  DASHBOARD RENDER
@@ -761,7 +581,17 @@ function renderDashboard() {
     // Active orders list
     const container = document.getElementById('activeOrdersList');
     if (activeOrders.length === 0) {
-        container.innerHTML = `<div class="empty-state"><div class="empty-icon">✨</div><div class="empty-text">Nenhum pedido ativo</div></div>`;
+        const logo = currentStore?.imageUrl
+            ? `<img class="store-empty-watermark" src="${esc(currentStore.imageUrl)}" alt="">`
+            : '';
+        container.innerHTML = `
+            <div class="empty-state store-empty-state">
+                ${logo}
+                <div class="empty-content">
+                    <div class="empty-icon">✨</div>
+                    <div class="empty-text">Nenhum pedido ativo</div>
+                </div>
+            </div>`;
         return;
     }
 
@@ -797,26 +627,19 @@ function renderOrderCard(order) {
     const time = date.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
     const isPending = order.status === 'pending';
     const customer = order.userName || order.customerName || 'Cliente';
-    const customerDisplay = getHouseCustomerAlias(order) || customer;
-    const houseBadge = isHouseCustomer(order)
-        ? '<span class="hc-badge service-local" title="Cliente que já comprou nesta loja">Cliente da casa</span>'
-        : '';
     const shortId = order.id.slice(-6).toUpperCase();
 
     const addr = order.address || {};
     const fullAddr = [addr.street, addr.number ? 'nº ' + addr.number : '', addr.complement, addr.neighborhood].filter(Boolean).join(', ');
     const ref = addr.reference || '';
 
-    const isLocal = order.deliveryMode === 'local' || order.orderType === 'local' || order.noDelivery === true || order.sourceDetail === 'table';
-    const isDelivery = !isLocal && order.deliveryMode !== 'pickup';
     const payLabels = { pix:'💠 PIX', credit:'💳 Crédito', debit:'💳 Débito',
-                        cash:'💵 Dinheiro', picpay:'💚 PicPay', food_voucher:'🎫 Vale Alimentação', local:'💵 Dinheiro' };
-    const payMethod = payLabels[order.paymentMethod] || order.paymentMethod || (isLocal ? '💵 Dinheiro' : '—');
+                        cash:'💵 Dinheiro', picpay:'💚 PicPay', food_voucher:'🎫 Vale Alimentação' };
+    const payMethod = payLabels[order.paymentMethod] || order.paymentMethod || '—';
     const change = order.needChange && order.changeFor ? 'Troco p/ ' + formatCurrency(order.changeFor) : '';
     const sub = order.subtotal ?? order.total ?? 0;
     const notes = order.notes || order.observation || '';
-    const isPickup = order.deliveryMode === 'pickup';
-    const serviceLabel = isPickup ? 'Retirada' : (isLocal ? 'Local' : 'Entrega');
+    const isPickup = order.orderType === 'pickup' || order.deliveryMode === 'pickup';
 
     // Phone
     const rawPhone = order.userPhone || order.phone || order.customerPhone || '';
@@ -844,12 +667,11 @@ function renderOrderCard(order) {
         <div class="order-header" onclick="toggleOrder('${order.id}')">
             <div>
                 <div class="order-id">#${shortId}</div>
-                <div class="order-customer">${esc(customerDisplay)}</div>
+                <div class="order-customer">${esc(customer)}</div>
                 <div class="order-meta">
                     <span>${time}</span>
-                    <span>${serviceLabel}</span>
+                    <span>${isPickup ? 'Retirada' : 'Entrega'}</span>
                     <span>${formatCurrency(order.total)}</span>
-                    ${houseBadge}
                 </div>
             </div>
             <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
@@ -935,14 +757,6 @@ async function updateOrder(orderId, status) {
             timeline,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        const updatedOrder = activeOrders.find(o => o.id === orderId) || historyOrders.find(o => o.id === orderId);
-        if (touchHouseCustomer({ ...(updatedOrder || { id: orderId }), status })) {
-            saveHouseCustomersIndex();
-        }
-        if ((status === 'delivered' || status === 'cancelled') && isPcApp()) {
-            const base = activeOrders.find(o => o.id === orderId) || historyOrders.find(o => o.id === orderId) || { id: orderId };
-            await mirrorOrderToLocal({ ...base, status, updatedAt: new Date().toISOString() });
-        }
 
         clearAlert(orderId);
         showToast(`Pedido: ${getStatusLabel(status)}`);
@@ -994,7 +808,6 @@ function updatePhoneDOM(orderId, phone) {
 function renderHistory() {
     const container = document.getElementById('historyList');
     if (!container) return;
-    if (isPcApp()) { persistHistoryOrdersLocal(historyOrders); }
 
     const search = (document.getElementById('historySearch')?.value || '').toLowerCase();
 
@@ -1035,26 +848,13 @@ function renderHistoryCard(order) {
     const date = toDate(order.createdAt);
     const time = date.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
     const customer = order.userName || order.customerName || 'Cliente';
-    const customerDisplay = getHouseCustomerAlias(order) || customer;
-    const houseBadge = isHouseCustomer(order) ? '<span class="hc-badge service-local">Cliente da casa</span>' : '';
     const sClass = order.status === 'cancelled' ? 'cancelled' : 'delivered';
     const sub = order.subtotal ?? order.total ?? 0;
-    const isLocal = order.deliveryMode === 'local' || order.orderType === 'local' || order.noDelivery === true || order.sourceDetail === 'table';
     const payLabels = { pix:'💠 PIX', credit:'💳 Crédito', debit:'💳 Débito',
-                        cash:'💵 Dinheiro', picpay:'💚 PicPay', food_voucher:'🎫 Vale Alimentação', local:'💵 Dinheiro' };
-    const pay = payLabels[order.paymentMethod] || order.paymentMethod || (isLocal ? '💵 Dinheiro' : '—');
+                        cash:'💵 Dinheiro', picpay:'💚 PicPay', food_voucher:'🎫 Vale Alimentação' };
+    const pay = payLabels[order.paymentMethod] || order.paymentMethod || '—';
 
-    const items = order.items || [];
-    const itemCount = items.reduce((s, i) => s + (parseInt(i.qty, 10) || 0), 0);
-    const previewItems = items.slice(0, 3).map(i => {
-        const q = parseInt(i.qty, 10) || 0;
-        return `${q}x ${i.name || 'Item'}`;
-    }).join(' • ');
-    const tableOrCustomer = order.tableNumber ? `Mesa ${order.tableNumber}` : customerDisplay;
-    const service = order.deliveryMode === 'pickup' ? 'Retirada' : (isLocal ? 'Local' : 'Entrega');
-    const serviceClass = service === 'Local' ? 'service-local' : service === 'Retirada' ? 'service-pickup' : 'service-delivery';
-
-    const itemsHtml = items.map(i => {
+    const itemsHtml = (order.items || []).map(i => {
         const addons = sanitizeAddons(i.addons);
         const addonSum = addons.reduce((s,a) => s + (a.price||0), 0);
         const total = (i.price + addonSum) * i.qty;
@@ -1070,25 +870,19 @@ function renderHistoryCard(order) {
 
     return `<div class="history-card">
         <div class="history-header" onclick="toggleHistory('${order.id}')">
-            <div class="hc-main">
-                <div class="hc-id-row">
-                    <div class="hc-id">#${order.id.slice(-6).toUpperCase()}</div>
-                    <span class="hc-badge ${sClass}">${getStatusLabel(order.status)}</span>
-                    <span class="hc-badge ${serviceClass}">${service}</span>
-                    <span class="hc-badge neutral">${pay.replace(/[💠💳💵💚🎫]\s*/g,'')}</span>
-                </div>
-                <div class="hc-customer">${esc(tableOrCustomer)}</div>
+            <div>
+                <div class="hc-id">#${order.id.slice(-6).toUpperCase()} — ${esc(customer)}</div>
                 <div class="hc-meta">
                     <span>${time}</span>
                     <span>•</span>
-                    <span>${itemCount} itens</span>
-                    ${previewItems ? `<span>•</span><span>${esc(previewItems)}</span>` : ''}
-                    ${houseBadge ? `<span>•</span>${houseBadge}` : ''}
+                    <span>${(order.orderType || order.deliveryMode) === 'pickup' ? 'Retirada' : 'Entrega'}</span>
+                    <span>•</span>
+                    <span>${(order.items||[]).length} itens</span>
                 </div>
             </div>
             <div style="text-align:right">
                 <div class="hc-total">${formatCurrency(order.total)}</div>
-                <div class="hc-status ${sClass}">${esc(customerDisplay)}</div>
+                <div class="hc-status ${sClass}">${getStatusLabel(order.status)}</div>
             </div>
         </div>
         <div class="history-body" id="hb-${order.id}">
@@ -1160,69 +954,11 @@ function updateNotifBtn() {
 //  POPUP / IFRAME SYSTEM
 // ══════════════════════════════════════════════
 
-function savedPcBaseUrl() {
-    const value = localStorage.getItem('pedrad_pc_base_url') || '';
-    return isNetworkBaseUrl(value) ? value : '';
-}
-
-function isNetworkBaseUrl(value) {
-    try {
-        const host = new URL(value).hostname;
-        return host !== '127.0.0.1' && host !== 'localhost' && host !== '::1';
-    } catch (e) {
-        return false;
-    }
-}
-
-async function resolvePcBaseUrl() {
-    if (window.PedraElectron?.getServerInfo) {
-        try {
-            const info = await window.PedraElectron.getServerInfo();
-            if (info?.baseUrl && isNetworkBaseUrl(info.baseUrl)) {
-                localStorage.setItem('pedrad_pc_base_url', info.baseUrl);
-                return info.baseUrl;
-            }
-        } catch (e) {
-            console.warn('Servidor local não informado pelo Electron:', e);
-        }
-    }
-    return savedPcBaseUrl();
-}
-
-function buildPopupUrl(page, pcBaseUrl = savedPcBaseUrl()) {
-    const url = new URL(page, location.href);
-    const file = url.pathname.split('/').pop() || page;
-    const sid = getUniversalStoreId();
-    const tablePages = new Set(['mesas.html', 'funcionarios.html', 'garcom.html']);
-
-    if (sid && !url.searchParams.has('storeId')) {
-        url.searchParams.set('storeId', sid);
-    }
-
-    if (tablePages.has(file) && pcBaseUrl) {
-        url.searchParams.set('pcBaseUrl', pcBaseUrl);
-    }
-
-    return `${file}${url.search}${url.hash}`;
-}
-
 function openPopup(page) {
     const modal = document.getElementById('iframeModal');
     const frame = document.getElementById('popupFrame');
+    frame.src = page;
     modal.classList.add('show');
-
-    const file = new URL(page, location.href).pathname.split('/').pop() || page;
-    const tablePages = new Set(['mesas.html', 'funcionarios.html', 'garcom.html']);
-    if (!tablePages.has(file)) {
-        frame.src = buildPopupUrl(page);
-    }
-
-    resolvePcBaseUrl().then(baseUrl => {
-        const nextSrc = buildPopupUrl(page, baseUrl);
-        if (!frame.src || frame.src !== new URL(nextSrc, location.href).href) {
-            frame.src = nextSrc;
-        }
-    });
 }
 
 function closePopup() {
@@ -1281,10 +1017,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.data?.type === 'pdvSale') {
             loadHistory(true).then(() => renderDashboard());
         }
-        if (e.data?.type === 'historyOpenDashboard') {
-            closePopup();
-            navigateTo('dashboard');
-        }
     });
 });
 
@@ -1327,30 +1059,6 @@ function openPDV() {
     if (!sid) return showToast('StoreId não encontrado');
 
     openPopup(`pdv.html?storeId=${encodeURIComponent(sid)}`);
-}
-
-async function validateLocalPersistence() {
-    if (!isPcApp()) {
-        showToast('Validação local disponível apenas no app de PC');
-        return;
-    }
-    try {
-        const sid = getUniversalStoreId();
-        const resp = await window.PedraElectron.sales.list({ storeId: sid || '', limit: 5000 });
-        const total = Number(resp?.total || 0);
-        showToast(`Banco local OK: ${total} registro(s) desta loja`);
-    } catch (err) {
-        console.error('validateLocalPersistence:', err);
-        showToast('Falha ao validar persistência local');
-    }
-}
-
-async function verifyAccountPassword(password) {
-    if (!currentUser || !currentUser.email) throw new Error('Usuário não autenticado');
-    if (!password || !String(password).trim()) throw new Error('Senha obrigatória');
-    const cred = firebase.auth.EmailAuthProvider.credential(currentUser.email, String(password));
-    await currentUser.reauthenticateWithCredential(cred);
-    return true;
 }
 
 // ══════════════════════════════════════════════

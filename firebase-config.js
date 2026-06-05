@@ -18,3 +18,12 @@ firebase.firestore().settings({
 
 const auth = firebase.auth();
 const db = firebase.firestore();
+
+(function loadSecurityMonitor(){
+  if (window.PedraSecurityMonitor || document.querySelector('script[data-pedra-security-monitor]')) return;
+  const script = document.createElement('script');
+  script.src = 'security-monitor.js';
+  script.defer = true;
+  script.dataset.pedraSecurityMonitor = 'true';
+  document.head.appendChild(script);
+})();
