@@ -267,6 +267,7 @@
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script>
         const firebaseConfig = {
@@ -278,6 +279,7 @@
             appId: "1:293587190550:web:80c9399f82847c80e20637"
         };
         if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
         const db = firebase.firestore();
 
         const storeId = localStorage.getItem('currentStoreId') || new URLSearchParams(location.search).get('storeId');
@@ -317,12 +319,34 @@
         setInterval(syncTheme, 1200);
         window.addEventListener('storage', syncTheme);
 
+        function waitForAuthUser(timeoutMs = 10000) {
+            return new Promise(resolve => {
+                let done = false;
+                const timer = setTimeout(() => {
+                    if (!done) {
+                        done = true;
+                        try { unsub(); } catch {}
+                        resolve(auth.currentUser || null);
+                    }
+                }, timeoutMs);
+
+                const unsub = auth.onAuthStateChanged(user => {
+                    if (done) return;
+                    done = true;
+                    clearTimeout(timer);
+                    try { unsub(); } catch {}
+                    resolve(user || null);
+                });
+            });
+        }
+
         async function init() {
             if (!storeId) {
                 document.querySelector('.container').innerHTML = '<div class="loading-state" style="padding:100px 20px;">Loja não identificada. Acesse pelo painel da loja.</div>';
                 return;
             }
             try {
+                await waitForAuthUser();
                 const doc = await db.collection('stores').doc(storeId).get();
                 if (!doc.exists) { showToast('Loja não encontrada'); return; }
                 storeData = { id: doc.id, ...doc.data() };
@@ -420,6 +444,21 @@
             }
         }
 
+        function num(value) {
+            const n = parseFloat(value);
+            return Number.isFinite(n) ? n : 0;
+        }
+
+        function orderStoreSale(order) {
+            const subtotal = parseFloat(order.subtotal);
+            if (Number.isFinite(subtotal)) return subtotal;
+            const total = num(order.total);
+            if (order.source === 'pdv' && order.localTaxIncludedInTotal !== false) {
+                return Math.max(total - num(order.localTax), 0);
+            }
+            return Math.max(total - num(order.deliveryFee), 0);
+        }
+
         async function loadInvoice() {
             const { month, year } = selectedMonth;
             const start = new Date(year, month, 1);
@@ -427,15 +466,17 @@
 
             const cached = getCache();
             if (cached && cached.transparencyVersion === 1) {
+                renderInvoice(cached);
+                showCacheStatus(true);
                 try {
                     const storeDoc = await db.collection('stores').doc(storeId).get();
                     const lastOrderAt = storeDoc.data()?.lastOrderAt?.toMillis?.() || null;
                     if (lastOrderAt && lastOrderAt <= cached.cachedAt) {
-                        renderInvoice(cached);
-                        showCacheStatus(true);
                         return;
                     }
-                } catch {}
+                } catch {
+                    return;
+                }
             }
 
             document.getElementById('invoiceBody').innerHTML =
@@ -454,25 +495,24 @@
                 const appOrders = valid.filter(o => o.source !== 'pdv');
 
                 const orderCount = valid.length;
-                const totalSales = valid.reduce((s, o) => s + (o.total || 0), 0);
                 const appOrderCount = appOrders.length;
                 const pdvOrderCount = pdvOrders.length;
-                const appSales = appOrders.reduce((s, o) => s + (o.total || 0), 0);
-                const pdvSales = pdvOrders.reduce((s, o) => s + (o.total || 0), 0);
-                const pdvLocalTaxTotal = pdvOrders.reduce((s, o) => s + (o.localTax || 0), 0);
-                const deliveryEarnings = valid.reduce((s, o) => s + (o.deliveryFee || 0), 0);
-                const baseAmount = totalSales - deliveryEarnings;
+                const appSales = appOrders.reduce((s, o) => s + orderStoreSale(o), 0);
+                const pdvSales = pdvOrders.reduce((s, o) => s + orderStoreSale(o), 0);
+                const totalSales = appSales + pdvSales;
+                const pdvLocalTaxTotal = pdvOrders.reduce((s, o) => s + num(o.localTax), 0);
+                const deliveryEarnings = valid.reduce((s, o) => s + num(o.deliveryFee), 0);
+                const baseAmount = appSales;
                 const feeType = storeData.feeType || 'percent';
                 const feeValue = feeType === 'fixed' ? (storeData.feeFixed || 0) : (storeData.feePercent || 10);
 
-                let platformFee = 0;
-                if (feeType === 'fixed') platformFee = orderCount * feeValue;
-                else platformFee = baseAmount * (feeValue / 100);
+                const appPlatformFee = feeType === 'fixed' ? appOrderCount * feeValue : appSales * (feeValue / 100);
+                const platformFee = appPlatformFee + pdvLocalTaxTotal;
 
                 const data = {
                     orderCount, appOrderCount, pdvOrderCount,
                     totalSales, appSales, pdvSales, pdvLocalTaxTotal,
-                    deliveryEarnings, baseAmount, platformFee,
+                    deliveryEarnings, baseAmount, appPlatformFee, platformFee,
                     feeType, feeValue, month, year,
                     transparencyVersion: 1
                 };
@@ -481,31 +521,45 @@
                 showCacheStatus(false);
 
                 const invoiceId = `${storeId}_${year}-${String(month + 1).padStart(2, '0')}`;
-                await db.collection('invoices').doc(invoiceId).set({
-                    storeId, storeName: storeData.name || '',
-                    month: month + 1, year,
-                    orderCount, appOrderCount, pdvOrderCount,
-                    totalSales, appSales, pdvSales, pdvLocalTaxTotal,
-                    deliveryEarnings, baseAmount, platformFee,
-                    feeType, feeValue,
-                    status: 'open',
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                }, { merge: true });
+                const invoiceRef = db.collection('invoices').doc(invoiceId);
+                try {
+                    const existingInvoice = await invoiceRef.get();
+                    const existingStatus = existingInvoice.exists ? existingInvoice.data().status : null;
+                    await invoiceRef.set({
+                        storeId, storeName: storeData.name || '',
+                        month: month + 1, year,
+                        orderCount, appOrderCount, pdvOrderCount,
+                        totalSales, appSales, pdvSales, pdvLocalTaxTotal,
+                        deliveryEarnings, baseAmount, appPlatformFee, platformFee,
+                        feeType, feeValue,
+                        status: existingStatus === 'paid' ? 'paid' : 'open',
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+                } catch (invoiceErr) {
+                    if (invoiceErr?.code !== 'permission-denied') {
+                        throw invoiceErr;
+                    }
+                    console.warn('Sem permissão para gravar invoices; mantendo fatura local.', invoiceErr);
+                }
 
             } catch (err) {
                 console.error(err);
-                document.getElementById('invoiceBody').innerHTML =
-                    '<div class="loading-state">Erro ao calcular fatura</div>';
+                const hasRenderedInvoice = document.querySelector('#invoiceBody .invoice-row');
+                if (!hasRenderedInvoice) {
+                    document.getElementById('invoiceBody').innerHTML =
+                        '<div class="loading-state">Erro ao calcular fatura</div>';
+                }
             }
         }
 
         function renderInvoice(data) {
-            const { orderCount, totalSales, deliveryEarnings, baseAmount, platformFee, month, year } = data;
+            const { orderCount, totalSales, baseAmount, platformFee, month, year } = data;
             const appOrderCount = data.appOrderCount || 0;
             const pdvOrderCount = data.pdvOrderCount || 0;
             const appSales = data.appSales || 0;
             const pdvSales = data.pdvSales || 0;
             const pdvLocalTaxTotal = data.pdvLocalTaxTotal || 0;
+            const appPlatformFee = data.appPlatformFee || 0;
             const feeType = data.feeType || storeData.feeType || 'percent';
             const feeValue = Number.isFinite(parseFloat(data.feeValue))
                 ? parseFloat(data.feeValue)
@@ -518,11 +572,12 @@
             document.getElementById('invoiceTotal').textContent = fmtCurrency(platformFee);
 
             const feeLabel = feeType === 'fixed'
-                ? `${fmtCurrency(feeValue)} × ${orderCount} pedidos`
+                ? `${fmtCurrency(feeValue)} × ${appOrderCount} pedidos do app`
                 : `${feeValue}% sobre ${fmtCurrency(baseAmount)}`;
-            const formula = feeType === 'fixed'
-                ? `${fmtCurrency(feeValue)} x ${orderCount} pedidos = ${fmtCurrency(platformFee)}`
-                : `${fmtCurrency(baseAmount)} x ${feeValue}% = ${fmtCurrency(platformFee)}`;
+            const appFormula = feeType === 'fixed'
+                ? `${fmtCurrency(feeValue)} x ${appOrderCount} pedidos do app = ${fmtCurrency(appPlatformFee)}`
+                : `${fmtCurrency(baseAmount)} x ${feeValue}% = ${fmtCurrency(appPlatformFee)}`;
+            const formula = `${appFormula} + PDV ${fmtCurrency(pdvLocalTaxTotal)} = ${fmtCurrency(platformFee)}`;
 
             document.getElementById('invoiceBody').innerHTML = `
                 <div class="invoice-row">
@@ -538,16 +593,12 @@
                     <span class="invoice-row-value">${fmtCurrency(pdvSales)} · ${pdvOrderCount} vendas</span>
                 </div>
                 <div class="invoice-row meta">
-                    <span class="invoice-row-label">Taxa PDV cobrada do cliente</span>
+                    <span class="invoice-row-label">Taxa aplicativo PDV</span>
                     <span class="invoice-row-value">${fmtCurrency(pdvLocalTaxTotal)}</span>
-                </div>
-                <div class="invoice-row">
-                    <span class="invoice-row-label">Entrega recebida pela loja</span>
-                    <span class="invoice-row-value" style="color:var(--blue);">- ${fmtCurrency(deliveryEarnings)}</span>
                 </div>
                 <hr class="invoice-divider">
                 <div class="invoice-row">
-                    <span class="invoice-row-label">Base taxável da plataforma</span>
+                    <span class="invoice-row-label">Base taxável app</span>
                     <span class="invoice-row-value">${fmtCurrency(baseAmount)}</span>
                 </div>
                 <div class="invoice-row">
@@ -560,8 +611,8 @@
                 </div>
                 <div class="fee-explanation">
                     <strong>Como a cobrança foi calculada:</strong> a plataforma soma os pedidos não cancelados do mês,
-                    separa as vendas do app e do PDV, remove o valor de entrega da base e aplica o acordo atual da loja.
-                    A taxa PDV exibida acima é a taxa cobrada do cliente no PDV e fica visível para conferência.
+                    separa as vendas do app e do PDV, não soma a taxa PDV ao valor vendido pela loja e aplica cada taxa em sua própria base.
+                    A taxa PDV exibida acima é cobrança da plataforma, registrada separadamente da venda da loja.
                     <div class="fee-formula">${formula}</div>
                 </div>
             `;
