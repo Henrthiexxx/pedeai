@@ -17,27 +17,27 @@
 
         body {
             font-family: 'DM Sans', -apple-system, system-ui, sans-serif;
-            background: #0a0a0c;
+            background: #060606;
             color: #f0f0f2;
             min-height: 100dvh;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-direction: column;
-            gap: 28px;
+            gap: 32px;
         }
 
         .splash-brand {
             display: flex;
             align-items: center;
-            gap: 11px;
+            gap: 13px;
             opacity: 0;
             animation: fadeUp 0.5s 0.1s ease forwards;
         }
 
         .splash-brand-mark {
-            width: 46px;
-            height: 46px;
+            width: 48px;
+            height: 48px;
             border-radius: 13px;
             overflow: hidden;
             flex-shrink: 0;
@@ -51,6 +51,12 @@
             display: block;
         }
 
+        .splash-brand-text {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.12;
+        }
+
         .splash-logo {
             font-size: 1.5rem;
             font-weight: 800;
@@ -61,11 +67,11 @@
         .splash-logo span { color: #2dff9e; }
 
         .splash-sub {
-            font-size: 0.8rem;
-            color: #6e6e78;
-            margin-top: 6px;
-            opacity: 0;
-            animation: fadeUp 0.5s 0.2s ease forwards;
+            font-size: 0.78rem;
+            color: #7d847f;
+            font-weight: 600;
+            margin-top: 4px;
+            letter-spacing: 0.01em;
         }
 
         .splash-spinner {
@@ -86,12 +92,12 @@
     </style>
 </head>
 <body>
-    <div>
-        <div class="splash-brand">
-            <div class="splash-brand-mark"><img src="icon-192.png" alt="Pedra Delivery"></div>
+    <div class="splash-brand">
+        <div class="splash-brand-mark"><img src="icon-192.png" alt="Pedra Delivery"></div>
+        <div class="splash-brand-text">
             <div class="splash-logo"><span>Pedra</span> Delivery</div>
+            <div class="splash-sub">Painel do estabelecimento</div>
         </div>
-        <div class="splash-sub">Painel do estabelecimento</div>
     </div>
     <div class="splash-spinner"></div>
 
