@@ -1,9 +1,10 @@
-const CACHE_NAME = 'pedrad-v1';
+const CACHE_NAME = 'pedrad-v2';
+const APP_BASE = new URL('./', self.location.href);
 const urlsToCache = [
-    '/',
-    '/index.html',
-    '/manifest.json'
-];
+    './',
+    './index.html',
+    './manifest.json'
+].map(path => new URL(path, APP_BASE).href);
 
 self.addEventListener('install', event => {
     event.waitUntil(
