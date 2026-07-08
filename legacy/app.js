@@ -458,7 +458,7 @@ function bindAuthListener() {
             await loadStore();
             if (currentStore) {
                 publishStoreContext();
-                showApp();
+                window.showApp();
                 startOrdersListener();
                 loadHistory();
                 updateNotifBtn();
@@ -499,13 +499,13 @@ function showAuth() {
     }
 }
 
-function showApp() {
+window.showApp = function showApp() {
     const boot = document.getElementById('bootLoading');
     if (boot) boot.style.display = 'none';
     document.getElementById('mainApp').classList.remove('hidden');
     updateStoreUI();
     if (typeof window.__maybeShowWebNotice === 'function') window.__maybeShowWebNotice();
-}
+};
 
 // ══════════════════════════════════════════════
 //  CLEANUP (unsub todos os listeners)
