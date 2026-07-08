@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Relatorio do Dia - Pedra Delivery</title>
+    <meta name="theme-color" content="#0a0a0c">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body{
+            min-height:100dvh;
+            padding:20px;
+            max-width:980px;
+            margin:0 auto;
+            background:radial-gradient(ellipse at 50% 0%,var(--bg-2) 0%,var(--bg-0) 72%);
+        }
+        .page-header{
+            display:flex;
+            align-items:flex-start;
+            justify-content:space-between;
+            gap:14px;
+            padding-bottom:16px;
+            margin-bottom:18px;
+            border-bottom:1px solid var(--border);
+        }
+        .page-title{
+            font-size:1rem;
+            font-weight:700;
+            letter-spacing:.08em;
+            text-transform:uppercase;
+        }
+        .page-subtitle{
+            margin-top:4px;
+            font-size:.78rem;
+            color:var(--text-2);
+        }
+        .date-control{
+            display:flex;
+            gap:8px;
+            align-items:center;
+            flex-shrink:0;
+        }
+        .date-control .form-input{
+            width:150px;
+            padding:8px 10px;
+            font-size:.8rem;
+        }
+        .summary-grid{
+            display:grid;
+            grid-template-columns:repeat(4,1fr);
+            gap:10px;
+            margin-bottom:16px;
+        }
+        .summary-card{
+            background:var(--bg-1);
+            border:1px solid var(--border);
+            border-radius:var(--r);
+            padding:16px;
+            box-shadow:var(--sh-sm);
+        }
+        .summary-value{
+            font-size:1.22rem;
+            font-weight:800;
+            letter-spacing:-.03em;
+            white-space:nowrap;
+        }
+        .summary-label{
+            margin-top:4px;
+            font-size:.66rem;
+            color:var(--text-2);
+            text-transform:uppercase;
+            letter-spacing:.08em;
+            font-weight:700;
+        }
+        .panel{
+            background:var(--bg-1);
+            border:1px solid var(--border);
+            border-radius:var(--r);
+            box-shadow:var(--sh-sm);
+            overflow:hidden;
+            margin-bottom:14px;
+        }
+        .panel-head{
+            display:flex;
+            justify-content:space-between;
+            gap:12px;
+            align-items:center;
+            padding:16px 18px;
+            border-bottom:1px solid var(--border);
+        }
+        .panel-title{
+            font-size:.76rem;
+            font-weight:800;
+            letter-spacing:.08em;
+            text-transform:uppercase;
+            color:var(--text-1);
+        }
+        .panel-note{
+            font-size:.72rem;
+            color:var(--text-2);
+        }
+        .report-table{
+            width:100%;
+            border-collapse:collapse;
+        }
+        .report-table th,
+        .report-table td{
+            padding:13px 16px;
+            border-bottom:1px solid var(--border);
+            text-align:left;
+            vertical-align:top;
+            font-size:.82rem;
+        }
+        .report-table th{
+            color:var(--text-2);
+            font-size:.64rem;
+            text-transform:uppercase;
+            letter-spacing:.08em;
+            font-weight:800;
+            background:var(--bg-2);
+        }
+        .report-table tr:last-child td{border-bottom:none}
+        .driver-name{
+            font-weight:700;
+            color:var(--text-0);
+        }
+        .driver-meta{
+            margin-top:2px;
+            color:var(--text-2);
+            font-size:.72rem;
+        }
+        .amount{
+            font-weight:800;
+            color:var(--green);
+            white-space:nowrap;
+        }
+        .pix-box{
+            display:flex;
+            align-items:flex-start;
+            gap:8px;
+            max-width:360px;
+        }
+        .pix-key{
+            min-width:0;
+            overflow-wrap:anywhere;
+            color:var(--text-0);
+            line-height:1.45;
+        }
+        .pix-empty{
+            color:var(--orange);
+            font-size:.78rem;
+        }
+        .copy-btn{
+            padding:4px 8px;
+            border-radius:var(--rx);
+            font-size:.7rem;
+            flex-shrink:0;
+        }
+        .orders-list{
+            padding:6px 0;
+        }
+        .order-row{
+            display:grid;
+            grid-template-columns:90px 1fr auto auto;
+            gap:12px;
+            align-items:center;
+            padding:11px 18px;
+            border-bottom:1px solid var(--border);
+            font-size:.8rem;
+        }
+        .order-row:last-child{border-bottom:none}
+        .order-id{
+            color:var(--text-2);
+            font-weight:700;
+            font-variant-numeric:tabular-nums;
+        }
+        .order-customer{
+            min-width:0;
+            overflow:hidden;
+            text-overflow:ellipsis;
+            white-space:nowrap;
+        }
+        .badge{
+            display:inline-flex;
+            align-items:center;
+            padding:4px 9px;
+            border-radius:999px;
+            border:1px solid var(--border);
+            background:var(--bg-2);
+            color:var(--text-1);
+            font-size:.68rem;
+            font-weight:700;
+            white-space:nowrap;
+        }
+        .badge.green{background:var(--green-bg);border-color:var(--green-b);color:var(--green)}
+        .badge.orange{background:var(--orange-bg);border-color:var(--orange-b);color:var(--orange)}
+        .empty-state,
+        .loading-state{
+            padding:38px 20px;
+            text-align:center;
+            color:var(--text-2);
+            font-size:.84rem;
+        }
+        .loading-state .spinner{margin:0 auto 10px}
+        .hint{
+            padding:13px 16px;
+            border:1px solid var(--blue-b);
+            background:var(--blue-bg);
+            border-radius:var(--rs);
+            color:var(--text-1);
+            font-size:.76rem;
+            line-height:1.55;
+            margin-bottom:14px;
+        }
+        .hint strong{color:var(--text-0)}
+        @media(max-width:760px){
+            body{padding:16px}
+            .page-header{flex-direction:column}
+            .date-control{width:100%}
+            .date-control .form-input{flex:1;width:auto}
+            .summary-grid{grid-template-columns:repeat(2,1fr)}
+            .report-table,
+            .report-table thead,
+            .report-table tbody,
+            .report-table tr,
+            .report-table th,
+            .report-table td{display:block}
+            .report-table thead{display:none}
+            .report-table tr{border-bottom:1px solid var(--border);padding:12px 16px}
+            .report-table tr:last-child{border-bottom:none}
+            .report-table td{border:0;padding:5px 0}
+            .report-table td::before{
+                content:attr(data-label);
+                display:block;
+                font-size:.62rem;
+                color:var(--text-3);
+                text-transform:uppercase;
+                letter-spacing:.08em;
+                font-weight:800;
+                margin-bottom:2px;
+            }
+            .order-row{grid-template-columns:1fr;gap:4px}
+            .order-customer{white-space:normal}
+        }
+    </style>
+    <link rel="stylesheet" href="modules/popup-desktop.css">
+</head>
+<body>
+    <div class="toast" id="toast"></div>
+
+    <header class="page-header">
+        <div>
+            <div class="page-title">Relatorio do Dia</div>
+            <div class="page-subtitle" id="storeName">Carregando loja...</div>
+        </div>
+        <div class="date-control">
+            <input class="form-input" type="date" id="reportDate">
+            <button class="btn btn-primary btn-sm" id="reloadBtn" onclick="loadReport()">Atualizar</button>
+        </div>
+    </header>
+
+    <div class="hint">
+        <strong>Entregas a pagar:</strong> soma das taxas de entrega dos pedidos entregues no dia, agrupadas pelo entregador identificado no pedido. A chave Pix vem do cadastro do entregador quando estiver disponivel.
+    </div>
+
+    <section class="summary-grid">
+        <div class="summary-card">
+            <div class="summary-value" id="salesTotal">-</div>
+            <div class="summary-label">Vendas do dia</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-value" id="ordersTotal">-</div>
+            <div class="summary-label">Pedidos validos</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-value" id="deliveriesTotal">-</div>
+            <div class="summary-label">Entregas feitas</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-value" id="deliveryDebtTotal">-</div>
+            <div class="summary-label">A pagar entregadores</div>
+        </div>
+    </section>
+
+    <section class="panel">
+        <div class="panel-head">
+            <div class="panel-title">Pagamento por entregador</div>
+            <div class="panel-note" id="driversNote">-</div>
+        </div>
+        <div id="driversReport">
+            <div class="loading-state"><div class="spinner"></div>Calculando relatorio...</div>
+        </div>
+    </section>
+
+    <section class="panel">
+        <div class="panel-head">
+            <div class="panel-title">Pedidos do dia</div>
+            <div class="panel-note" id="ordersNote">-</div>
+        </div>
+        <div class="orders-list" id="ordersList">
+            <div class="loading-state">Carregando pedidos...</div>
+        </div>
+    </section>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="dist/renderer/bootstrap.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAnIJRcUxN-0swpVnonPbJjTSK87o4CQ_g",
+            authDomain: "pedrad-814d0.firebaseapp.com",
+            projectId: "pedrad-814d0",
+            storageBucket: "pedrad-814d0.appspot.com",
+            messagingSenderId: "293587190550",
+            appId: "1:293587190550:web:80c9399f82847c80e20637"
+        };
+
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        let storeId = new URLSearchParams(location.search).get('storeId')
+            || localStorage.getItem('currentStoreId')
+            || localStorage.getItem('CURRENT_STORE_ID')
+            || localStorage.getItem('storeId');
+        let currentStore = null;
+        let driversById = new Map();
+
+        applyInitialTheme();
+        bootstrap();
+
+        function applyInitialTheme() {
+            function readThemeFromWindow(win) {
+                try {
+                    const value = win.document.documentElement.getAttribute('data-theme');
+                    if (value === 'light' || value === 'dark') return value;
+                } catch (_) {}
+                return null;
+            }
+
+            function syncTheme() {
+                const external = readThemeFromWindow(window.opener || {}) || readThemeFromWindow(window.parent || {});
+                const stored = localStorage.getItem('pedrad-theme')
+                    || localStorage.getItem('theme')
+                    || localStorage.getItem('appTheme');
+                const theme = external || stored || 'dark';
+                document.documentElement.setAttribute('data-theme', theme === 'light' ? 'light' : 'dark');
+            }
+
+            syncTheme();
+            window.addEventListener('storage', syncTheme);
+            setInterval(syncTheme, 1000);
+        }
+
+        async function bootstrap() {
+            document.getElementById('reportDate').value = localDateValue(new Date());
+
+            try {
+                await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+                const user = await waitForAuthUser();
+                if (!user) {
+                    renderFatal('Sessao expirada. Abra novamente pelo painel da loja.');
+                    return;
+                }
+
+                currentStore = await resolveCurrentStore(user);
+                if (!currentStore?.id) {
+                    renderFatal('Loja nao identificada. Abra o relatorio pelo painel da loja.');
+                    return;
+                }
+
+                storeId = currentStore.id;
+                localStorage.setItem('currentStoreId', storeId);
+                localStorage.setItem('CURRENT_STORE_ID', storeId);
+                document.getElementById('storeName').textContent = currentStore.name || 'Loja';
+
+                await loadReport();
+            } catch (err) {
+                console.error(err);
+                renderFatal('Erro ao carregar relatorio do dia.');
+            }
+        }
+
+        function waitForAuthUser() {
+            if (auth.currentUser) return Promise.resolve(auth.currentUser);
+            return new Promise(resolve => {
+                const unsub = auth.onAuthStateChanged(user => {
+                    unsub();
+                    resolve(user || null);
+                });
+            });
+        }
+
+        async function resolveCurrentStore(user) {
+            const knownId = String(storeId || '').trim();
+            if (window.PedraPcTs?.resolveStoreForFirebaseUser) {
+                const resolved = await window.PedraPcTs.resolveStoreForFirebaseUser(db, {
+                    uid: String(user.uid || '').trim(),
+                    email: String(user.email || '').trim()
+                }, { knownIds: knownId ? [knownId] : [] });
+                if (resolved) return resolved;
+            }
+
+            if (!knownId) return null;
+            const snap = await db.collection('stores').doc(knownId).get();
+            return snap.exists ? { id: snap.id, ...snap.data() } : null;
+        }
+
+        async function loadReport() {
+            if (!storeId) return;
+            const btn = document.getElementById('reloadBtn');
+            btn.disabled = true;
+            btn.textContent = '...';
+            document.getElementById('driversReport').innerHTML =
+                '<div class="loading-state"><div class="spinner"></div>Calculando relatorio...</div>';
+            document.getElementById('ordersList').innerHTML =
+                '<div class="loading-state">Carregando pedidos...</div>';
+
+            try {
+                const selected = parseDateInput(document.getElementById('reportDate').value);
+                const start = new Date(selected);
+                start.setHours(0, 0, 0, 0);
+                const end = new Date(start);
+                end.setDate(end.getDate() + 1);
+
+                const ordersSnap = await db.collection('orders')
+                    .where('storeId', '==', storeId)
+                    .where('createdAt', '>=', start)
+                    .where('createdAt', '<', end)
+                    .get();
+
+                const orders = ordersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+                    .sort((a, b) => toDate(a.createdAt) - toDate(b.createdAt));
+
+                await loadDrivers(orders);
+                renderReport(orders);
+            } catch (err) {
+                console.error(err);
+                const msg = err?.code === 'permission-denied'
+                    ? 'Sem permissao para carregar os pedidos desta loja.'
+                    : 'Erro ao carregar o relatorio.';
+                document.getElementById('driversReport').innerHTML = `<div class="empty-state">${esc(msg)}</div>`;
+                document.getElementById('ordersList').innerHTML = `<div class="empty-state">${esc(msg)}</div>`;
+                showToast(msg);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Atualizar';
+            }
+        }
+
+        async function loadDrivers(orders) {
+            driversById = new Map();
+
+            try {
+                const linkedSnap = await db.collection('drivers')
+                    .where('linkedStoreId', '==', storeId)
+                    .get();
+                linkedSnap.docs.forEach(doc => driversById.set(doc.id, { id: doc.id, ...doc.data() }));
+            } catch (err) {
+                if (err?.code !== 'permission-denied') console.warn('Erro ao listar entregadores vinculados:', err);
+            }
+
+            const missingIds = Array.from(new Set(orders.map(getDriverId).filter(Boolean)))
+                .filter(id => !driversById.has(id));
+            await Promise.all(missingIds.map(async id => {
+                try {
+                    const snap = await db.collection('drivers').doc(id).get();
+                    if (snap.exists) driversById.set(snap.id, { id: snap.id, ...snap.data() });
+                } catch (_) {}
+            }));
+        }
+
+        function renderReport(orders) {
+            const validOrders = orders.filter(order => order.status !== 'cancelled');
+            const deliveredDeliveryOrders = validOrders.filter(order =>
+                order.status === 'delivered' && isDeliveryOrder(order)
+            );
+
+            const salesTotal = validOrders.reduce((sum, order) => sum + orderTotal(order), 0);
+            const deliveryDebtTotal = deliveredDeliveryOrders.reduce((sum, order) => sum + deliveryFee(order), 0);
+            const groups = groupDriverPayments(deliveredDeliveryOrders);
+
+            document.getElementById('salesTotal').textContent = fmtCurrency(salesTotal);
+            document.getElementById('ordersTotal').textContent = String(validOrders.length);
+            document.getElementById('deliveriesTotal').textContent = String(deliveredDeliveryOrders.length);
+            document.getElementById('deliveryDebtTotal').textContent = fmtCurrency(deliveryDebtTotal);
+            document.getElementById('driversNote').textContent = `${groups.length} entregador(es)`;
+            document.getElementById('ordersNote').textContent = `${orders.length} pedido(s) encontrado(s)`;
+
+            renderDriverTable(groups);
+            renderOrdersList(orders);
+        }
+
+        function groupDriverPayments(orders) {
+            const map = new Map();
+
+            orders.forEach(order => {
+                const driverId = getDriverId(order) || `unknown:${getDriverName(order) || 'sem-entregador'}`;
+                const driverDoc = getDriverId(order) ? driversById.get(getDriverId(order)) : null;
+                const name = getDriverName(order) || driverDoc?.name || driverDoc?.displayName || 'Sem entregador identificado';
+                const pixKey = getPixKey(driverDoc || order);
+                const key = driverId;
+
+                if (!map.has(key)) {
+                    map.set(key, {
+                        id: driverId,
+                        name,
+                        pixKey,
+                        orders: [],
+                        count: 0,
+                        amount: 0
+                    });
+                }
+
+                const group = map.get(key);
+                group.orders.push(order);
+                group.count += 1;
+                group.amount += deliveryFee(order);
+                if (!group.pixKey && pixKey) group.pixKey = pixKey;
+            });
+
+            return Array.from(map.values()).sort((a, b) => b.amount - a.amount || a.name.localeCompare(b.name));
+        }
+
+        function renderDriverTable(groups) {
+            const container = document.getElementById('driversReport');
+            if (!groups.length) {
+                container.innerHTML = '<div class="empty-state">Nenhuma entrega concluida com taxa de entrega para pagar neste dia.</div>';
+                return;
+            }
+
+            container.innerHTML = `
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th>Entregador</th>
+                            <th>Entregas</th>
+                            <th>Valor devido</th>
+                            <th>Chave Pix</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${groups.map(group => `
+                            <tr>
+                                <td data-label="Entregador">
+                                    <div class="driver-name">${esc(group.name)}</div>
+                                    <div class="driver-meta">${esc(shortDriverId(group.id))}</div>
+                                </td>
+                                <td data-label="Entregas">${group.count}</td>
+                                <td data-label="Valor devido"><span class="amount">${fmtCurrency(group.amount)}</span></td>
+                                <td data-label="Chave Pix">${renderPixCell(group)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>`;
+        }
+
+        function renderPixCell(group) {
+            if (!group.pixKey) return '<span class="pix-empty">Pix nao cadastrado</span>';
+            const encoded = encodeURIComponent(group.pixKey);
+            return `
+                <div class="pix-box">
+                    <div class="pix-key">${esc(group.pixKey)}</div>
+                    <button class="btn btn-sm copy-btn" onclick="copyPix('${encoded}')">Copiar</button>
+                </div>`;
+        }
+
+        function renderOrdersList(orders) {
+            const container = document.getElementById('ordersList');
+            if (!orders.length) {
+                container.innerHTML = '<div class="empty-state">Nenhum pedido encontrado nesta data.</div>';
+                return;
+            }
+
+            container.innerHTML = orders.map(order => {
+                const date = toDate(order.createdAt);
+                const status = order.status || 'pending';
+                const valid = status !== 'cancelled';
+                const customer = order.userName || order.customerName || order.clientName || 'Cliente';
+                const fee = deliveryFee(order);
+                const deliveryLabel = isDeliveryOrder(order) ? fmtCurrency(fee) : 'Sem entrega';
+                return `
+                    <div class="order-row">
+                        <div class="order-id">#${esc(String(order.id || '').slice(-6).toUpperCase())}</div>
+                        <div class="order-customer">${esc(customer)}</div>
+                        <div>${date.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' })}</div>
+                        <div class="badge ${valid ? 'green' : 'orange'}">${esc(statusLabel(status))} · ${esc(deliveryLabel)}</div>
+                    </div>`;
+            }).join('');
+        }
+
+        function getDriverId(order) {
+            return firstValue(order, [
+                'driverId',
+                'deliveryDriverId',
+                'assignedDriverId',
+                'acceptedByDriverId',
+                'deliveredByDriverId',
+                'deliveredBy',
+                'deliveryPersonId',
+                'courierId',
+                'riderId',
+                'motoboyId',
+                'entregadorId',
+                'driver.id',
+                'deliveryDriver.id',
+                'assignedDriver.id',
+                'deliveryPerson.id',
+                'rider.id'
+            ]);
+        }
+
+        function getDriverName(order) {
+            return firstValue(order, [
+                'driverName',
+                'deliveryDriverName',
+                'assignedDriverName',
+                'acceptedByDriverName',
+                'deliveredByDriverName',
+                'deliveredByName',
+                'deliveryPersonName',
+                'courierName',
+                'riderName',
+                'motoboyName',
+                'entregadorNome',
+                'driver.name',
+                'deliveryDriver.name',
+                'assignedDriver.name',
+                'deliveryPerson.name',
+                'rider.name'
+            ]);
+        }
+
+        function getPixKey(source) {
+            return firstValue(source || {}, [
+                'pixKey',
+                'pix',
+                'pixChave',
+                'chavePix',
+                'paymentPixKey',
+                'bankPixKey',
+                'pix.key',
+                'payment.pixKey',
+                'payment.pix',
+                'bank.pixKey',
+                'bank.pix'
+            ]);
+        }
+
+        function firstValue(obj, paths) {
+            for (const path of paths) {
+                const value = path.split('.').reduce((acc, key) => acc && acc[key], obj);
+                if (value !== undefined && value !== null && String(value).trim() !== '') {
+                    return String(value).trim();
+                }
+            }
+            return '';
+        }
+
+        function isDeliveryOrder(order) {
+            return order.deliveryMode !== 'pickup'
+                && order.deliveryMode !== 'local'
+                && order.orderType !== 'local'
+                && order.noDelivery !== true
+                && order.sourceDetail !== 'table';
+        }
+
+        function deliveryFee(order) {
+            return num(order.deliveryFee || order.deliveryTax || order.deliveryPrice || order.frete || 0);
+        }
+
+        function orderTotal(order) {
+            return num(order.total || order.totalAmount || order.subtotal || 0);
+        }
+
+        function num(value) {
+            const parsed = Number(value);
+            return Number.isFinite(parsed) ? parsed : 0;
+        }
+
+        function toDate(value) {
+            if (!value) return new Date(0);
+            return value.toDate ? value.toDate() : new Date(value);
+        }
+
+        function parseDateInput(value) {
+            if (!value) return new Date();
+            const parts = value.split('-').map(part => parseInt(part, 10));
+            if (parts.length !== 3 || parts.some(part => !Number.isFinite(part))) return new Date();
+            return new Date(parts[0], parts[1] - 1, parts[2]);
+        }
+
+        function localDateValue(date) {
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function statusLabel(status) {
+            const labels = {
+                pending:'Pendente',
+                confirmed:'Confirmado',
+                preparing:'Preparando',
+                ready:'Pronto',
+                delivering:'Em entrega',
+                delivered:'Entregue',
+                cancelled:'Cancelado'
+            };
+            return labels[status] || status || 'Pedido';
+        }
+
+        function shortDriverId(id) {
+            if (!id || id.startsWith('unknown:')) return 'Sem ID no pedido';
+            return `ID ${id.slice(0, 6)}...${id.slice(-4)}`;
+        }
+
+        function fmtCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', {
+                style:'currency',
+                currency:'BRL'
+            }).format(value || 0);
+        }
+
+        function esc(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function copyPix(encodedValue) {
+            const value = decodeURIComponent(encodedValue || '');
+            if (!value) return;
+            navigator.clipboard.writeText(value)
+                .then(() => showToast('Chave Pix copiada'))
+                .catch(() => showToast('Nao foi possivel copiar'));
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            clearTimeout(window._dailyReportToastTimer);
+            window._dailyReportToastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function renderFatal(message) {
+            document.getElementById('driversReport').innerHTML = `<div class="empty-state">${esc(message)}</div>`;
+            document.getElementById('ordersList').innerHTML = `<div class="empty-state">${esc(message)}</div>`;
+            ['salesTotal', 'ordersTotal', 'deliveriesTotal', 'deliveryDebtTotal'].forEach(id => {
+                document.getElementById(id).textContent = '-';
+            });
+            document.getElementById('storeName').textContent = message;
+        }
+    </script>
+</body>
+</html>
