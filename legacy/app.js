@@ -493,14 +493,18 @@ function handleLogout() {
 }
 
 function showAuth() {
-    document.getElementById('authPage').style.display = 'flex';
-    document.getElementById('mainApp').classList.add('hidden');
+    // Web: o login é uma página exclusiva, sem sidebar/painel.
+    if (location.pathname.split('/').pop() !== 'login.html') {
+        location.replace('login.html');
+    }
 }
 
 function showApp() {
-    document.getElementById('authPage').style.display = 'none';
+    const boot = document.getElementById('bootLoading');
+    if (boot) boot.style.display = 'none';
     document.getElementById('mainApp').classList.remove('hidden');
     updateStoreUI();
+    if (typeof window.__maybeShowWebNotice === 'function') window.__maybeShowWebNotice();
 }
 
 // ══════════════════════════════════════════════
@@ -1297,8 +1301,16 @@ function openPopup(page) {
 }
 
 function closePopup() {
+    const frame = document.getElementById('popupFrame');
+    // Deixa o conteúdo do popup vetar o fechamento (ex.: config com alterações não salvas).
+    try {
+        const w = frame && frame.contentWindow;
+        if (w && typeof w.__pedraBeforeClose === 'function' && w.__pedraBeforeClose() === false) {
+            return;
+        }
+    } catch (_) {}
     document.getElementById('iframeModal').classList.remove('show');
-    document.getElementById('popupFrame').src = '';
+    if (frame) frame.src = '';
 }
 
 function openProductsPage() {
