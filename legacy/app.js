@@ -499,7 +499,7 @@ function showAuth() {
     }
 }
 
-window.showApp = function showApp() {
+window.showApp = function () {
     const boot = document.getElementById('bootLoading');
     if (boot) boot.style.display = 'none';
     document.getElementById('mainApp').classList.remove('hidden');
