@@ -191,6 +191,14 @@
             }
         }
 
+        /* Badge "PC" para itens exclusivos do app de PC (sobrescreve o vermelho de contagem) */
+        .nav-badge-pc {
+            background: var(--bg-3);
+            color: var(--text-2);
+            border: 1px solid var(--border);
+            font-weight: 800;
+            letter-spacing: .04em;
+        }
     </style>
 </head>
 <body>
@@ -208,29 +216,10 @@
     <button class="notif-popup-close" onclick="hideNotifPopup()">×</button>
 </div>
 
-<!-- ══════════ AUTH ══════════ -->
-<div id="authPage" class="auth-page">
-    <div class="auth-box">
-        <div class="auth-logo">
-            <div class="auth-brand-mark"><img src="icon-192.png" alt="Pedra Delivery"></div>
-            <div class="auth-brand-text"><span>Pedra</span> Delivery</div>
-            <p>Painel do estabelecimento</p>
-        </div>
-        <div class="auth-card">
-            <form onsubmit="handleLogin(event)">
-                <div class="form-group">
-                    <label class="form-label">E-mail</label>
-                    <input type="email" class="form-input" id="loginEmail" placeholder="loja@email.com" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Senha</label>
-                    <input type="password" class="form-input" id="loginPassword" placeholder="••••••••" required>
-                </div>
-                <button type="submit" class="btn btn-primary btn-block">Entrar</button>
-            </form>
-        </div>
-    </div>
-</div>
+<!-- ══════════ BOOT (enquanto valida sessão) ══════════ -->
+<div id="bootLoading" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg-0);color:var(--text-2);font-size:.9rem;z-index:40">Carregando…</div>
+
+<!-- Login é uma página exclusiva (login.html). Sem sessão, o app redireciona para lá. -->
 
 <!-- ══════════ MAIN APP ══════════ -->
 <div id="mainApp" class="hidden">
@@ -258,8 +247,9 @@
                     <span class="icon">☰</span> Historico
                     <span class="nav-badge" id="pendingBadge" style="display:none">0</span>
                 </div>
-                <div class="nav-item" onclick="openPopup('estatisticas.html')">
+                <div class="nav-item" onclick="showPcOnly()">
                     <span class="icon">◴</span> Estatisticas
+                    <span class="nav-badge nav-badge-pc">PC</span>
                 </div>
             </div>
             <div class="nav-section">
@@ -274,11 +264,13 @@
             </div>
             <div class="nav-section">
                 <div class="nav-section-title">Ferramentas</div>
-                <div class="nav-item" onclick="openPopup('clientes-da-casa.html')">
+                <div class="nav-item" onclick="showPcOnly()">
                     <span class="icon">☺</span> Clientes da Casa
+                    <span class="nav-badge nav-badge-pc">PC</span>
                 </div>
-                <div class="nav-item" onclick="openPopup('layout-editor.html')">
+                <div class="nav-item" onclick="showPcOnly()">
                     <span class="icon">◫</span> Layout da Loja
+                    <span class="nav-badge nav-badge-pc">PC</span>
                 </div>
                 <div class="nav-item" onclick="openPopup('promocoes.html')">
                     <span class="icon">%</span> Promoções
@@ -413,6 +405,27 @@
                     ⬇ Baixar o app para PC
                 </a>
                 <button class="btn btn-ghost" onclick="closeWebNotice()" style="width:100%">Continuar na web</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recurso exclusivo do app de PC -->
+<div class="modal" id="pcOnlyModal" onclick="if(event.target===this)closePcOnly()">
+    <div class="modal-box" style="max-width:420px">
+        <div class="modal-body" style="text-align:center;padding:30px 26px;">
+            <div style="font-size:2.4rem;line-height:1;margin-bottom:12px">🖥️</div>
+            <div class="modal-title" style="margin-bottom:10px">Disponível na versão de PC</div>
+            <div style="color:var(--text-1);margin-bottom:22px;font-size:.9rem;line-height:1.55">
+                Este recurso funciona no <b>aplicativo para PC</b> do Pedra Delivery.
+                Baixe grátis no site oficial para usar <b>Clientes da Casa</b>,
+                <b>Estatísticas</b>, <b>Layout da Loja</b> e muito mais.
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+                <a class="btn btn-primary" href="https://www.pedradelivery.com.br/download.html" target="_blank" rel="noopener" style="width:100%;text-decoration:none">
+                    ⬇ Baixar o app para PC
+                </a>
+                <button class="btn btn-ghost" onclick="closePcOnly()" style="width:100%">Fechar</button>
             </div>
         </div>
     </div>
@@ -849,16 +862,27 @@
 
   function showWebNotice() {
     try { if (sessionStorage.getItem('pedrad_web_notice_seen') === '1') return; } catch (e) {}
+    // Só no painel logado — nunca durante o boot/redirecionamento para o login.
+    var app = document.getElementById('mainApp');
+    if (!app || app.classList.contains('hidden')) return;
     var m = document.getElementById('webNoticeModal');
     if (m) m.classList.add('active');
   }
 
-  function schedule() { setTimeout(showWebNotice, 900); }
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', schedule, { once: true });
-  } else {
-    schedule();
-  }
+  // O painel (showApp) chama isto assim que fica visível, garantindo que
+  // o aviso só apareça logado e nunca durante o boot/redirect para o login.
+  window.__maybeShowWebNotice = function () { setTimeout(showWebNotice, 700); };
+
+  // Recursos exclusivos do app de PC (Clientes da Casa, Estatísticas, Layout da Loja).
+  window.showPcOnly = function () {
+    try { if (typeof window.closeSidebar === 'function') window.closeSidebar(); } catch (e) {}
+    var m = document.getElementById('pcOnlyModal');
+    if (m) m.classList.add('active');
+  };
+  window.closePcOnly = function () {
+    var m = document.getElementById('pcOnlyModal');
+    if (m) m.classList.remove('active');
+  };
 })();
 </script>
 

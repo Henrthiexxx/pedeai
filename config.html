@@ -10,7 +10,7 @@
         body {
             min-height: 100vh;
             padding-top: env(safe-area-inset-top);
-            padding-bottom: calc(env(safe-area-inset-bottom) + 24px);
+            padding-bottom: calc(env(safe-area-inset-bottom) + 96px);
             background: radial-gradient(ellipse at 50% 0%, var(--bg-2) 0%, var(--bg-0) 68%);
         }
 
@@ -293,7 +293,62 @@
             gap: 14px;
         }
 
-        .bottom-save { margin-top: 18px; }
+        .page-sub {
+            font-size: .78rem;
+            color: var(--text-2);
+            margin-top: 3px;
+            line-height: 1.4;
+        }
+        .page-sub b { color: var(--text-1); font-weight: 600; }
+
+        /* Aviso "só salva ao clicar em Salvar" */
+        .save-hint {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+            margin-bottom: 16px;
+            padding: 12px 14px;
+            background: var(--green-bg);
+            border: 1px solid var(--green-b);
+            border-radius: var(--rs);
+        }
+        .save-hint svg { width: 16px; height: 16px; stroke: var(--green); flex: 0 0 auto; margin-top: 1px; }
+        .save-hint span { font-size: .78rem; color: var(--text-1); line-height: 1.45; }
+
+        /* Barra fixa de salvar */
+        .save-bar {
+            position: fixed;
+            left: 0; right: 0; bottom: 0;
+            z-index: 30;
+            background: color-mix(in srgb, var(--bg-0) 82%, transparent);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-top: 1px solid var(--border);
+            padding: 12px 20px calc(12px + env(safe-area-inset-bottom));
+        }
+        .save-bar-inner {
+            max-width: 720px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .dirty-badge {
+            display: none;
+            align-items: center;
+            gap: 7px;
+            font-size: .78rem;
+            font-weight: 600;
+            color: var(--amber, #f59e0b);
+        }
+        .dirty-badge::before {
+            content: '';
+            width: 8px; height: 8px; border-radius: 50%;
+            background: currentColor;
+            box-shadow: 0 0 8px currentColor;
+        }
+        .save-bar .btn { margin-left: auto; min-width: 190px; }
+        .save-bar .btn[disabled] { opacity: .6; cursor: not-allowed; }
 
         .toast { max-width: min(92vw, 440px); }
 
@@ -347,7 +402,19 @@
                 <circle cx="12" cy="12" r="3"/>
                 <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
             </svg>
-            <h1>Configurações</h1>
+            <div>
+                <h1>Configurações</h1>
+                <p class="page-sub">As alterações só são aplicadas quando você clicar em <b>Salvar</b>.</p>
+            </div>
+        </div>
+
+        <div class="save-hint">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="9"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <span>Edite o que precisar em todas as seções abaixo e clique em <b>Salvar alterações</b> ao final. Nada é alterado antes disso.</span>
         </div>
 
         <!-- ===== INFORMAÇÕES DA LOJA ===== -->
@@ -442,8 +509,6 @@
                 <label class="form-label">Endereço</label>
                 <input type="text" class="form-input" id="storeAddress" placeholder="Rua, número - Bairro">
             </div>
-
-            <button class="btn btn-primary btn-block" onclick="saveStoreInfo()">Salvar informações</button>
         </div>
 
         <!-- ===== HORÁRIO DE FUNCIONAMENTO ===== -->
@@ -499,17 +564,14 @@
                 </div>
                 <div class="toggle active" id="uiSoundToggle" onclick="toggleSetting('uiSound')"></div>
             </div>
-
-            <div class="setting-item">
-                <div class="setting-info">
-                    <div class="setting-label">Aceitar automaticamente</div>
-                    <div class="setting-desc">Confirmar pedidos sem aprovação</div>
-                </div>
-                <div class="toggle" id="autoAcceptToggle" onclick="toggleSetting('autoAccept')"></div>
-            </div>
         </div>
+    </div>
 
-        <button class="btn btn-primary btn-block bottom-save" onclick="saveAllSettings()">Salvar todas configurações</button>
+    <div class="save-bar">
+        <div class="save-bar-inner">
+            <span class="dirty-badge" id="dirtyBadge">Alterações não salvas</span>
+            <button class="btn btn-primary" id="saveBtn" onclick="saveAll()">Salvar alterações</button>
+        </div>
     </div>
 
     <script src="pedra-web-db.js"></script>
@@ -580,6 +642,33 @@
         let currentImageBase64 = null;
         const UI_SOUND_KEY = 'pedrad_ui_sounds';
 
+        // ===== DIRTY TRACKING (alterações só valem após salvar) =====
+        let isDirty = false;
+        function markDirty() {
+            if (isDirty) return;
+            isDirty = true;
+            updateSaveBar();
+        }
+        function updateSaveBar() {
+            const badge = document.getElementById('dirtyBadge');
+            if (badge) badge.style.display = isDirty ? 'inline-flex' : 'none';
+        }
+
+        // Qualquer edição em campos marca como "não salvo".
+        document.addEventListener('input', (e) => {
+            if (e.target.classList && e.target.classList.contains('form-input')) markDirty();
+        });
+        document.addEventListener('change', (e) => {
+            if (e.target.classList && e.target.classList.contains('form-input')) markDirty();
+        });
+
+        // Chamado pelo painel (closePopup) antes de fechar o popup.
+        // Retorna false para cancelar o fechamento.
+        window.__pedraBeforeClose = function () {
+            if (!isDirty) return true;
+            return confirm('Você tem alterações não salvas.\n\nDeseja sair sem salvar?');
+        };
+
         // ===== DAYS DEFINITION =====
         const DAYS = [
             { key: 'mon',      label: 'Segunda-feira' },
@@ -613,6 +702,7 @@
             const toggle = row.querySelector('.toggle');
             row.classList.toggle('disabled');
             toggle.classList.toggle('active');
+            markDirty();
         }
 
         function getDayState(key) {
@@ -727,10 +817,13 @@
             document.getElementById('soundToggle').classList.toggle('active', s.soundEnabled !== false);
             const uiSoundEnabled = readUiSoundPreference(s);
             document.getElementById('uiSoundToggle').classList.toggle('active', uiSoundEnabled);
-            document.getElementById('autoAcceptToggle').classList.toggle('active', !!s.autoAccept);
 
             persistUiSoundPreference(uiSoundEnabled);
             notifyParentUiSoundChanged(uiSoundEnabled);
+
+            // Estado recém-carregado do Firestore = nada pendente.
+            isDirty = false;
+            updateSaveBar();
         }
 
         // Converte estrutura antiga (weekday/weekend) pro novo formato granular
@@ -792,6 +885,7 @@
                     : await resizeImageToBase64(file, 600, 600);
                 currentImageBase64 = base64;
                 updateImagePreview(base64);
+                markDirty();
                 setUploadStatus('✓ Imagem processada', 'success');
                 showToast('✓ Imagem carregada! Clique em Salvar');
             } catch (err) {
@@ -879,6 +973,7 @@
             if (!confirm('Remover imagem da loja?')) return;
             currentImageBase64 = null;
             updateImagePreview(null);
+            markDirty();
             setUploadStatus('', '');
             showToast('✓ Imagem removida. Clique em Salvar');
         }
@@ -926,21 +1021,27 @@
         function toggleSetting(setting) {
             const toggle = document.getElementById(`${setting}Toggle`);
             if (!toggle) return;
+            // Apenas reflete o estado na tela; a aplicação real acontece no Salvar.
             toggle.classList.toggle('active');
-
-            if (setting === 'uiSound') {
-                const enabled = toggle.classList.contains('active');
-                persistUiSoundPreference(enabled);
-                notifyParentUiSoundChanged(enabled);
-                showToast(enabled ? '✓ Sons da interface ativados' : '✓ Sons da interface desativados');
-            }
+            markDirty();
         }
 
-        // ===== SAVE =====
-        async function saveStoreInfo() {
+        // ===== SAVE (único botão — salva TUDO) =====
+        async function saveAll() {
+            if (!currentStore?.id) { showToast('Loja não carregada'); return; }
+
+            const btn = document.getElementById('saveBtn');
+            const prevLabel = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Salvando...';
+
             try {
-                if (!currentStore?.id) { showToast('Loja não carregada'); return; }
-                const data = {
+                const hours = {};
+                DAYS.forEach(d => { hours[d.key] = getDayState(d.key); });
+
+                const uiSoundEnabled = document.getElementById('uiSoundToggle').classList.contains('active');
+
+                const updateData = {
                     name: (document.getElementById('storeName').value || '').trim(),
                     phone: (document.getElementById('storePhone').value || '').trim(),
                     cnpj: (document.getElementById('storeCnpj').value || '').trim(),
@@ -952,37 +1053,37 @@
                     status: 'active',
                     suspended: false,
                     suspendReason: firebase.firestore.FieldValue.delete(),
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                };
-                await db.collection('stores').doc(currentStore.id).update(data);
-                showToast('✓ Informações salvas!');
-            } catch (err) { console.error(err); showToast('✗ Erro ao salvar'); }
-        }
-
-        async function saveAllSettings() {
-            try {
-                if (!currentStore?.id) { showToast('Loja não carregada'); return; }
-
-                const hours = {};
-                DAYS.forEach(d => { hours[d.key] = getDayState(d.key); });
-
-                const updateData = {
-                    imageUrl: currentImageBase64 || '',
-                    status: 'active',
-                    suspended: false,
-                    suspendReason: firebase.firestore.FieldValue.delete(),
                     settings: {
                         soundEnabled: document.getElementById('soundToggle').classList.contains('active'),
-                        uiSoundEnabled: document.getElementById('uiSoundToggle').classList.contains('active'),
-                        autoAccept: document.getElementById('autoAcceptToggle').classList.contains('active'),
+                        uiSoundEnabled,
                         hours
                     },
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
 
                 await db.collection('stores').doc(currentStore.id).update(updateData);
+
+                // Efeitos locais só depois de persistir (antes disso, nada muda).
+                persistUiSoundPreference(uiSoundEnabled);
+                notifyParentUiSoundChanged(uiSoundEnabled);
+
+                // Atualiza o estado em memória para refletir o que foi salvo.
+                currentStore = {
+                    ...currentStore,
+                    ...updateData,
+                    settings: { ...(currentStore.settings || {}), ...updateData.settings }
+                };
+
+                isDirty = false;
+                updateSaveBar();
                 showToast('✓ Configurações salvas!');
-            } catch (err) { console.error(err); showToast('✗ Erro ao salvar'); }
+            } catch (err) {
+                console.error(err);
+                showToast('✗ Erro ao salvar');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = prevLabel;
+            }
         }
 
         function showToast(msg) {
