@@ -1,0 +1,280 @@
+/* Desktop layout for pages opened inside the PC popup iframe.
+   Goal: body never scrolls — the .container/.wrap is the scroll area. */
+
+@media (min-width: 900px) {
+
+  /* ── 1. Full-height body, no external scroll ── */
+  html {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    height: 100vh !important;
+    min-height: unset !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* ── 2. Main scroll region ── */
+  .container,
+  .wrap,
+  .popup-page {
+    flex: 1 !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 20px 28px !important;
+    max-width: none !important;
+    margin: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* ── 3. PDV: already has its own full-height layout ── */
+  body:has(.pdv) {
+    overflow: hidden !important;
+  }
+
+  body:has(.pdv) .pdv-right {
+    width: 390px !important;
+  }
+
+  body:has(.pdv) .pdv-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important;
+  }
+
+  /* ── 4. Page header: compact, single row ── */
+  .page-header,
+  .popup-header,
+  .top {
+    display: flex !important;
+    align-items: center !important;
+    flex-direction: row !important;
+    flex-shrink: 0 !important;
+    margin-bottom: 14px !important;
+    padding-bottom: 12px !important;
+  }
+
+  .page-header {
+    justify-content: space-between !important;
+  }
+
+  .page-title,
+  .popup-title,
+  .top h1 {
+    font-size: 1.05rem !important;
+  }
+
+  .page-subtitle,
+  .top p,
+  .section-head .section-sub {
+    font-size: .82rem !important;
+  }
+
+  /* ── 5. Action buttons ── */
+  .header-actions,
+  .actions {
+    width: auto !important;
+    flex-shrink: 0 !important;
+    justify-content: flex-end !important;
+  }
+
+  .actions .btn,
+  .header-actions .btn,
+  .token-row .btn,
+  .remove-btn,
+  .product-btn {
+    width: auto !important;
+  }
+
+  /* ── 6. Cards: tighter desktop padding ── */
+  .section,
+  .card,
+  .panel,
+  .popup-card,
+  .agreement-box,
+  .invoice-card,
+  .summary-box {
+    padding: 16px 20px !important;
+  }
+
+  /* ── 7. Form grids ── */
+  .form-row,
+  .grid-2,
+  .config-grid,
+  .form-grid,
+  .new-group-opts,
+  .summary-row,
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  /* ── 8. Toolbar ── */
+  .toolbar-left,
+  .toolbar-right {
+    width: auto !important;
+  }
+
+  .view-switch {
+    width: auto !important;
+    justify-content: flex-start !important;
+  }
+
+  /* ── 9. Products grid ── */
+  .grid.view-default {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important;
+  }
+
+  .grid.view-compact {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)) !important;
+  }
+
+  /* ── 10. Product-edit form: 2-column ── */
+  body:has(#form) #form {
+    display: grid !important;
+    grid-template-columns: minmax(320px, .9fr) minmax(420px, 1.1fr);
+    gap: 16px;
+    align-items: start;
+  }
+
+  body:has(#form) #form[style*="display:none"],
+  body:has(#form) #form[style*="display: none"] {
+    display: none !important;
+  }
+
+  body:has(#form) #form > .section {
+    margin-bottom: 0 !important;
+  }
+
+  body:has(#form) #form > .section:nth-of-type(2),
+  body:has(#form) #form > .section:nth-of-type(3) {
+    grid-column: 2;
+  }
+
+  body:has(#form) .actions-bar {
+    left: 50% !important;
+    right: auto !important;
+    bottom: 18px !important;
+    width: min(760px, calc(100vw - 56px)) !important;
+    transform: translateX(-50%);
+    border: 1px solid var(--border) !important;
+    border-radius: var(--r) !important;
+    box-shadow: var(--sh-lg) !important;
+  }
+
+  /* ── 11. Meu-entregador: 2-column ──
+     #mainContent envolve .info-banner + .content-grid; o split de cards
+     precisa acontecer no .content-grid (pai real dos cards), não no
+     #mainContent (senão os cards ficam empilhados num único item). */
+  body:has(#mainContent) .content-grid {
+    grid-template-columns: minmax(340px, .9fr) minmax(420px, 1.1fr) !important;
+    gap: 16px;
+    align-items: start;
+  }
+
+  body:has(#mainContent) .info-banner {
+    margin-bottom: 14px !important;
+  }
+
+  body:has(#mainContent) #driversList {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  /* ── 12. Mesas / Funcionários ── */
+  body:has(#tablesList) .grid,
+  body:has(#staffList) .grid {
+    grid-template-columns: 340px 1fr !important;
+  }
+
+  body:has(#tablesList) .tables {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)) !important;
+  }
+
+  body:has(#staffList) .staff {
+    grid-template-columns: 1fr auto !important;
+  }
+
+  body:has(#staffList) .row-actions {
+    justify-content: flex-end !important;
+  }
+
+  /* ── 13. Config: 2-column ── */
+  /* Note: fatura-loja.html also has #storeName — the #invoiceBody rule below must come last */
+  body:has(#storeName):not(:has(#invoiceBody)) .container {
+    display: grid !important;
+    grid-template-columns: minmax(520px, 1.15fr) minmax(360px, .85fr);
+    gap: 16px;
+    align-items: start;
+    max-width: 1180px !important;
+    margin: 0 auto !important;
+  }
+
+  body:has(#storeName):not(:has(#invoiceBody)) .page-header,
+  body:has(#storeName):not(:has(#invoiceBody)) .bottom-save {
+    grid-column: 1 / -1;
+  }
+
+  /* Header: ícone + título juntos à esquerda (sem o space-between da seção 4) */
+  body:has(#storeName):not(:has(#invoiceBody)) .page-header {
+    justify-content: flex-start !important;
+  }
+
+  /* Botão salvar: não esticar na largura toda */
+  body:has(#storeName):not(:has(#invoiceBody)) .bottom-save {
+    max-width: 420px;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  body:has(#storeName):not(:has(#invoiceBody)) .card:has(#storeName) {
+    grid-column: 1;
+    grid-row: 2 / span 3;
+  }
+
+  body:has(#storeName):not(:has(#invoiceBody)) .card:has(.day-row),
+  body:has(#storeName):not(:has(#invoiceBody)) .card:has(#soundToggle) {
+    grid-column: 2;
+  }
+
+  /* ── 14. Fatura: 2-column ── */
+  body:has(#invoiceBody) .container {
+    display: grid !important;
+    grid-template-columns: minmax(320px, .9fr) minmax(480px, 1.1fr);
+    gap: 18px;
+    align-items: start;
+  }
+
+  body:has(#invoiceBody) .page-header,
+  body:has(#invoiceBody) .suspended-banner,
+  body:has(#invoiceBody) .agreement-box,
+  body:has(#invoiceBody) .month-selector,
+  body:has(#invoiceBody) .cache-indicator,
+  body:has(#invoiceBody) .summary-row,
+  body:has(#invoiceBody) .locked-section {
+    grid-column: 1;
+  }
+
+  body:has(#invoiceBody) .invoice-card {
+    grid-column: 2;
+    grid-row: 1 / span 8;
+  }
+
+  body:has(#invoiceBody) .page-header {
+    margin-bottom: 0 !important;
+  }
+
+  body:has(#invoiceBody) .month-selector {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+}
