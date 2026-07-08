@@ -23,6 +23,8 @@ body{
 }
 .page-title{font-size:1.05rem;font-weight:600;letter-spacing:-.02em}
 .page-subtitle{font-size:.82rem;color:var(--text-2);margin-top:4px}
+.page-header-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.file-input{display:none}
 .section{
     background:var(--bg-1);border:1px solid var(--border);border-radius:var(--r);
     padding:18px;margin-bottom:14px;box-shadow:var(--sh-sm);transition:all .2s
@@ -98,13 +100,67 @@ body{
 }
 .btn-danger:hover{background:rgba(248,113,113,.14)!important;color:var(--red)!important;border-color:rgba(248,113,113,.34)!important}
 .inline-help{font-size:.74rem;color:var(--text-2);margin-top:6px;line-height:1.45}
+.optional-tag{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:99px;background:var(--bg-2);border:1px solid var(--border);color:var(--text-2);font-size:.66rem;font-weight:500;letter-spacing:.02em;text-transform:none}
+
+.howto{
+    background:linear-gradient(180deg,var(--bg-1) 0%,var(--bg-2) 100%);
+    border:1px solid var(--border);border-radius:var(--r);
+    padding:16px 18px;margin-bottom:14px;box-shadow:var(--sh-sm)
+}
+.howto-title{font-size:.78rem;font-weight:700;color:var(--text-0);letter-spacing:.03em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.howto-title .ico{font-size:.95rem}
+.howto-steps{display:grid;gap:8px;margin-bottom:10px}
+.howto-step{display:flex;gap:10px;align-items:flex-start;font-size:.82rem;color:var(--text-1);line-height:1.45}
+.howto-step .num{flex-shrink:0;width:20px;height:20px;border-radius:99px;background:var(--accent);color:var(--accent-t);font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.howto-examples{font-size:.74rem;color:var(--text-2);padding-top:10px;border-top:1px dashed var(--border);line-height:1.5}
+.howto-examples strong{color:var(--text-1);font-weight:600}
+.howto.collapsed .howto-steps,.howto.collapsed .howto-examples{display:none}
+.howto-toggle{background:none;border:none;color:var(--text-2);font-size:.72rem;cursor:pointer;padding:2px 6px;margin-left:auto;border-radius:6px}
+.howto-toggle:hover{color:var(--text-0);background:var(--bg-2)}
+
+.adv-bar{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:10px 12px;margin-bottom:12px;
+    background:var(--bg-2);border:1px solid var(--border);border-radius:var(--rs)
+}
+.adv-bar-label{font-size:.78rem;color:var(--text-1);display:flex;align-items:center;gap:8px;line-height:1.35}
+.adv-bar-label .badge{font-size:.65rem;padding:2px 7px;border-radius:99px;background:var(--bg-3);color:var(--text-2);text-transform:uppercase;letter-spacing:.04em;font-weight:600}
+.adv-bar-hint{font-size:.7rem;color:var(--text-2);margin-top:2px;font-weight:400}
+.switch{position:relative;display:inline-block;width:42px;height:24px;flex-shrink:0}
+.switch input{opacity:0;width:0;height:0}
+.switch-slider{position:absolute;cursor:pointer;inset:0;background:var(--bg-3);border:1px solid var(--border);border-radius:99px;transition:.2s}
+.switch-slider::before{position:absolute;content:"";height:16px;width:16px;left:3px;top:50%;transform:translateY(-50%);background:var(--text-0);border-radius:50%;transition:.2s}
+.switch input:checked + .switch-slider{background:var(--accent);border-color:var(--accent)}
+.switch input:checked + .switch-slider::before{transform:translate(18px,-50%);background:var(--accent-t)}
+
+.item-card{
+    display:flex;flex-direction:column;gap:8px;padding:12px;background:var(--bg-1);
+    border:1px solid var(--border);border-radius:var(--rs);margin-bottom:8px;box-shadow:var(--sh-sm)
+}
+.item-card-head{display:flex;align-items:center;gap:8px}
+.item-card-head .preview{flex:1;font-size:.84rem;line-height:1.4;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item-card-head .actions-inline{display:flex;gap:6px;flex-shrink:0}
+.item-grid{display:grid;grid-template-columns:1fr 110px 1fr;gap:8px}
+.item-grid label{font-size:.66rem;color:var(--text-2);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;display:block}
+.item-grid input,.item-grid select{
+    width:100%;padding:7px 9px;background:var(--bg-2);border:1px solid var(--border);
+    border-radius:var(--rx);color:var(--text-0);font-size:.82rem;font-family:inherit
+}
+.item-grid input:focus,.item-grid select:focus{outline:none;box-shadow:0 0 0 2px var(--blue-bg);border-color:var(--border-h)}
+.item-overridden{color:var(--accent);font-size:.66rem;margin-left:6px}
+.bulk-tools{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.bulk-tools .btn{padding:6px 10px;font-size:.74rem;min-width:0}
+
 @media(max-width:560px){
     .page-header{flex-direction:column;align-items:stretch}
     .config-grid,.grid-2{grid-template-columns:1fr}
     .actions{flex-direction:column}
     .actions .btn{width:100%}
+    .item-grid{grid-template-columns:1fr;gap:6px}
+    .item-card-head .preview{white-space:normal}
 }
 </style>
+<link rel="stylesheet" href="modules/popup-desktop.css">
 </head>
 <body>
 <div class="toast" id="toast"></div>
@@ -112,9 +168,13 @@ body{
     <div class="page-header">
         <div>
             <div class="page-title">Cadastro em lote</div>
-            <div class="page-subtitle">Criação rápida de vários produtos da mesma linha</div>
+            <div class="page-subtitle">Crie vários produtos de uma linha em poucos toques</div>
         </div>
-        
+        <div class="page-header-actions">
+            <input class="file-input" id="csvFileInput" type="file" accept=".csv,text/csv">
+            <button class="btn btn-soft btn-sm" type="button" onclick="chooseCsvFile()">Importar CSV</button>
+            <button class="btn btn-soft btn-sm" type="button" onclick="exportProductsCsv()">Exportar CSV</button>
+        </div>
     </div>
     <div id="view"></div>
 </div>
@@ -122,19 +182,156 @@ body{
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="dist/renderer/bootstrap.js"></script>
 <script>
 const FC={apiKey:"AIzaSyAnIJRcUxN-0swpVnonPbJjTSK87o4CQ_g",authDomain:"pedrad-814d0.firebaseapp.com",projectId:"pedrad-814d0",storageBucket:"pedrad-814d0.appspot.com",messagingSenderId:"293587190550",appId:"1:293587190550:web:80c9399f82847c80e20637"};
 if(!firebase.apps.length)firebase.initializeApp(FC);
 const db=firebase.firestore(),auth=firebase.auth();
 
 const params=new URLSearchParams(location.search);
-const storeId=params.get('storeId')||localStorage.getItem('currentStoreId');
+let storeId=params.get('storeId')||localStorage.getItem('currentStoreId');
 
-let state={marca:'',tipo:'',preco:0,categoria:'',quantidade:0,items:[],currentIndex:0,editingId:null,step:'config',categories:[]};
+let state={marca:'',tipo:'',preco:0,categoria:'',quantidade:0,items:[],currentIndex:0,editingId:null,step:'config',categories:[],advanced:false,howtoCollapsed:false};
 let idCounter=0;
+const CSV_FIELDS=['name','description','price','category','active','imageUrl','imageData','addonGroups'];
+
+function buildName(item){
+    const parts=[state.marca, state.tipo, item.nome].map(s=>(s||'').trim()).filter(Boolean);
+    return parts.join(' ');
+}
+function getItemPrice(it){return (it.precoOverride!=null && it.precoOverride!=='')?Number(it.precoOverride):state.preco}
+function getItemCategory(it){return (it.categoriaOverride!=null && it.categoriaOverride!=='')?it.categoriaOverride:state.categoria}
+function fmtMoney(n){
+    const v=Number(n)||0;
+    return v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+}
 
 function esc(s){const d=document.createElement('div');d.textContent=String(s||'');return d.innerHTML}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2500)}
+function csvCell(value){
+    const text=String(value??'');
+    return /[",\r\n]/.test(text)?`"${text.replace(/"/g,'""')}"`:text;
+}
+function parseCsv(text){
+    text=String(text||'').replace(/^\uFEFF/,'');
+    const rows=[];let row=[],field='',quoted=false;
+    for(let i=0;i<text.length;i++){
+        const char=text[i];
+        if(quoted){
+            if(char==='"'&&text[i+1]==='"'){field+='"';i++}
+            else if(char==='"')quoted=false;
+            else field+=char;
+        }else if(char==='"')quoted=true;
+        else if(char===','){row.push(field);field=''}
+        else if(char==='\n'){row.push(field);rows.push(row);row=[];field=''}
+        else if(char!=='\r')field+=char;
+    }
+    if(field||row.length){row.push(field);rows.push(row)}
+    return rows.filter(columns=>columns.some(value=>String(value).trim()!==''));
+}
+function normalizeImportedGroups(raw,rowNumber){
+    const text=String(raw||'').trim();
+    if(!text)return[];
+    let groups;
+    try{groups=JSON.parse(text)}catch(e){throw new Error(`Linha ${rowNumber}: addonGroups não contém JSON válido.`)}
+    if(!Array.isArray(groups))throw new Error(`Linha ${rowNumber}: addonGroups precisa ser uma lista.`);
+    return groups.map((group,groupIndex)=>{
+        const items=(Array.isArray(group?.items)?group.items:[]).map((item,itemIndex)=>({
+            name:String(item?.name||'').trim(),
+            price:Math.max(0,parseFloat(item?.price)||0),
+            order:item?.order??itemIndex
+        })).filter(item=>item.name);
+        return{
+            name:String(group?.name||`Grupo ${groupIndex+1}`).trim(),
+            type:group?.type==='free'?'free':'paid',
+            min:Math.max(0,parseInt(group?.min)||0),
+            max:Math.max(0,parseInt(group?.max)||0),
+            items
+        };
+    }).filter(group=>group.name&&group.items.length);
+}
+function importedBoolean(value){
+    const normalized=String(value??'').trim().toLowerCase();
+    return !['false','0','não','nao','inativo'].includes(normalized);
+}
+function chooseCsvFile(){document.getElementById('csvFileInput')?.click()}
+async function exportProductsCsv(){
+    if(!storeId)return toast('Loja não identificada');
+    try{
+        toast('Preparando exportação...');
+        const snap=await db.collection('products').where('storeId','==',storeId).get();
+        const products=snap.docs.map(doc=>({id:doc.id,...doc.data()})).sort((a,b)=>(a.category||'').localeCompare(b.category||'','pt-BR')||(a.name||'').localeCompare(b.name||'','pt-BR'));
+        const lines=[CSV_FIELDS.join(',')];
+        products.forEach(product=>{
+            const values={
+                name:product.name||'',
+                description:product.description||'',
+                price:(parseFloat(product.price)||0).toFixed(2),
+                category:product.category||'',
+                active:product.active===false?'false':'true',
+                imageUrl:product.imageUrl||'',
+                imageData:product.imageData||'',
+                addonGroups:JSON.stringify(Array.isArray(product.addonGroups)?product.addonGroups:[])
+            };
+            lines.push(CSV_FIELDS.map(field=>csvCell(values[field])).join(','));
+        });
+        const blob=new Blob(['\uFEFF'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'});
+        const url=URL.createObjectURL(blob),link=document.createElement('a');
+        const date=new Date().toISOString().slice(0,10);
+        link.href=url;link.download=`produtos-${storeId}-${date}.csv`;document.body.appendChild(link);link.click();link.remove();
+        setTimeout(()=>URL.revokeObjectURL(url),1000);
+        toast(`${products.length} produto(s) exportado(s)`);
+    }catch(e){console.error(e);toast('Erro ao exportar: '+e.message)}
+}
+async function importProductsCsv(file){
+    if(!file||!storeId)return;
+    try{
+        const rows=parseCsv(await file.text());
+        if(rows.length<2)throw new Error('O CSV não possui produtos.');
+        const headers=rows[0].map(value=>String(value).trim());
+        const missing=['name','price','category'].filter(field=>!headers.includes(field));
+        if(missing.length)throw new Error(`Colunas obrigatórias ausentes: ${missing.join(', ')}.`);
+        const products=rows.slice(1).map((columns,index)=>{
+            const source={};headers.forEach((header,columnIndex)=>{source[header]=columns[columnIndex]??''});
+            const rowNumber=index+2,name=String(source.name||'').trim(),category=String(source.category||'').trim();
+            const price=parseFloat(String(source.price||'').trim().replace(',','.'));
+            if(!name)throw new Error(`Linha ${rowNumber}: nome vazio.`);
+            if(!category)throw new Error(`Linha ${rowNumber}: categoria vazia.`);
+            if(!isFinite(price)||price<=0)throw new Error(`Linha ${rowNumber}: preço inválido.`);
+            return{
+                name,
+                description:String(source.description||'').trim(),
+                price,
+                category,
+                active:importedBoolean(source.active),
+                imageUrl:String(source.imageUrl||'').trim(),
+                imageData:String(source.imageData||'').trim(),
+                addonGroups:normalizeImportedGroups(source.addonGroups,rowNumber)
+            };
+        });
+        if(!products.length)throw new Error('Nenhum produto válido encontrado.');
+        if(!confirm(`Importar ${products.length} produto(s)? Os itens serão adicionados aos produtos existentes.`))return;
+        const now=firebase.firestore.FieldValue.serverTimestamp();
+        for(let offset=0;offset<products.length;offset+=400){
+            const batch=db.batch();
+            products.slice(offset,offset+400).forEach(product=>{
+                batch.set(db.collection('products').doc(),{...product,storeId,createdAt:now,updatedAt:now});
+            });
+            await batch.commit();
+        }
+        const categories=[...new Set(products.map(product=>product.category))];
+        if(categories.length){
+            await db.collection('stores').doc(storeId).set({
+                categories:firebase.firestore.FieldValue.arrayUnion(...categories),
+                updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+            },{merge:true});
+        }
+        state.categories=[...new Set([...state.categories,...categories])].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+        toast(`${products.length} produto(s) importado(s)`);
+        render();
+    }catch(e){console.error(e);toast('Erro ao importar: '+e.message)}
+    finally{const input=document.getElementById('csvFileInput');if(input)input.value=''}
+}
 function goBack(event){
   if (event) event.preventDefault();
 
@@ -203,23 +400,44 @@ function render(){
 
 function renderConfig(){
     const catOpts=state.categories.length
-        ?state.categories.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('')
+        ?state.categories.map(c=>`<option value="${esc(c)}" ${state.categoria===c?'selected':''}>${esc(c)}</option>`).join('')
         :'<option value="">Nenhuma disponível</option>';
+    const collapsedCls=state.howtoCollapsed?'collapsed':'';
     return`
+    <div class="howto ${collapsedCls}" id="howtoBox">
+        <div class="howto-title">
+            <span class="ico">💡</span>
+            <span>Como funciona</span>
+            <button class="howto-toggle" onclick="toggleHowto()">${state.howtoCollapsed?'mostrar':'ocultar'}</button>
+        </div>
+        <div class="howto-steps">
+            <div class="howto-step"><span class="num">1</span><span>Defina os <strong>valores comuns</strong> (marca, preço, categoria) — eles vão se repetir em todos os itens.</span></div>
+            <div class="howto-step"><span class="num">2</span><span>Diga <strong>quantos itens</strong> você vai cadastrar.</span></div>
+            <div class="howto-step"><span class="num">3</span><span>Digite só a <strong>variação</strong> de cada um (sabor, tamanho, cor…) e pressione <strong>Enter</strong>.</span></div>
+            <div class="howto-step"><span class="num">4</span><span>Antes de salvar, você pode ajustar nome, preço ou categoria <strong>item por item</strong>, se quiser.</span></div>
+        </div>
+        <div class="howto-examples">
+            <strong>Exemplos:</strong> Essências “Ziggy Tradicional” em vários sabores · Refrigerantes “Coca-Cola” em vários tamanhos · Camisetas “Básica” em várias cores.
+        </div>
+    </div>
+
     <div class="section">
         <div class="form-group">
-            <label class="form-label">Marca</label>
-            <input class="form-input" id="fMarca" value="${esc(state.marca)}" placeholder="Ex: Ziggy, Essência...">
+            <label class="form-label">Marca / Linha base</label>
+            <input class="form-input" id="fMarca" value="${esc(state.marca)}" placeholder="Ex: Ziggy, Coca-Cola, Básica...">
+            <div class="inline-help">A palavra que se repete no início de todos os produtos.</div>
         </div>
 
         <div class="config-grid">
             <div class="form-group">
-                <label class="form-label">Tipo</label>
-                <input class="form-input" id="fTipo" value="${esc(state.tipo)}" placeholder="Ex: Essência">
+                <label class="form-label">Tipo <span class="optional-tag">opcional</span></label>
+                <input class="form-input" id="fTipo" value="${esc(state.tipo)}" placeholder="Ex: Essência, Lata, Algodão">
+                <div class="inline-help">Subcategoria que também se repete. Deixe em branco se não precisar.</div>
             </div>
             <div class="form-group">
-                <label class="form-label">Quantidade</label>
+                <label class="form-label">Quantidade de itens</label>
                 <input class="form-input" id="fQtd" type="number" min="1" max="200" value="${state.quantidade||''}" placeholder="5">
+                <div class="inline-help">De 1 a 200 produtos por vez.</div>
             </div>
         </div>
 
@@ -227,20 +445,73 @@ function renderConfig(){
             <div class="form-group">
                 <label class="form-label">Preço unitário (R$)</label>
                 <input class="form-input" id="fPreco" type="number" step="0.10" min="0" value="${state.preco||''}" placeholder="0,00">
+                <div class="inline-help">Aplicado a todos. Você pode mudar item a item depois.</div>
             </div>
             <div class="form-group">
                 <label class="form-label">Categoria</label>
                 <select class="form-select" id="fCat">
                     <option value="">Selecione...</option>${catOpts}
                 </select>
+                <div class="inline-help">Mesma categoria para o lote inteiro (ajustável por item).</div>
             </div>
         </div>
 
-        <div class="inline-help">Preencha a base comum e depois informe apenas a variação de cada item. Porque repetir coisa igual manualmente é um hobby estranho.</div>
-
         <div class="actions" style="margin-top:16px">
             <button class="btn btn-soft" onclick="goBack()">Cancelar</button>
-            <button class="btn btn-primary" onclick="startInput()">Iniciar cadastro</button>
+            <button class="btn btn-primary" onclick="startInput()">Iniciar cadastro →</button>
+        </div>
+    </div>`;
+}
+
+function toggleHowto(){
+    state.howtoCollapsed=!state.howtoCollapsed;
+    const box=document.getElementById('howtoBox');
+    const btn=box?.querySelector('.howto-toggle');
+    if(box)box.classList.toggle('collapsed',state.howtoCollapsed);
+    if(btn)btn.textContent=state.howtoCollapsed?'mostrar':'ocultar';
+}
+
+function renderItemSimple(it){
+    if(state.editingId===it.id)
+        return`<li>
+            <input class="be-edit" data-id="${it.id}" value="${esc(it.nome)}">
+            <button class="btn btn-success btn-sm" onclick="saveEdit(${it.id})">Salvar</button>
+            <button class="btn btn-danger btn-sm" onclick="delItem(${it.id})">Remover</button>
+        </li>`;
+    return`<li>
+        <span>${esc(buildName(it))}</span>
+        <button class="btn btn-soft btn-sm" onclick="startEditItem(${it.id})">Editar</button>
+        <button class="btn btn-danger btn-sm" onclick="delItem(${it.id})">Remover</button>
+    </li>`;
+}
+
+function renderItemAdvanced(it){
+    const catOpts=['<option value="">— sem categoria —</option>']
+        .concat(state.categories.map(c=>`<option value="${esc(c)}" ${getItemCategory(it)===c?'selected':''}>${esc(c)}</option>`))
+        .join('');
+    const priceVal=it.precoOverride!=null && it.precoOverride!==''?it.precoOverride:'';
+    const priceOv=priceVal!=='';
+    const catOv=it.categoriaOverride!=null && it.categoriaOverride!=='';
+    return`<div class="item-card" data-id="${it.id}">
+        <div class="item-card-head">
+            <div class="preview">${esc(buildName(it))}</div>
+            <div class="actions-inline">
+                <button class="btn btn-danger btn-sm" onclick="delItem(${it.id})" title="Remover">×</button>
+            </div>
+        </div>
+        <div class="item-grid">
+            <div>
+                <label>Variação</label>
+                <input data-field="nome" data-id="${it.id}" value="${esc(it.nome)}" placeholder="Nome da variação" oninput="updateItemField(${it.id},'nome',this.value)">
+            </div>
+            <div>
+                <label>Preço ${priceOv?'<span class="item-overridden">●</span>':''}</label>
+                <input type="number" step="0.10" min="0" data-field="preco" data-id="${it.id}" value="${esc(priceVal)}" placeholder="${esc(state.preco||0)}" oninput="updateItemField(${it.id},'precoOverride',this.value)">
+            </div>
+            <div>
+                <label>Categoria ${catOv?'<span class="item-overridden">●</span>':''}</label>
+                <select data-field="cat" data-id="${it.id}" onchange="updateItemField(${it.id},'categoriaOverride',this.value)">${catOpts}</select>
+            </div>
         </div>
     </div>`;
 }
@@ -248,42 +519,95 @@ function renderConfig(){
 function renderInput(){
     const done=state.currentIndex>=state.quantidade;
     const progress=`${Math.min(state.currentIndex,state.quantidade)} / ${state.quantidade}`;
-    const listHtml=state.items.map(it=>{
-        if(state.editingId===it.id)
-            return`<li>
-                <input class="be-edit" data-id="${it.id}" value="${esc(it.nome)}">
-                <button class="btn btn-success btn-sm" onclick="saveEdit(${it.id})">Salvar</button>
-                <button class="btn btn-danger btn-sm" onclick="delItem(${it.id})">Remover</button>
-            </li>`;
-        return`<li>
-            <span>${esc(state.marca)} ${esc(state.tipo)} <strong>${esc(it.nome)}</strong></span>
-            <button class="btn btn-soft btn-sm" onclick="startEditItem(${it.id})">Editar</button>
-            <button class="btn btn-danger btn-sm" onclick="delItem(${it.id})">Remover</button>
-        </li>`;
-    }).join('');
+    const baseLabel=[state.marca,state.tipo].filter(Boolean).map(esc).join(' · ');
+    const listHtml=state.advanced
+        ?state.items.map(renderItemAdvanced).join('')
+        :`<ul class="list" id="itemList">${state.items.map(renderItemSimple).join('')}</ul>`;
+
+    const overrides=state.items.filter(it=>(it.precoOverride!=null && it.precoOverride!=='')||(it.categoriaOverride!=null && it.categoriaOverride!=='')).length;
+    const advHint=state.advanced
+        ?`<span class="adv-bar-hint">${overrides?overrides+' item(ns) com valor personalizado':'Edite qualquer campo abaixo. O preço/categoria em branco usam o valor padrão do lote.'}</span>`
+        :`<span class="adv-bar-hint">Ative para ajustar nome, preço e categoria item por item antes de salvar.</span>`;
 
     return`
     <div class="section">
-        <div class="progress"><strong>${esc(state.marca)}</strong> · ${esc(state.tipo)} · progresso ${progress}</div>
+        <div class="progress"><strong>${baseLabel||esc(state.marca)||'Lote'}</strong> · progresso ${progress} · preço base ${fmtMoney(state.preco)}</div>
 
         ${!done?`
         <div class="input-box">
             <div class="input-counter">Item ${state.currentIndex+1} de ${state.quantidade}</div>
             <input class="input-field" id="nameInput" placeholder="Digite a variação e pressione Enter" autocomplete="off">
             <div class="input-hint">Exemplo: Morango, Uva, 500 ml, Grande, Tradicional</div>
-        </div>`:`<div class="done-msg">Todos os nomes foram preenchidos.</div>`}
+        </div>`:`<div class="done-msg">✓ Todos os itens digitados. Revise abaixo antes de salvar.</div>`}
+
+        ${state.items.length?`
+        <div class="adv-bar">
+            <div>
+                <div class="adv-bar-label">
+                    <span>Personalizar valores</span>
+                    <span class="badge">Opcional</span>
+                </div>
+                ${advHint}
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="advToggle" ${state.advanced?'checked':''} onchange="toggleAdvanced(this.checked)">
+                <span class="switch-slider"></span>
+            </label>
+        </div>`:''}
+
+        ${state.items.length && state.advanced?`
+        <div class="bulk-tools">
+            <button class="btn btn-soft btn-sm" onclick="bulkResetPrices()" title="Voltar todos os preços para o valor base">Resetar preços</button>
+            <button class="btn btn-soft btn-sm" onclick="bulkResetCategories()" title="Voltar todas as categorias para o valor base">Resetar categorias</button>
+            <button class="btn btn-soft btn-sm" onclick="bulkApplyPrice()" title="Aplicar um mesmo preço a todos">Aplicar preço a todos…</button>
+        </div>`:''}
 
         <div class="list-wrap">
             ${state.items.length?`<div class="list-label">Itens adicionados (${state.items.length})</div>`:''}
-            <ul class="list" id="itemList">${listHtml}</ul>
+            ${listHtml}
         </div>
 
         <div class="actions">
+            <button class="btn btn-soft" onclick="backToConfig()">← Ajustes</button>
             <button class="btn btn-soft" onclick="goBack()">Cancelar</button>
             ${state.items.length?`<button class="btn btn-success" id="saveBtn" onclick="saveBatch()">Salvar (${state.items.length})</button>`:''}
         </div>
         <div class="status" id="status"></div>
     </div>`;
+}
+
+function backToConfig(){state.step='config';render()}
+
+function toggleAdvanced(on){
+    state.advanced=!!on;
+    render();
+}
+
+function updateItemField(id,field,value){
+    const it=state.items.find(x=>x.id===id);
+    if(!it)return;
+    if(field==='nome')it.nome=value;
+    else it[field]=value;
+    if(field==='nome'){
+        const card=document.querySelector(`.item-card[data-id="${id}"] .preview`);
+        if(card)card.textContent=buildName(it);
+    }
+    if(field==='precoOverride'||field==='categoriaOverride'){
+        const overrides=state.items.filter(x=>(x.precoOverride!=null && x.precoOverride!=='')||(x.categoriaOverride!=null && x.categoriaOverride!=='')).length;
+        const hint=document.querySelector('.adv-bar-hint');
+        if(hint)hint.textContent=overrides?overrides+' item(ns) com valor personalizado':'Edite qualquer campo abaixo. O preço/categoria em branco usam o valor padrão do lote.';
+    }
+}
+
+function bulkResetPrices(){state.items.forEach(it=>{it.precoOverride=''});render()}
+function bulkResetCategories(){state.items.forEach(it=>{it.categoriaOverride=''});render()}
+function bulkApplyPrice(){
+    const v=prompt('Preço a aplicar em todos os itens (R$):',state.preco||'');
+    if(v===null)return;
+    const n=parseFloat((v||'').toString().replace(',','.'));
+    if(!isFinite(n)||n<0){toast('Preço inválido');return}
+    state.items.forEach(it=>{it.precoOverride=n});
+    render();
 }
 
 function bindEvents(){
@@ -299,10 +623,19 @@ function bindEvents(){
         });
     });
     if(state.step==='config')document.getElementById('fMarca')?.focus();
-    else document.getElementById('nameInput')?.focus();
+    else if(state.currentIndex<state.quantidade)document.getElementById('nameInput')?.focus();
     if(state.editingId!==null){
         const ed=document.querySelector(`.be-edit[data-id="${state.editingId}"]`);
         if(ed){ed.focus();ed.addEventListener('keydown',e=>{if(e.key==='Enter')saveEdit(state.editingId)})}
+    }
+    if(state.advanced){
+        state.items.forEach(it=>{
+            const sel=document.querySelector(`select[data-field="cat"][data-id="${it.id}"]`);
+            if(sel){
+                const val=it.categoriaOverride!=null && it.categoriaOverride!==''?it.categoriaOverride:state.categoria;
+                sel.value=val||'';
+            }
+        });
     }
 }
 
@@ -312,8 +645,10 @@ function startInput(){
     state.quantidade=parseInt(document.getElementById('fQtd')?.value)||0;
     state.preco=parseFloat(document.getElementById('fPreco')?.value)||0;
     state.categoria=(document.getElementById('fCat')?.value||'').trim();
-    if(!state.marca||!state.tipo||state.quantidade<1){toast('Preencha marca, tipo e quantidade');return}
-    state.step='input';state.currentIndex=0;state.items=[];
+    if(!state.marca||state.quantidade<1){toast('Preencha a marca e a quantidade');return}
+    if(state.quantidade>200){toast('Máximo de 200 por lote');return}
+    if(state.items.length===0)state.currentIndex=0;
+    state.step='input';
     render();
 }
 
@@ -322,23 +657,11 @@ function addName(){
     const nome=(input.value||'').trim();
     if(!nome)return;
     idCounter++;
-    state.items.push({id:idCounter,nome});
+    state.items.push({id:idCounter,nome,precoOverride:'',categoriaOverride:''});
     state.currentIndex++;
     input.value='';
-    document.getElementById('itemList').innerHTML=state.items.map(it=>`<li><span>${esc(state.marca)} ${esc(state.tipo)} <strong>${esc(it.nome)}</strong></span><button class="btn btn-soft btn-sm" onclick="startEditItem(${it.id})">Editar</button><button class="btn btn-danger btn-sm" onclick="delItem(${it.id})">Remover</button></li>`).join('');
-    if(state.currentIndex>=state.quantidade){render();return}
-    const counter=document.querySelector('.input-counter');
-    if(counter)counter.textContent=`Item ${state.currentIndex+1} de ${state.quantidade}`;
-    const lbl=document.querySelector('.list-label');
-    if(lbl)lbl.textContent=`Itens adicionados (${state.items.length})`;
-    const acts=document.querySelector('.actions');
-    if(acts&&!document.getElementById('saveBtn')){
-        acts.innerHTML=`<button class="btn btn-soft" onclick="goBack()">Cancelar</button><button class="btn btn-success" id="saveBtn" onclick="saveBatch()">Salvar (${state.items.length})</button>`;
-    }else if(document.getElementById('saveBtn')){
-        document.getElementById('saveBtn').textContent=`Salvar (${state.items.length})`;
-    }
-    const ul=document.getElementById('itemList');if(ul)ul.scrollTop=ul.scrollHeight;
-    input.focus();
+    render();
+    document.getElementById('nameInput')?.focus();
 }
 
 function startEditItem(id){state.editingId=id;render()}
@@ -365,13 +688,14 @@ async function saveBatch(){
         const now=firebase.firestore.FieldValue.serverTimestamp();
         state.items.forEach(item=>{
             const ref=db.collection('products').doc();
+            const finalName=buildName(item);
             batch.set(ref,{
-                name:`${state.marca} ${state.tipo} ${item.nome}`,
+                name:finalName,
                 marca:state.marca,
-                tipo:state.tipo,
+                tipo:state.tipo||'',
                 variante:item.nome,
-                price:state.preco,
-                category:state.categoria,
+                price:getItemPrice(item),
+                category:getItemCategory(item),
                 active:true,
                 storeId:storeId,
                 addonGroups:[],
@@ -391,10 +715,21 @@ async function saveBatch(){
 }
 
 (async()=>{
-    if(!storeId){document.getElementById('view').innerHTML='<div class="muted-box">Loja não identificada.</div>';return}
     const user=auth.currentUser||await new Promise(r=>{const u=auth.onAuthStateChanged(x=>{u();r(x)})});
     if(!user){document.getElementById('view').innerHTML='<div class="muted-box">Faça login para continuar.</div>';return}
+    if(window.PedraPcTs?.resolveStoreForFirebaseUser){
+        const resolvedStore=await window.PedraPcTs.resolveStoreForFirebaseUser(db,{
+            uid:String(user.uid||'').trim(),
+            email:String(user.email||'').trim()
+        },{knownIds:storeId?[storeId]:[]});
+        if(resolvedStore?.id){
+            storeId=resolvedStore.id;
+            localStorage.setItem('currentStoreId',storeId);
+        }
+    }
+    if(!storeId){document.getElementById('view').innerHTML='<div class="muted-box">Loja não identificada.</div>';return}
     await loadCategories();
+    document.getElementById('csvFileInput')?.addEventListener('change',event=>importProductsCsv(event.target.files?.[0]));
     render();
 })();
 </script>

@@ -390,41 +390,40 @@ body{
 }
 
 .grid.view-list .product-card{
-    display:grid;
-    grid-template-columns:160px minmax(0,1fr);
-    align-items:stretch;
-    border-radius:18px;
-}
-.grid.view-list .product-image{
-    min-height:132px;
-    height:100%;
-    border-right:1px solid var(--border);
+    display:block;
+    border-radius:14px;
+    padding:10px 12px;
 }
 .grid.view-list .product-body{
-    padding:14px 14px 12px;
-    justify-content:center;
+    padding:0;
+    gap:2px;
 }
 .grid.view-list .product-line{
-    margin-bottom:4px;
+    margin-bottom:2px;
 }
 .grid.view-list .product-name{
-    font-size:.92rem;
+    font-size:.86rem;
 }
 .grid.view-list .product-price{
-    font-size:.9rem;
+    font-size:.82rem;
 }
 .grid.view-list .product-cat{
-    font-size:.76rem;
-}
-.grid.view-list .product-extra{
     font-size:.72rem;
 }
-.grid.view-list .product-badges{
-    margin-top:8px;
+.grid.view-list .product-extra{
+    font-size:.7rem;
 }
-.grid.view-list .action-hints{
-    right:10px;
-    top:10px;
+.grid.view-list .product-image,
+.grid.view-list .action-hints,
+.grid.view-list .status-dot,
+.grid.view-list .product-badges{
+    display:none !important;
+}
+.grid.view-list .product-meta{
+    margin-top:0;
+}
+.grid.view-list .product-extra{
+    color:var(--text-1);
 }
 
 .empty-state{
@@ -462,6 +461,37 @@ body{
     background:var(--bg-3);
     border-color:var(--border-h)
 }
+
+.btn-batch{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:8px 12px;
+    border-radius:10px;
+    border:1px dashed var(--border);
+    background:transparent;
+    color:var(--text-2);
+    font-size:.78rem;
+    font-weight:500;
+    cursor:pointer;
+    transition:all .18s ease;
+}
+.btn-batch:hover{
+    color:var(--text-0);
+    background:var(--bg-1);
+    border-color:var(--border-h);
+    border-style:solid;
+}
+.btn-batch .batch-icon{
+    font-size:.9rem;
+    line-height:1;
+}
+.btn-primary-cta{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+}
+.btn-primary-cta .plus{font-weight:700;font-size:1rem;line-height:1}
 
 .page-footer{
     margin-top:18px;
@@ -525,12 +555,7 @@ body{
     .view-btn{flex:1}
     .grid.view-default{grid-template-columns:repeat(2,minmax(0,1fr))}
     .grid.view-compact{grid-template-columns:repeat(4,minmax(0,1fr))}
-    .grid.view-list .product-card{grid-template-columns:1fr}
-    .grid.view-list .product-image{
-        min-height:140px;
-        border-right:none;
-        border-bottom:1px solid var(--border);
-    }
+    .grid.view-list .product-card{padding:9px 10px}
 }
 @media(max-width:560px){
     .grid.view-default{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -545,6 +570,7 @@ body{
     .grid.view-compact .product-name{font-size:.69rem}
 }
 </style>
+<link rel="stylesheet" href="modules/popup-desktop.css">
 </head>
 <body>
 <div class="toast" id="toast"></div>
@@ -556,8 +582,9 @@ body{
             <div class="page-subtitle" id="subInfo">Carregando...</div>
         </div>
         <div class="header-actions">
-            <button class="btn btn-soft" onclick="openBatch()">Lote</button>
-            <button class="btn btn-primary" onclick="openCreate()">Novo</button>
+            <button class="btn btn-primary btn-primary-cta" onclick="openCreate()" title="Cadastrar um novo produto">
+                <span class="plus">+</span> Novo Produto
+            </button>
         </div>
     </div>
 
@@ -574,6 +601,9 @@ body{
                 <button class="view-btn" data-view="compact" onclick="setViewMode('compact')">Compacto</button>
                 <button class="view-btn" data-view="list" onclick="setViewMode('list')">Lista</button>
             </div>
+            <button class="btn-batch" onclick="openBatch()" title="Cadastrar vários produtos de uma vez (modo avançado)">
+                <span class="batch-icon">⊕</span> Cadastro em Lote
+            </button>
             <button class="btn btn-ghost" onclick="refreshNow()">Atualizar</button>
         </div>
     </div>
@@ -608,15 +638,17 @@ body{
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="dist/renderer/bootstrap.js"></script>
 <script>
 const FC={apiKey:"AIzaSyAnIJRcUxN-0swpVnonPbJjTSK87o4CQ_g",authDomain:"pedrad-814d0.firebaseapp.com",projectId:"pedrad-814d0",storageBucket:"pedrad-814d0.appspot.com",messagingSenderId:"293587190550",appId:"1:293587190550:web:80c9399f82847c80e20637"};
 if(!firebase.apps.length)firebase.initializeApp(FC);
 
 const db=firebase.firestore(),auth=firebase.auth();
-const storeId=(new URLSearchParams(location.search)).get('storeId')||localStorage.getItem('currentStoreId');
+let storeId=(new URLSearchParams(location.search)).get('storeId')||localStorage.getItem('currentStoreId');
 
 let allProducts=[],unsub=null,filter='all';
 let currentStoreName='';
+let categoryMedia=[];
 let viewMode=localStorage.getItem('pedrad-products-view-mode')||'default';
 let selectedProductId=null;
 
@@ -672,6 +704,13 @@ window.addEventListener('storage',syncTheme);
 
 function getProductById(id){
     return allProducts.find(p=>p.id===id)||null;
+}
+function sameCategory(a,b){return String(a||'').trim().toLocaleLowerCase('pt-BR')===String(b||'').trim().toLocaleLowerCase('pt-BR')}
+function productImage(p){
+    const own=p?.imageData&&p.imageData.startsWith('data:')?p.imageData:String(p?.imageUrl||'').trim();
+    if(own)return own;
+    const media=categoryMedia.find(item=>sameCategory(item?.name,p?.category));
+    return String(media?.imageData||media?.imageUrl||'').trim();
 }
 
 function updateSelectionUI(){
@@ -750,12 +789,38 @@ function getFilteredProducts(){
 }
 
 function productCardHtml(p){
-    const img=p.imageData&&p.imageData.startsWith('data:')?p.imageData:(p.imageUrl||'');
+    const img=productImage(p);
     const active=p.active!==false;
     const groups=p.addonGroups||[];
     const legacyAddons=(p.addons||[]).length+(p.flavors||[]).length+(p.sizes||[]).length+(p.extras||[]).length;
     const addonCount=groups.reduce((s,g)=>(s+(g.items||[]).length),0)+legacyAddons;
     const extra=addonCount?`${addonCount} adicionais`:(active?'Disponível':'Indisponível');
+
+    if(viewMode==='list'){
+        return `
+        <article
+            class="product-card ${active?'':'inactive'}"
+            data-id="${esc(p.id)}"
+            tabindex="0"
+            role="button"
+            aria-label="Produto ${esc(p.name||'Sem nome')}"
+            title="Clique para editar • Delete para excluir"
+        >
+            <div class="product-body">
+                <div class="product-main">
+                    <div class="product-line">
+                        <div class="product-name">${esc(p.name||'Sem nome')}</div>
+                        <div class="product-price">${money(p.price)}</div>
+                    </div>
+                    <div class="product-meta">
+                        <div class="product-cat">${esc(p.category||'Sem categoria')}</div>
+                        <div class="product-extra">${active?'Ativo':'Inativo'}${addonCount?` • ${addonCount} adicionais`:''}</div>
+                    </div>
+                </div>
+            </div>
+        </article>
+    `;
+    }
 
     return `
         <article
@@ -880,9 +945,14 @@ function refreshNow(){
 
 async function loadInfo(){
     try{
-        const doc=await db.collection('stores').doc(storeId).get();
+        const[doc,mediaSnap]=await Promise.all([
+            db.collection('stores').doc(storeId).get(),
+            db.collection('stores').doc(storeId).collection('categoryMedia').get()
+        ]);
         const d=doc.exists?doc.data():{};
         currentStoreName=d.name||'';
+        categoryMedia=mediaSnap.docs.map(mediaDoc=>({id:mediaDoc.id,...mediaDoc.data()}));
+        if(!categoryMedia.length&&Array.isArray(d.categoryMedia))categoryMedia=d.categoryMedia;
         updateSubtitle(allProducts.length,allProducts.length);
     }catch(e){
         currentStoreName='';
@@ -984,6 +1054,17 @@ applyViewMode();
     if(!user){
         document.getElementById('loading').innerHTML='<div class="muted-box">Faça login primeiro</div>';
         return;
+    }
+
+    if(window.PedraPcTs?.resolveStoreForFirebaseUser){
+        const resolvedStore=await window.PedraPcTs.resolveStoreForFirebaseUser(db,{
+            uid:String(user.uid||'').trim(),
+            email:String(user.email||'').trim()
+        },{knownIds:storeId?[storeId]:[]});
+        if(resolvedStore?.id){
+            storeId=resolvedStore.id;
+            localStorage.setItem('currentStoreId', storeId);
+        }
     }
 
     await loadInfo();

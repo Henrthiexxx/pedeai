@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Central de Marketing</title>
+  <meta name="theme-color" content="#09090b">
+  <style>
+    :root{
+      color-scheme:dark light;
+      --font:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
+      --bg-0:#09090b; --bg-1:#111114; --bg-2:#18181c; --bg-3:#202026;
+      --text-0:#f4f4f5; --text-1:#c7c7cf; --text-2:#8e8e99; --text-3:#666673;
+      --border:#26262d; --border-h:#3a3a44;
+      --accent:#f4f4f5; --accent-t:#0b0b0d;
+      --blue:#60a5fa; --blue-bg:rgba(96,165,250,.10); --blue-b:rgba(96,165,250,.22);
+      --green:#4ade80; --green-bg:rgba(74,222,128,.10); --green-b:rgba(74,222,128,.22);
+      --orange:#f59e0b; --orange-bg:rgba(245,158,11,.10); --orange-b:rgba(245,158,11,.20);
+      --red:#f87171; --red-bg:rgba(248,113,113,.10); --red-b:rgba(248,113,113,.20);
+      --shadow-sm:0 1px 3px rgba(0,0,0,.35),0 1px 2px rgba(0,0,0,.25);
+      --shadow-md:0 12px 28px rgba(0,0,0,.34),0 4px 12px rgba(0,0,0,.22);
+      --shadow-lg:0 18px 48px rgba(0,0,0,.46),0 8px 20px rgba(0,0,0,.28);
+      --r:18px;
+    }
+    [data-theme="light"]{
+      color-scheme:light dark;
+      --bg-0:#f4f5f7; --bg-1:#ffffff; --bg-2:#f7f7fa; --bg-3:#eeeff3;
+      --text-0:#111118; --text-1:#30303a; --text-2:#6c6c79; --text-3:#8b8b97;
+      --border:#dfdfe6; --border-h:#c9c9d2;
+      --accent:#17171c; --accent-t:#f8f8fb;
+      --blue:#2563eb; --blue-bg:rgba(37,99,235,.08); --blue-b:rgba(37,99,235,.18);
+      --green:#16a34a; --green-bg:rgba(22,163,74,.08); --green-b:rgba(22,163,74,.18);
+      --orange:#c77b00; --orange-bg:rgba(199,123,0,.08); --orange-b:rgba(199,123,0,.18);
+      --red:#dc2626; --red-bg:rgba(220,38,38,.08); --red-b:rgba(220,38,38,.18);
+      --shadow-sm:0 1px 2px rgba(16,24,40,.05),0 1px 3px rgba(16,24,40,.08);
+      --shadow-md:0 12px 24px rgba(16,24,40,.08),0 2px 8px rgba(16,24,40,.06);
+      --shadow-lg:0 24px 48px rgba(16,24,40,.12),0 10px 20px rgba(16,24,40,.08);
+    }
+    *{box-sizing:border-box}
+    html,body{min-height:100%}
+    body{
+      margin:0;
+      font-family:var(--font);
+      background:linear-gradient(180deg,var(--bg-0) 0%,var(--bg-0) 100%);
+      color:var(--text-0);
+      min-height:100dvh;
+      overflow-x:hidden;
+    }
+    [data-theme="light"] body{
+      background:linear-gradient(180deg,#eef1f6 0%,#f6f8fb 46%,#eef2f7 100%);
+    }
+    a{color:inherit;text-decoration:none}
+    button,input,select,textarea{font:inherit}
+    button{cursor:pointer}
+
+    .page{
+      width:min(1180px,calc(100% - 28px));
+      margin:0 auto;
+      padding:18px 0 30px;
+    }
+    .top{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:14px;
+      padding-bottom:16px;
+      margin-bottom:16px;
+      border-bottom:1px solid var(--border);
+    }
+    .title{min-width:0}
+    .title h1{
+      margin:0;
+      font-size:1.1rem;
+      font-weight:800;
+      letter-spacing:-.03em;
+    }
+    .title p{
+      margin:6px 0 0;
+      color:var(--text-2);
+      font-size:.85rem;
+      line-height:1.55;
+      max-width:760px;
+    }
+    .actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+    .btn{
+      min-height:42px;
+      padding:0 14px;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background:var(--bg-1);
+      color:var(--text-0);
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      font-size:.84rem;
+      font-weight:700;
+      box-shadow:var(--shadow-sm);
+      transition:transform .24s ease,border-color .24s ease,background .24s ease,box-shadow .24s ease,opacity .24s ease;
+    }
+    .btn:hover{transform:translateY(-1px);border-color:var(--border-h);box-shadow:var(--shadow-md)}
+    .btn-primary{background:var(--accent);color:var(--accent-t);border-color:var(--accent)}
+    .btn-soft{background:var(--bg-2)}
+
+    .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:14px}
+    .card{
+      border:1px solid var(--border);
+      border-radius:var(--r);
+      background:var(--bg-1);
+      box-shadow:var(--shadow-sm);
+      padding:16px;
+    }
+    .metric{display:flex;flex-direction:column;gap:6px;min-height:110px;justify-content:space-between}
+    .metric-label{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-2);font-weight:800}
+    .metric-value{font-size:1.9rem;font-weight:900;letter-spacing:-.04em}
+    .metric-sub{font-size:.78rem;color:var(--text-2);line-height:1.45}
+
+    .section{margin-top:14px}
+    .section-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .section-head h2{margin:0;font-size:.88rem;font-weight:800;letter-spacing:-.02em}
+    .section-head span{color:var(--text-2);font-size:.76rem}
+
+    .tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+    .tile{
+      border:1px solid var(--border);
+      border-radius:var(--r);
+      background:var(--bg-1);
+      padding:16px;
+      box-shadow:var(--shadow-sm);
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      min-height:160px;
+    }
+    .tile-icon{
+      width:42px;height:42px;border-radius:12px;
+      display:flex;align-items:center;justify-content:center;
+      background:var(--bg-2);
+      border:1px solid var(--border);
+      font-size:1.1rem;
+    }
+    .tile-title{font-size:.95rem;font-weight:800}
+    .tile-text{font-size:.8rem;color:var(--text-2);line-height:1.5;flex:1}
+
+    .queue{display:flex;flex-direction:column;gap:10px}
+    .queue-item{
+      border:1px solid var(--border);
+      border-radius:16px;
+      background:var(--bg-1);
+      padding:14px 16px;
+      display:grid;
+      grid-template-columns:minmax(0,1fr) auto;
+      gap:12px;
+      align-items:start;
+      box-shadow:var(--shadow-sm);
+    }
+    .queue-title{font-size:.92rem;font-weight:800;line-height:1.35}
+    .queue-meta{margin-top:5px;font-size:.76rem;color:var(--text-2);line-height:1.5}
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:5px 10px;
+      border-radius:999px;
+      font-size:.68rem;
+      font-weight:900;
+      border:1px solid var(--border);
+      background:var(--bg-2);
+      color:var(--text-1);
+      white-space:nowrap;
+    }
+    .pill.green{background:var(--green-bg);color:var(--green);border-color:var(--green-b)}
+    .pill.orange{background:var(--orange-bg);color:var(--orange);border-color:var(--orange-b)}
+    .pill.red{background:var(--red-bg);color:var(--red);border-color:var(--red-b)}
+    .pill.blue{background:var(--blue-bg);color:var(--blue);border-color:var(--blue-b)}
+    .empty{
+      padding:24px;
+      border:1px dashed var(--border);
+      border-radius:16px;
+      text-align:center;
+      color:var(--text-2);
+      background:var(--bg-1);
+    }
+
+    @media (max-width: 960px){
+      .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .tiles{grid-template-columns:1fr}
+      .top{flex-direction:column}
+      .actions{justify-content:flex-start}
+    }
+    @media (max-width: 560px){
+      .page{width:calc(100% - 20px)}
+      .grid{grid-template-columns:1fr}
+      .queue-item{grid-template-columns:1fr}
+      .btn{width:100%}
+      .actions{width:100%}
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="top">
+      <div class="title">
+        <h1>Central de Marketing</h1>
+        <p>Hub de navegação para as ferramentas que já existem. A loja cria a solicitação, acompanha os estados e segue para aprovação no painel administrativo.</p>
+      </div>
+      <div class="actions">
+        <button class="btn btn-soft" onclick="history.back()">Voltar</button>
+        <button class="btn btn-primary" onclick="openTool('AdsShop.html')">Criar propaganda</button>
+      </div>
+    </header>
+
+    <section class="grid">
+      <div class="card metric">
+        <div class="metric-label">Promoções ativas</div>
+        <div class="metric-value" id="promoCount">0</div>
+        <div class="metric-sub" id="promoSub">Produtos da loja com promoção ativa.</div>
+      </div>
+      <div class="card metric">
+        <div class="metric-label">Novidades publicadas</div>
+        <div class="metric-value" id="newsCount">0</div>
+        <div class="metric-sub" id="newsSub">Posts ativos para a vitrine da loja.</div>
+      </div>
+      <div class="card metric">
+        <div class="metric-label">Campanhas ativas</div>
+        <div class="metric-value" id="popupCount">0</div>
+        <div class="metric-sub">Popups de entrada liberados no cliente.</div>
+      </div>
+      <div class="card metric">
+        <div class="metric-label">Pendentes de aprovação</div>
+        <div class="metric-value" id="pendingCount">0</div>
+        <div class="metric-sub">Pedidos que seguem para o fluxo administrativo.</div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <h2>Atalhos</h2>
+        <span id="storeNameLabel">Minha loja</span>
+      </div>
+      <div class="tiles">
+        <div class="tile">
+          <div class="tile-icon">◉</div>
+          <div class="tile-title">Criar propaganda</div>
+          <div class="tile-text">Abre o fluxo existente de solicitação de campanha.</div>
+          <button class="btn btn-primary" onclick="openTool('AdsShop.html')">Abrir</button>
+        </div>
+        <div class="tile">
+          <div class="tile-icon">%</div>
+          <div class="tile-title">Promoções</div>
+          <div class="tile-text">Gerencia os produtos promocionais já integrados ao cliente.</div>
+          <button class="btn btn-primary" onclick="openTool('promocoes.html')">Abrir</button>
+        </div>
+        <div class="tile">
+          <div class="tile-icon">↗</div>
+          <div class="tile-title">Fluxo completo</div>
+          <div class="tile-text">Entra direto no passo seguinte da solicitação de propaganda.</div>
+          <button class="btn btn-primary" onclick="openTool('Step1.html')">Abrir</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <h2>Fila de solicitação</h2>
+        <span id="queueHint">Pedidos recentes em status pendente</span>
+      </div>
+      <div id="queueList" class="queue">
+        <div class="empty">Carregando fila...</div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="dist/renderer/bootstrap.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAnIJRcUxN-0swpVnonPbJjTSK87o4CQ_g",
+      authDomain: "pedrad-814d0.firebaseapp.com",
+      projectId: "pedrad-814d0",
+      storageBucket: "pedrad-814d0.appspot.com",
+      messagingSenderId: "293587190550",
+      appId: "1:293587190550:web:80c9399f82847c80e20637"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    firebase.firestore().settings(
+      { experimentalAutoDetectLongPolling: true, useFetchStreams: false },
+      { merge: true }
+    );
+
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    const esc = value => {
+      const d = document.createElement('div');
+      d.textContent = String(value ?? '');
+      return d.innerHTML;
+    };
+    const searchParams = new URLSearchParams(location.search);
+    let storeId = searchParams.get('storeId') || localStorage.getItem('currentStoreId') || '';
+
+    function openTool(page) {
+      const url = new URL(page, location.href);
+      if (storeId && !url.searchParams.has('storeId')) url.searchParams.set('storeId', storeId);
+      location.href = url.toString();
+    }
+
+    function formatTime(value) {
+      const date = value?.toDate ? value.toDate() : (value ? new Date(value) : null);
+      if (!date || isNaN(date.getTime())) return '';
+      return date.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+    }
+
+    function isPromoActive(item) {
+      if (!item || item.active === false) return false;
+      if (item.promo === true || item.promotional === true || item.onSale === true) return true;
+      if (String(item.promotionStatus || '').toLowerCase() === 'active') return true;
+      return false;
+    }
+
+    async function loadHub() {
+      const [storeDoc, popupSnap, pendingSnap, productsSnap, newsSnap, itemsSnap] = await Promise.all([
+        storeId ? db.collection('stores').doc(storeId).get() : Promise.resolve(null),
+        db.collection('welcomePopups').where('active', '==', true).limit(20).get(),
+        db.collection('ads_orders').where('status', '==', 'pending').limit(20).get(),
+        storeId ? db.collection('products').where('storeId', '==', storeId).limit(200).get() : Promise.resolve({ docs: [] }),
+        storeId ? db.collection('storeNews').where('storeId', '==', storeId).limit(100).get() : Promise.resolve({ docs: [] }),
+        db.collection('ads_shop_items').limit(100).get()
+      ]);
+
+      const store = storeDoc && storeDoc.exists ? { id: storeDoc.id, ...storeDoc.data() } : null;
+      document.getElementById('storeNameLabel').textContent = store?.name || 'Minha loja';
+
+      const products = productsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const activePromos = products.filter(isPromoActive);
+      document.getElementById('promoCount').textContent = String(activePromos.length);
+      document.getElementById('promoSub').textContent = store ? `${store.name || 'Sua loja'} · ${products.length} produtos carregados` : 'Produtos da loja com promoção ativa.';
+
+      const news = newsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const activeNews = news.filter(item => item.active !== false);
+      document.getElementById('newsCount').textContent = String(activeNews.length);
+      document.getElementById('newsSub').textContent = store ? `${store.name || 'Sua loja'} · posts publicados` : 'Posts ativos para a vitrine da loja.';
+
+      document.getElementById('popupCount').textContent = String(popupSnap.size || 0);
+      document.getElementById('pendingCount').textContent = String(pendingSnap.size || 0);
+
+      const itemsById = new Map(itemsSnap.docs.map(doc => [doc.id, { id: doc.id, ...doc.data() }]));
+      const pendingOrders = pendingSnap.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .sort((a, b) => {
+          const at = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+          const bt = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+          return bt - at;
+        })
+        .slice(0, 8);
+
+      const queue = document.getElementById('queueList');
+      if (!pendingOrders.length) {
+        queue.innerHTML = '<div class="empty">Nenhum pedido em espera no momento.</div>';
+        return;
+      }
+
+      queue.innerHTML = pendingOrders.map(order => {
+        const item = itemsById.get(order.itemId) || null;
+        const title = item?.nome || item?.name || order.descricao || 'Campanha de propaganda';
+        const meta = [
+          order.slots?.length ? `${order.slots.length} slot(s)` : 'Sem slots',
+          order.produto ? 'Produto vinculado' : 'Sem produto',
+          formatTime(order.createdAt)
+        ].filter(Boolean).join(' · ');
+        return `
+          <article class="queue-item">
+            <div>
+              <div class="queue-title">${esc(title)}</div>
+              <div class="queue-meta">${esc(meta)}</div>
+            </div>
+            <div class="pill orange">Pendente</div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    auth.onAuthStateChanged(user => {
+      if (!user) {
+        location.href = 'index.html';
+        return;
+      }
+      Promise.resolve()
+        .then(async () => {
+          if (window.PedraPcTs?.resolveStoreForFirebaseUser) {
+            const resolvedStore = await window.PedraPcTs.resolveStoreForFirebaseUser(db, {
+              uid: String(user.uid || '').trim(),
+              email: String(user.email || '').trim()
+            }, { knownIds: storeId ? [storeId] : [] });
+            if (resolvedStore?.id) {
+              storeId = resolvedStore.id;
+              localStorage.setItem('currentStoreId', storeId);
+            }
+          }
+          await loadHub();
+        })
+        .catch(err => {
+          console.error(err);
+          document.getElementById('queueList').innerHTML = '<div class="empty">Erro ao carregar o hub.</div>';
+        });
+    });
+  </script>
+</body>
+</html>

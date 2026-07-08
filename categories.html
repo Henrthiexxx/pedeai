@@ -159,7 +159,9 @@ body{
     justify-content:center;
     font-size:1.1rem;
     flex-shrink:0;
+    overflow:hidden;
 }
+.category-icon img{width:100%;height:100%;object-fit:cover}
 .category-info{
     flex:1;
     min-width:0;
@@ -325,12 +327,23 @@ body{
     .popup-actions{
         flex-direction:column;
     }
-    .popup-actions .btn{
+.popup-actions .btn{
         width:100%;
         justify-content:center;
     }
 }
+.image-popup-box{max-width:520px}
+.image-tabs{display:flex;gap:6px;padding:0 20px 14px}
+.image-tab{flex:1;padding:9px;border:1px solid var(--border);border-radius:var(--rs);background:var(--bg-2);color:var(--text-2);font:inherit;font-size:.78rem;font-weight:700;cursor:pointer}
+.image-tab.active{background:var(--accent);color:var(--accent-t);border-color:var(--accent)}
+.image-panel{padding:0 20px 14px}
+.image-help{font-size:.72rem;color:var(--text-2);margin-top:6px;line-height:1.4}
+.upload-area{border:1.5px dashed var(--border);border-radius:var(--rs);padding:22px;text-align:center;background:var(--bg-2);cursor:pointer;color:var(--text-1);font-size:.82rem}
+.upload-area:hover{border-color:var(--border-h);background:var(--bg-3)}
+.category-preview{height:190px;margin:0 20px 16px;border:1px solid var(--border);border-radius:var(--rs);background:var(--bg-2);display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--text-2);font-size:.78rem}
+.category-preview img{width:100%;height:100%;object-fit:cover}
 </style>
+<link rel="stylesheet" href="modules/popup-desktop.css">
 </head>
 <body>
 <div class="toast" id="toast"></div>
@@ -344,6 +357,32 @@ body{
         <div class="popup-actions">
             <button class="btn btn-neutral" onclick="closeDelPopup()">Cancelar</button>
             <button class="btn btn-danger-soft" id="delBtn" onclick="doDelete()">Excluir</button>
+        </div>
+    </div>
+</div>
+<div class="popup-overlay" id="imagePopup">
+    <div class="popup-box image-popup-box">
+        <div class="popup-head">
+            <div class="popup-title" id="imagePopupTitle">Imagem da categoria</div>
+        </div>
+        <div class="image-tabs">
+            <button class="image-tab active" id="catTabUrl" type="button" onclick="switchCategoryImageTab('url')">Usar URL</button>
+            <button class="image-tab" id="catTabUpload" type="button" onclick="switchCategoryImageTab('upload')">Enviar arquivo</button>
+        </div>
+        <div class="image-panel" id="catUrlPanel">
+            <input type="url" class="form-input" id="catImageUrl" placeholder="https://..." oninput="previewCategoryUrl(this.value)">
+            <div class="image-help">Cole uma URL pública para ser usada nos produtos sem imagem.</div>
+        </div>
+        <div class="image-panel" id="catUploadPanel" style="display:none">
+            <div class="upload-area" onclick="document.getElementById('catFileInput').click()">Selecionar imagem da categoria</div>
+            <input type="file" id="catFileInput" accept="image/*" style="display:none" onchange="handleCategoryFile(this.files[0])">
+            <div class="image-help">Até 3 MB. A imagem será recortada em formato quadrado e otimizada.</div>
+        </div>
+        <div class="category-preview" id="catImagePreview">Sem imagem</div>
+        <div class="popup-actions">
+            <button class="btn btn-danger-soft" type="button" onclick="removeCategoryImage()">Remover imagem</button>
+            <button class="btn btn-neutral" type="button" onclick="closeImagePopup()">Cancelar</button>
+            <button class="btn btn-primary" type="button" onclick="saveCategoryImage()">Salvar</button>
         </div>
     </div>
 </div>
@@ -385,13 +424,17 @@ body{
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+<script src="image-storage.js"></script>
+<script src="dist/renderer/bootstrap.js"></script>
 <script>
 const FC={apiKey:"AIzaSyAnIJRcUxN-0swpVnonPbJjTSK87o4CQ_g",authDomain:"pedrad-814d0.firebaseapp.com",projectId:"pedrad-814d0",storageBucket:"pedrad-814d0.appspot.com",messagingSenderId:"293587190550",appId:"1:293587190550:web:80c9399f82847c80e20637"};
 if(!firebase.apps.length)firebase.initializeApp(FC);
 const db=firebase.firestore(),auth=firebase.auth();
 
-const storeId=localStorage.getItem('currentStoreId');
-let categories=[],products=[],delIdx=null,editIdx=null;
+const urlStoreId=(new URLSearchParams(location.search)).get('storeId')||'';
+let storeId=urlStoreId||localStorage.getItem('currentStoreId')||'';
+let categories=[],products=[],categoryMedia=[],delIdx=null,editIdx=null,imageIdx=null,imageDraft={imageUrl:'',imageData:''};
 
 function applyTheme(theme){
     const normalized = theme === 'light' ? 'light' : 'dark';
@@ -435,6 +478,25 @@ setInterval(syncTheme, 1200);
 function esc(s){const d=document.createElement('div');d.textContent=String(s||'');return d.innerHTML}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2500)}
 function goBack(){if(window.parent!==window)window.parent.postMessage('closePopup','*');else location.href='index.html'}
+function isAdministrativeUser(user){return !!user&&!user.isAnonymous}
+async function resolveStoreForUser(user){
+    if(!user) return null;
+    const knownId=String(urlStoreId||localStorage.getItem('currentStoreId')||'').trim();
+    if(window.PedraPcTs?.resolveStoreForFirebaseUser){
+        const resolved=await window.PedraPcTs.resolveStoreForFirebaseUser(db,{
+            uid:String(user.uid||'').trim(),
+            email:String(user.email||'').trim()
+        },{knownIds:knownId?[knownId]:[]});
+        if(resolved) return resolved;
+    }
+    return null;
+}
+function permissionMessage(error){
+    if(error?.code==='permission-denied'){
+        return `Permissão negada ao acessar a loja "${storeId || 'desconhecida'}". Verifique se a conta está vinculada à loja correta.`;
+    }
+    return 'Erro ao salvar';
+}
 
 function getIcon(name){
     const l=(name||'').toLowerCase();
@@ -448,6 +510,16 @@ function getIcon(name){
 }
 
 function countProds(cat){return products.filter(p=>(p.category||'').toLowerCase().trim()===cat.toLowerCase().trim()).length}
+function sameCategory(a,b){return String(a||'').trim().toLocaleLowerCase('pt-BR')===String(b||'').trim().toLocaleLowerCase('pt-BR')}
+function getCategoryMedia(name){return categoryMedia.find(item=>sameCategory(item?.name,name))||null}
+function getCategoryImage(name){
+    const media=getCategoryMedia(name);
+    return String(media?.imageData||media?.imageUrl||'').trim();
+}
+function categoryIconHtml(name){
+    const image=getCategoryImage(name);
+    return image?`<img src="${esc(image)}" alt="">`:getIcon(name);
+}
 
 function render(){
     document.getElementById('totalCats').textContent=categories.length;
@@ -461,7 +533,7 @@ function render(){
         const count=countProds(c);
         if(editIdx===i){
             return`<div class="category-card">
-                <div class="category-icon">${getIcon(c)}</div>
+                <div class="category-icon">${categoryIconHtml(c)}</div>
                 <input type="text" class="cat-edit-input" id="editInput" value="${esc(c)}" maxlength="50" onkeydown="if(event.key==='Enter')saveEdit(${i})">
                 <div class="category-actions">
                     <button class="btn btn-primary btn-sm" onclick="saveEdit(${i})">Salvar</button>
@@ -470,12 +542,13 @@ function render(){
             </div>`;
         }
         return`<div class="category-card">
-            <div class="category-icon">${getIcon(c)}</div>
+            <div class="category-icon">${categoryIconHtml(c)}</div>
             <div class="category-info">
                 <div class="category-name">${esc(c)}</div>
-                <div class="category-count">${count} produto${count!==1?'s':''}</div>
+                <div class="category-count">${count} produto${count!==1?'s':''}${getCategoryImage(c)?' · imagem configurada':''}</div>
             </div>
             <div class="category-actions">
+                <button class="btn btn-neutral btn-sm" onclick="openImagePopup(${i})">Imagem</button>
                 <button class="btn btn-neutral btn-sm" onclick="startEdit(${i})">Editar</button>
                 <button class="btn btn-danger-soft btn-sm" onclick="confirmDel(${i})">Excluir</button>
             </div>
@@ -491,17 +564,39 @@ async function loadData(){
             db.collection('stores').doc(storeId).get(),
             db.collection('products').where('storeId','==',storeId).get()
         ]);
+        // A subcoleção categoryMedia pode não ter regra publicada ainda; uma
+        // falha aqui não deve impedir o carregamento das categorias.
+        let mediaSnap={docs:[]};
+        try{
+            mediaSnap=await db.collection('stores').doc(storeId).collection('categoryMedia').get();
+        }catch(mediaErr){
+            console.warn('categoryMedia indisponível:',mediaErr?.code||mediaErr);
+        }
         const d=storeDoc.exists?storeDoc.data():{};
         categories=Array.isArray(d.categories)?[...d.categories].sort():[];
+        const storedMedia=mediaSnap.docs.map(doc=>({id:doc.id,...doc.data()}));
+        const legacyMedia=Array.isArray(d.categoryMedia)?d.categoryMedia:[];
+        categoryMedia=(storedMedia.length?storedMedia:legacyMedia).map(item=>({
+            id:item?.id||'',
+            name:String(item?.name||'').trim(),
+            imageUrl:String(item?.imageUrl||'').trim(),
+            imageData:String(item?.imageData||'').trim()
+        })).filter(item=>item.name);
         products=snap.docs.map(doc=>({id:doc.id,...doc.data()}));
         const prodCats=[...new Set(products.map(p=>p.category).filter(Boolean))];
         const all=[...new Set([...categories,...prodCats])].sort();
-        if(all.length>categories.length){categories=all;await saveCats()}
+        categories=all;
         render();
-    }catch(e){console.error(e);toast('Erro ao carregar')}
+    }catch(e){
+        console.error(e);
+        const msg=e?.code==='permission-denied'
+            ?`Não foi possível ler a loja "${storeId || 'desconhecida'}". Essa conta provavelmente não está cadastrada como dona/admin dessa loja.`
+            :'Erro ao carregar';
+        toast(msg);
+    }
 }
 
-async function saveCats(){await db.collection('stores').doc(storeId).update({categories})}
+async function saveCats(){await db.collection('stores').doc(storeId).set({categories},{merge:true})}
 
 async function addCat(){
     const input=document.getElementById('newCatName');
@@ -510,7 +605,7 @@ async function addCat(){
     if(categories.some(c=>c.toLowerCase()===name.toLowerCase())){toast('Já existe');return}
     const btn=document.getElementById('btnAdd');btn.disabled=true;btn.textContent='Adicionando...';
     try{categories.push(name);categories.sort();await saveCats();input.value='';render();toast('Categoria criada')}
-    catch(e){categories.pop();toast('Erro ao salvar')}
+    catch(e){categories.pop();console.error(e);toast(permissionMessage(e))}
     finally{btn.disabled=false;btn.textContent='Adicionar'}
 }
 
@@ -527,13 +622,18 @@ async function saveEdit(i){
         const toUpdate=products.filter(p=>(p.category||'').toLowerCase().trim()===oldName.toLowerCase().trim());
         const batch=db.batch();
         toUpdate.forEach(p=>batch.update(db.collection('products').doc(p.id),{category:newName}));
+        const media=getCategoryMedia(oldName);
+        if(media){
+            media.name=newName;
+            if(media.id)batch.update(db.collection('stores').doc(storeId).collection('categoryMedia').doc(media.id),{name:newName,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+        }
         categories[i]=newName;categories.sort();
         batch.update(db.collection('stores').doc(storeId),{categories});
         await batch.commit();
         toUpdate.forEach(p=>p.category=newName);
         editIdx=null;render();
         toast(`${toUpdate.length} produto(s) atualizado(s)`);
-    }catch(e){console.error(e);toast('Erro ao editar');render()}
+    }catch(e){console.error(e);toast(permissionMessage(e));render()}
 }
 
 function confirmDel(i){
@@ -547,20 +647,108 @@ function closeDelPopup(){document.getElementById('delPopup').classList.remove('s
 async function doDelete(){
     if(delIdx===null)return;
     try{
+        const media=getCategoryMedia(categories[delIdx]);
+        if(media?.id)await db.collection('stores').doc(storeId).collection('categoryMedia').doc(media.id).delete();
+        categoryMedia=categoryMedia.filter(item=>!sameCategory(item?.name,categories[delIdx]));
         categories.splice(delIdx,1);
         await saveCats();
         closeDelPopup();
         render();
         toast('Categoria removida');
-    }catch(e){console.error(e);toast('Erro ao excluir')}
+    }catch(e){console.error(e);toast(permissionMessage(e))}
+}
+
+function openImagePopup(i){
+    imageIdx=i;
+    const name=categories[i],media=getCategoryMedia(name);
+    // mediaId estável: usa o id do doc existente ou gera um novo, para o caminho
+    // no Storage casar com o documento de categoryMedia salvo depois.
+    const mediaId=media?.id||db.collection('stores').doc(storeId).collection('categoryMedia').doc().id;
+    imageDraft={imageUrl:String(media?.imageUrl||''),imageData:String(media?.imageData||''),mediaId};
+    document.getElementById('imagePopupTitle').textContent=`Imagem: ${name}`;
+    document.getElementById('catImageUrl').value=imageDraft.imageUrl;
+    document.getElementById('catFileInput').value='';
+    switchCategoryImageTab(imageDraft.imageData?'upload':'url');
+    renderCategoryImagePreview();
+    document.getElementById('imagePopup').classList.add('show');
+}
+function closeImagePopup(){document.getElementById('imagePopup').classList.remove('show');imageIdx=null;imageDraft={imageUrl:'',imageData:''}}
+function switchCategoryImageTab(tab){
+    document.getElementById('catTabUrl').classList.toggle('active',tab==='url');
+    document.getElementById('catTabUpload').classList.toggle('active',tab==='upload');
+    document.getElementById('catUrlPanel').style.display=tab==='url'?'block':'none';
+    document.getElementById('catUploadPanel').style.display=tab==='upload'?'block':'none';
+}
+function previewCategoryUrl(url){imageDraft.imageUrl=String(url||'').trim();if(imageDraft.imageUrl)imageDraft.imageData='';renderCategoryImagePreview()}
+function renderCategoryImagePreview(){
+    const preview=document.getElementById('catImagePreview'),image=imageDraft.imageData||imageDraft.imageUrl;
+    preview.innerHTML=image?`<img src="${esc(image)}" alt="" onerror="this.parentElement.textContent='Erro ao carregar imagem'">`:'Sem imagem';
+}
+async function handleCategoryFile(file){
+    if(!file)return;
+    if(file.size>3*1024*1024){toast('Máximo de 3 MB');return}
+    try{
+        toast('Enviando imagem...');
+        const path=`stores/${storeId}/categories/${imageDraft.mediaId}`;
+        const url=await ImageStorage.uploadImage(file,path,{sizes:[720,600,480]});
+        const prev=imageDraft.imageUrl;
+        if(prev&&prev!==url&&ImageStorage.isStorageUrl(prev))ImageStorage.deleteByUrl(prev);
+        imageDraft.imageUrl=url;
+        imageDraft.imageData='';
+        document.getElementById('catImageUrl').value='';
+        renderCategoryImagePreview();
+        toast('Imagem enviada');
+    }catch(e){console.error(e);toast('Erro ao enviar imagem')}
+}
+async function saveCategoryImage(){
+    if(imageIdx===null)return;
+    const name=categories[imageIdx],existing=getCategoryMedia(name);
+    const next={name,imageUrl:imageDraft.imageData?'':imageDraft.imageUrl,imageData:imageDraft.imageData||''};
+    try{
+        // Reusa o id do doc existente ou o mediaId preparado (que casa com o caminho no Storage).
+        const ref=db.collection('stores').doc(storeId).collection('categoryMedia').doc(existing?.id||imageDraft.mediaId);
+        await ref.set({...next,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+        if(existing)Object.assign(existing,next,{id:ref.id});else categoryMedia.push({...next,id:ref.id});
+        closeImagePopup();render();toast('Imagem da categoria salva');
+    }catch(e){console.error(e);toast(permissionMessage(e))}
+}
+async function removeCategoryImage(){
+    if(imageIdx===null)return;
+    const name=categories[imageIdx];
+    try{
+        const existing=getCategoryMedia(name);
+        if(existing?.id)await db.collection('stores').doc(storeId).collection('categoryMedia').doc(existing.id).delete();
+        if(ImageStorage.isStorageUrl(existing?.imageUrl))ImageStorage.deleteByUrl(existing.imageUrl);
+        categoryMedia=categoryMedia.filter(item=>!sameCategory(item?.name,name));
+        closeImagePopup();render();toast('Imagem removida');
+    }catch(e){console.error(e);toast(permissionMessage(e))}
 }
 
 document.getElementById('delPopup').addEventListener('click',e=>{if(e.target.id==='delPopup')closeDelPopup()});
+document.getElementById('imagePopup').addEventListener('click',e=>{if(e.target.id==='imagePopup')closeImagePopup()});
 
 (async()=>{
-    if(!storeId){document.getElementById('catList').innerHTML='<div class="empty-state"><strong>Faça login primeiro</strong>A loja atual não foi encontrada no navegador.</div>';return}
     const user=auth.currentUser||await new Promise(r=>{const u=auth.onAuthStateChanged(x=>{u();r(x)})});
-    if(!user){document.getElementById('catList').innerHTML='<div class="empty-state"><strong>Faça login</strong>O acesso à loja precisa de autenticação.</div>';return}
+    if(!isAdministrativeUser(user)){document.getElementById('catList').innerHTML='<div class="empty-state"><strong>Faça login novamente</strong>O gerenciamento de categorias exige a conta proprietária da loja.</div>';return}
+    // Confia no storeId recebido do app (URL/localStorage); quem realmente
+    // valida a permissão são as regras do Firestore na hora de salvar — igual
+    // ao products.html e ao app mobile. A resolução por dono só serve de
+    // fallback caso nenhuma loja tenha sido informada.
+    if(!storeId){
+        const resolvedStore=await resolveStoreForUser(user);
+        if(resolvedStore) storeId=resolvedStore.id;
+    }
+    if(!storeId){
+        document.getElementById('catList').innerHTML='<div class="empty-state"><strong>Loja não identificada</strong>Abra as categorias pelo painel da loja para carregar a loja ativa.</div>';
+        return;
+    }
+    localStorage.setItem('currentStoreId', storeId);
+    if(urlStoreId && urlStoreId!==storeId){
+        const nextUrl=new URL(location.href);
+        nextUrl.searchParams.set('storeId', storeId);
+        history.replaceState(null,'',nextUrl.toString());
+    }
+    document.querySelector('.page-title small').textContent=`Loja ativa: ${storeId}`;
     await loadData();
 })();
 </script>

@@ -1,10 +1,9 @@
-const CACHE_NAME = 'pedrad-v2';
-const APP_BASE = new URL('./', self.location.href);
+const CACHE_NAME = 'pedrad-v1';
 const urlsToCache = [
-    './',
-    './index.html',
-    './manifest.json'
-].map(path => new URL(path, APP_BASE).href);
+    '/',
+    '/index.html',
+    '/manifest.json'
+];
 
 self.addEventListener('install', event => {
     event.waitUntil(
@@ -15,6 +14,15 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('fetch', event => {
+    if (event.request.method !== 'GET') {
+        return;
+    }
+
+    const requestUrl = new URL(event.request.url);
+    if (requestUrl.origin !== self.location.origin) {
+        return;
+    }
+
     // Network first, fallback to cache
     event.respondWith(
         fetch(event.request)
@@ -24,12 +32,16 @@ self.addEventListener('fetch', event => {
                     const responseClone = response.clone();
                     caches.open(CACHE_NAME).then(cache => {
                         cache.put(event.request, responseClone);
-                    });
+                    }).catch(() => {});
                 }
                 return response;
             })
-            .catch(() => {
-                return caches.match(event.request);
+            .catch(async () => {
+                const cached = await caches.match(event.request);
+                return cached || new Response('Offline', {
+                    status: 503,
+                    statusText: 'Service Unavailable'
+                });
             })
     );
 });

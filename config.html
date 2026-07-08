@@ -6,7 +6,6 @@
     <title>Configurações - Pedra Delivery</title>
     <meta name="theme-color" content="#0a0a0c">
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="ui/menu/nav.css">
     <style>
         body {
             min-height: 100vh;
@@ -513,9 +512,11 @@
         <button class="btn btn-primary btn-block bottom-save" onclick="saveAllSettings()">Salvar todas configurações</button>
     </div>
 
+    <script src="pedra-web-db.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="dist/renderer/bootstrap.js"></script>
     <script>
         // ===== THEME SYNC =====
         const THEME_KEYS = ['theme', 'appTheme', 'pedrad_theme', 'color-theme', 'data-theme'];
@@ -684,12 +685,16 @@
 
         async function loadStoreData(user) {
             try {
-                let snapshot = await db.collection('stores').where('ownerEmail', '==', user.email).limit(1).get();
-                if (snapshot.empty) {
-                    snapshot = await db.collection('stores').where('ownerId', '==', user.uid).limit(1).get();
-                }
-                if (!snapshot.empty) {
-                    currentStore = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+                const knownId = String(localStorage.getItem('currentStoreId') || '').trim();
+                const resolvedStore = window.PedraPcTs?.resolveStoreForFirebaseUser
+                    ? await window.PedraPcTs.resolveStoreForFirebaseUser(db, {
+                        uid: String(user?.uid || '').trim(),
+                        email: String(user?.email || '').trim()
+                    }, { knownIds: knownId ? [knownId] : [] })
+                    : null;
+                if (resolvedStore) {
+                    currentStore = resolvedStore;
+                    localStorage.setItem('currentStoreId', currentStore.id);
                     loadStoreUI();
                 } else {
                     showToast('Loja não encontrada');
@@ -944,6 +949,9 @@
                     deliveryTime: (document.getElementById('storeDeliveryTime').value || '').trim(),
                     address: (document.getElementById('storeAddress').value || '').trim(),
                     imageUrl: currentImageBase64 || '',
+                    status: 'active',
+                    suspended: false,
+                    suspendReason: firebase.firestore.FieldValue.delete(),
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
                 await db.collection('stores').doc(currentStore.id).update(data);
@@ -960,6 +968,9 @@
 
                 const updateData = {
                     imageUrl: currentImageBase64 || '',
+                    status: 'active',
+                    suspended: false,
+                    suspendReason: firebase.firestore.FieldValue.delete(),
                     settings: {
                         soundEnabled: document.getElementById('soundToggle').classList.contains('active'),
                         uiSoundEnabled: document.getElementById('uiSoundToggle').classList.contains('active'),

@@ -180,6 +180,7 @@
             .invoice-row{align-items:flex-start;flex-direction:column}
         }
     </style>
+    <link rel="stylesheet" href="modules/popup-desktop.css">
 </head>
 <body>
     <div class="toast" id="toast"></div>
@@ -269,6 +270,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="dist/renderer/bootstrap.js"></script>
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyAnIJRcUxN-0swpVnonPbJjTSK87o4CQ_g",
@@ -282,10 +284,25 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        const storeId = localStorage.getItem('currentStoreId') || new URLSearchParams(location.search).get('storeId');
+        let storeId = localStorage.getItem('currentStoreId') || new URLSearchParams(location.search).get('storeId');
         let storeData = null;
         let selectedMonth = null;
-        const CACHE_KEY = `invoice_cache_${storeId}`;
+        const cacheBaseKey = () => `invoice_cache_${storeId}`;
+        const invoiceWriteBlockKey = () => `invoice_write_block_${storeId}`;
+
+        function isInvoiceWriteBlocked() {
+            try {
+                return localStorage.getItem(invoiceWriteBlockKey()) === '1';
+            } catch (_) {
+                return false;
+            }
+        }
+
+        function blockInvoiceWrite() {
+            try {
+                localStorage.setItem(invoiceWriteBlockKey(), '1');
+            } catch (_) {}
+        }
 
         function applyTheme(theme){
             document.documentElement.setAttribute('data-theme',theme === 'light' ? 'light' : 'dark');
@@ -346,7 +363,17 @@
                 return;
             }
             try {
-                await waitForAuthUser();
+                const user = await waitForAuthUser();
+                if (user && window.PedraPcTs?.resolveStoreForFirebaseUser) {
+                    const resolvedStore = await window.PedraPcTs.resolveStoreForFirebaseUser(db, {
+                        uid: String(user.uid || '').trim(),
+                        email: String(user.email || '').trim()
+                    }, { knownIds: storeId ? [storeId] : [] });
+                    if (resolvedStore?.id) {
+                        storeId = resolvedStore.id;
+                        localStorage.setItem('currentStoreId', storeId);
+                    }
+                }
                 const doc = await db.collection('stores').doc(storeId).get();
                 if (!doc.exists) { showToast('Loja não encontrada'); return; }
                 storeData = { id: doc.id, ...doc.data() };
@@ -412,7 +439,7 @@
         }
 
         function getCacheKey() {
-            return `${CACHE_KEY}_${selectedMonth.year}_${selectedMonth.month}`;
+            return `${cacheBaseKey()}_${selectedMonth.year}_${selectedMonth.month}`;
         }
 
         function getCache() {
@@ -449,16 +476,6 @@
             return Number.isFinite(n) ? n : 0;
         }
 
-        function orderStoreSale(order) {
-            const subtotal = parseFloat(order.subtotal);
-            if (Number.isFinite(subtotal)) return subtotal;
-            const total = num(order.total);
-            if (order.source === 'pdv' && order.localTaxIncludedInTotal !== false) {
-                return Math.max(total - num(order.localTax), 0);
-            }
-            return Math.max(total - num(order.deliveryFee), 0);
-        }
-
         async function loadInvoice() {
             const { month, year } = selectedMonth;
             const start = new Date(year, month, 1);
@@ -490,56 +507,47 @@
                     .get();
 
                 const orders = snap.docs.map(d => d.data());
-                const valid = orders.filter(o => o.status !== 'cancelled');
-                const pdvOrders = valid.filter(o => o.source === 'pdv');
-                const appOrders = valid.filter(o => o.source !== 'pdv');
-
-                const orderCount = valid.length;
-                const appOrderCount = appOrders.length;
-                const pdvOrderCount = pdvOrders.length;
-                const appSales = appOrders.reduce((s, o) => s + orderStoreSale(o), 0);
-                const pdvSales = pdvOrders.reduce((s, o) => s + orderStoreSale(o), 0);
-                const totalSales = appSales + pdvSales;
-                const pdvLocalTaxTotal = pdvOrders.reduce((s, o) => s + num(o.localTax), 0);
-                const deliveryEarnings = valid.reduce((s, o) => s + num(o.deliveryFee), 0);
-                const baseAmount = appSales;
-                const feeType = storeData.feeType || 'percent';
-                const feeValue = feeType === 'fixed' ? (storeData.feeFixed || 0) : (storeData.feePercent || 10);
-
-                const appPlatformFee = feeType === 'fixed' ? appOrderCount * feeValue : appSales * (feeValue / 100);
-                const platformFee = appPlatformFee + pdvLocalTaxTotal;
-
-                const data = {
-                    orderCount, appOrderCount, pdvOrderCount,
-                    totalSales, appSales, pdvSales, pdvLocalTaxTotal,
-                    deliveryEarnings, baseAmount, appPlatformFee, platformFee,
-                    feeType, feeValue, month, year,
-                    transparencyVersion: 1
-                };
+                const data = window.PedraPcTs?.calculateInvoiceSummary
+                    ? window.PedraPcTs.calculateInvoiceSummary(orders, {
+                        month,
+                        year,
+                        feeType: storeData.feeType || 'percent',
+                        feeFixed: storeData.feeFixed || 0,
+                        feePercent: storeData.feePercent || 10
+                    })
+                    : null;
+                if (!data) {
+                    throw new Error('Runtime TypeScript indisponível para cálculo da fatura.');
+                }
                 setCache(data);
                 renderInvoice(data);
                 showCacheStatus(false);
 
-                const invoiceId = `${storeId}_${year}-${String(month + 1).padStart(2, '0')}`;
-                const invoiceRef = db.collection('invoices').doc(invoiceId);
-                try {
-                    const existingInvoice = await invoiceRef.get();
-                    const existingStatus = existingInvoice.exists ? existingInvoice.data().status : null;
-                    await invoiceRef.set({
-                        storeId, storeName: storeData.name || '',
-                        month: month + 1, year,
-                        orderCount, appOrderCount, pdvOrderCount,
-                        totalSales, appSales, pdvSales, pdvLocalTaxTotal,
-                        deliveryEarnings, baseAmount, appPlatformFee, platformFee,
-                        feeType, feeValue,
-                        status: existingStatus === 'paid' ? 'paid' : 'open',
-                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                    }, { merge: true });
-                } catch (invoiceErr) {
-                    if (invoiceErr?.code !== 'permission-denied') {
-                        throw invoiceErr;
+                if (!isInvoiceWriteBlocked()) {
+                    const invoiceId = `${storeId}_${year}-${String(month + 1).padStart(2, '0')}`;
+                    const invoiceRef = db.collection('invoices').doc(invoiceId);
+                    try {
+                        const existingInvoice = await invoiceRef.get();
+                        const existingStatus = existingInvoice.exists ? existingInvoice.data().status : null;
+                        await invoiceRef.set({
+                            storeId, storeName: storeData.name || '',
+                            month: month + 1, year,
+                            orderCount, appOrderCount, pdvOrderCount,
+                            totalSales, appSales, pdvSales, pdvLocalTaxTotal,
+                            deliveryEarnings, baseAmount, appPlatformFee, platformFee,
+                            feeType, feeValue,
+                            status: existingStatus === 'paid' ? 'paid' : 'open',
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        }, { merge: true });
+                    } catch (invoiceErr) {
+                        // A persistência em invoices é opcional para a tela da loja.
+                        // Se as regras bloquearem, mantemos apenas o cálculo local/render.
+                        if (invoiceErr?.code !== 'permission-denied') {
+                            throw invoiceErr;
+                        }
+                        blockInvoiceWrite();
+                        console.warn('Sem permissão para gravar invoices; mantendo fatura local.', invoiceErr);
                     }
-                    console.warn('Sem permissão para gravar invoices; mantendo fatura local.', invoiceErr);
                 }
 
             } catch (err) {
@@ -547,7 +555,9 @@
                 const hasRenderedInvoice = document.querySelector('#invoiceBody .invoice-row');
                 if (!hasRenderedInvoice) {
                     document.getElementById('invoiceBody').innerHTML =
-                        '<div class="loading-state">Erro ao calcular fatura</div>';
+                        `<div class="loading-state">${err && err.code === 'permission-denied'
+                            ? 'Sem permissão para carregar a fatura desta loja'
+                            : 'Erro ao calcular fatura'}</div>`;
                 }
             }
         }

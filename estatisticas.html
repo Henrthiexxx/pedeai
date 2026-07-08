@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Estatisticas</title>
+  <style>
+    :root{--bg:#0f1115;--bg2:#171a21;--text:#e9edf5;--muted:#aab2c5;--line:#2a3140;--brand:#4f8cff;--danger:#dc2626}
+    [data-theme="light"]{--bg:#f5f7fb;--bg2:#fff;--text:#0f172a;--muted:#51607a;--line:#d8deea;--brand:#2563eb;--danger:#b91c1c}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+    .wrap{max-width:1180px;margin:0 auto;padding:16px}
+    .head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+    .title{font-size:1.1rem;font-weight:700}.sub{font-size:.84rem;color:var(--muted)}
+    .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .btn,.input,.select{border:1px solid var(--line);background:var(--bg2);color:var(--text);padding:8px 10px;border-radius:10px;font-size:.82rem}
+    .btn{cursor:pointer}.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}.btn.danger{background:var(--danger);border-color:var(--danger);color:#fff}
+    .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.chip{border:1px solid var(--line);background:var(--bg2);color:var(--text);padding:7px 10px;border-radius:999px;font-size:.78rem;cursor:pointer}
+    .chip.active{border-color:var(--brand);color:#fff;background:var(--brand)}
+    .cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:12px}
+    .card{border:1px solid var(--line);background:var(--bg2);border-radius:12px;padding:10px}.k{font-size:.75rem;color:var(--muted)}.v{font-weight:700;margin-top:4px}
+    .table{margin-top:12px;border:1px solid var(--line);border-radius:12px;overflow:auto;background:var(--bg2)}
+    table{width:100%;border-collapse:collapse}th,td{padding:9px;border-bottom:1px solid var(--line);font-size:.8rem;white-space:nowrap;text-align:left}th{font-size:.73rem;color:var(--muted)}.right{text-align:right}
+    .empty{padding:24px;text-align:center;color:var(--muted)}
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:16px}
+    .modal.show{display:flex}.modal-box{width:100%;max-width:360px;border:1px solid var(--line);border-radius:12px;background:var(--bg2);padding:12px}
+    @media (max-width:900px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div>
+      <div class="title">Estatisticas</div>
+      <div class="sub">Analise de vendas usando somente o banco local do PC.</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn" onclick="reloadAll()">Atualizar</button>
+      <button class="btn danger" onclick="openDeleteModal()">Apagar historico</button>
+      <button class="btn" onclick="window.parent?.postMessage({type:'closePopup'},'*')">Fechar</button>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <input id="fDay" type="date" class="input" onchange="setExactDay()" />
+    <select id="fSource" class="select" onchange="render()">
+      <option value="all">Origem: todas</option>
+      <option value="delivery">Delivery</option>
+      <option value="pdv">PDV</option>
+      <option value="table">Mesa</option>
+    </select>
+    <select id="fStatus" class="select" onchange="render()">
+      <option value="all">Status: todos</option>
+      <option value="pending">Pendente</option>
+      <option value="confirmed">Confirmado</option>
+      <option value="preparing">Preparando</option>
+      <option value="ready">Pronto</option>
+      <option value="delivering">Em entrega</option>
+      <option value="delivered">Entregue</option>
+      <option value="cancelled">Cancelado</option>
+    </select>
+    <input id="fSearch" class="input" placeholder="Buscar cliente, mesa, pedido" oninput="render()" />
+  </div>
+
+  <div class="chips">
+    <button class="chip active" data-shortcut="30d" onclick="setShortcut('30d',this)">Ultimos 30 dias</button>
+    <button class="chip" data-shortcut="6m" onclick="setShortcut('6m',this)">6 meses</button>
+    <button class="chip" data-shortcut="1y" onclick="setShortcut('1y',this)">1 ano</button>
+    <button class="chip" data-shortcut="all" onclick="setShortcut('all',this)">Tudo</button>
+  </div>
+
+  <div class="cards">
+    <div class="card"><div class="k">Vendas</div><div class="v" id="kCount">0</div></div>
+    <div class="card"><div class="k">Faturamento</div><div class="v" id="kRevenue">R$ 0,00</div></div>
+    <div class="card"><div class="k">Ticket medio</div><div class="v" id="kAvg">R$ 0,00</div></div>
+    <div class="card"><div class="k">Itens vendidos</div><div class="v" id="kItems">0</div></div>
+  </div>
+
+  <div class="table">
+    <table>
+      <thead><tr><th>Data</th><th>Origem</th><th>Status</th><th>Cliente/Mesa</th><th>Pagamento</th><th class="right">Itens</th><th class="right">Total</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div class="empty" id="empty" style="display:none">Sem vendas para os filtros selecionados.</div>
+  </div>
+</div>
+
+<div class="modal" id="deleteModal">
+  <div class="modal-box">
+    <div style="font-weight:700;margin-bottom:8px">Confirmar exclusao do historico</div>
+    <div class="sub" style="margin-bottom:10px">Informe a senha da conta para apagar o banco local deste PC.</div>
+    <input id="deletePassword" type="password" class="input" style="width:100%;margin-bottom:10px" placeholder="Senha da conta" />
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn" onclick="closeDeleteModal()">Cancelar</button>
+      <button class="btn danger" onclick="confirmDelete()">Apagar</button>
+    </div>
+  </div>
+</div>
+
+<script src="pedra-web-db.js"></script>
+<script>
+let allSales=[];
+let activeShortcut='30d';
+function money(v){return (Number(v)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
+function dt(v){const d=new Date(v);return isNaN(d)?'-':d.toLocaleString('pt-BR')}
+function theme(){try{const t=window.parent?.document?.documentElement?.getAttribute('data-theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}}
+function toast(msg){window.parent?.showToast?.(msg)}
+function electronApi(){return window.PedraElectron||window.parent?.PedraElectron||null}
+function toDate(s){return new Date(s.createdAtLocal||s.createdAtServer||s.createdAt||0)}
+function sourceKey(s){if(s.sourceDetail==='table')return 'table';if((s.source||'').toLowerCase()==='pdv')return 'pdv';return 'delivery'}
+function setShortcut(v,el){activeShortcut=v;document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));el?.classList.add('active');document.getElementById('fDay').value='';render()}
+function setExactDay(){activeShortcut='day';document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));render()}
+
+function filtered(){
+  const src=document.getElementById('fSource').value;
+  const st=document.getElementById('fStatus').value;
+  const q=(document.getElementById('fSearch').value||'').toLowerCase().trim();
+  const day=document.getElementById('fDay').value;
+  const now=new Date();
+  return allSales.filter(s=>{
+    const d=toDate(s);
+    if(activeShortcut==='30d'){const t=new Date(now);t.setDate(t.getDate()-30);if(!(d>=t))return false}
+    if(activeShortcut==='6m'){const t=new Date(now);t.setMonth(t.getMonth()-6);if(!(d>=t))return false}
+    if(activeShortcut==='1y'){const t=new Date(now);t.setFullYear(t.getFullYear()-1);if(!(d>=t))return false}
+    if(activeShortcut==='day'&&day){const a=new Date(day+'T00:00:00');const b=new Date(day+'T23:59:59.999');if(!(d>=a&&d<=b))return false}
+    if(src!=='all'&&sourceKey(s)!==src)return false;
+    if(st!=='all'&&String(s.status||'')!==st)return false;
+    if(q){const txt=`${s.userName||''} ${s.tableNumber||''} ${s.externalOrderId||''}`.toLowerCase();if(!txt.includes(q))return false}
+    return true;
+  });
+}
+
+function render(){
+  const list=filtered().sort((a,b)=>toDate(b)-toDate(a));
+  const rows=document.getElementById('rows');
+  const empty=document.getElementById('empty');
+  let revenue=0,items=0;
+  list.forEach(s=>{revenue+=Number(s.total)||0;items+=Array.isArray(s.items)?s.items.reduce((a,i)=>a+(Number(i.qty)||0),0):0});
+  document.getElementById('kCount').textContent=String(list.length);
+  document.getElementById('kRevenue').textContent=money(revenue);
+  document.getElementById('kAvg').textContent=money(list.length?revenue/list.length:0);
+  document.getElementById('kItems').textContent=String(items);
+  if(!list.length){rows.innerHTML='';empty.style.display='block';return}
+  empty.style.display='none';
+  rows.innerHTML=list.map(s=>{
+    const src=sourceKey(s)==='table'?'Mesa':(sourceKey(s)==='pdv'?'PDV':'Delivery');
+    const who=s.tableNumber?`Mesa ${s.tableNumber}`:(s.userName||'Cliente');
+    const qty=Array.isArray(s.items)?s.items.reduce((a,i)=>a+(Number(i.qty)||0),0):0;
+    return `<tr><td>${dt(toDate(s))}</td><td>${src}</td><td>${s.status||'-'}</td><td>${who}</td><td>${s.paymentMethod||'-'}</td><td class='right'>${qty}</td><td class='right'>${money(s.total)}</td></tr>`;
+  }).join('');
+}
+
+async function reloadAll(){
+  const api=electronApi();
+  if(!api?.sales?.list){toast('API local indisponivel');return}
+  const params=new URLSearchParams(location.search);
+  const storeId=params.get('storeId')||'';
+  const resp=await api.sales.list({storeId,limit:20000});
+  allSales=Array.isArray(resp?.items)?resp.items:[];
+  render();
+}
+
+function openDeleteModal(){document.getElementById('deletePassword').value='';document.getElementById('deleteModal').classList.add('show')}
+function closeDeleteModal(){document.getElementById('deleteModal').classList.remove('show')}
+
+async function confirmDelete(){
+  const pass=document.getElementById('deletePassword').value||'';
+  if(!pass.trim()){toast('Informe a senha');return}
+  if(!window.parent?.verifyAccountPassword){toast('Validação de senha indisponivel');return}
+  try{
+    const api=electronApi();
+    if(!api?.sales?.clear){toast('API local indisponivel');return}
+    await window.parent.verifyAccountPassword(pass);
+    await api.sales.clear();
+    closeDeleteModal();
+    toast('Historico local apagado com sucesso');
+    await reloadAll();
+  }catch(e){
+    toast('Senha invalida ou erro ao apagar historico');
+  }
+}
+
+theme();setInterval(theme,1000);
+reloadAll().catch(()=>toast('Erro ao carregar estatisticas locais'));
+</script>
+</body>
+</html>

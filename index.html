@@ -2,117 +2,865 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pedra Delivery</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Pedra Delivery — Painel da Loja</title>
     <meta name="theme-color" content="#09090b">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <link rel="manifest" href="manifest.json">
     <link rel="icon" href="icon-192.png">
-    <!-- Pré-carrega as páginas enquanto verifica auth -->
-    <link rel="prefetch" href="login.html">
-    <link rel="prefetch" href="home.html">
-    <link rel="prefetch" href="style.css">
+    <link rel="stylesheet" href="style.css">
     <style>
-        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        /* Contraste seguro para textos secundários no claro/escuro */
+        :root {
+            --pedra-muted-dark: #9ca3af;
+            --pedra-muted-light: #5f6368;
+        }
 
-        body {
-            font-family: 'DM Sans', -apple-system, system-ui, sans-serif;
-            background: #060606;
-            color: #f0f0f2;
-            min-height: 100dvh;
+        html[data-theme="dark"] {
+            --text-muted: var(--pedra-muted-dark);
+            --text-2: var(--pedra-muted-dark);
+            --text-secondary: var(--pedra-muted-dark);
+        }
+
+        html[data-theme="light"] {
+            --text-muted: var(--pedra-muted-light);
+            --text-2: var(--pedra-muted-light);
+            --text-secondary: var(--pedra-muted-light);
+        }
+
+        html[data-theme="dark"] .stat-label,
+        html[data-theme="dark"] .section-count,
+        html[data-theme="dark"] .history-link,
+        html[data-theme="dark"] .nav-section-title,
+        html[data-theme="dark"] .sidebar-store-status,
+        html[data-theme="dark"] .notif-popup-body,
+        html[data-theme="dark"] #confirmText,
+        html[data-theme="dark"] .auth-logo p {
+            color: var(--pedra-muted-dark) !important;
+        }
+
+        html[data-theme="light"] .stat-label,
+        html[data-theme="light"] .section-count,
+        html[data-theme="light"] .history-link,
+        html[data-theme="light"] .nav-section-title,
+        html[data-theme="light"] .sidebar-store-status,
+        html[data-theme="light"] .notif-popup-body,
+        html[data-theme="light"] #confirmText,
+        html[data-theme="light"] .auth-logo p {
+            color: var(--pedra-muted-light) !important;
+        }
+
+
+        /* Correção do cabeçalho no modo escuro */
+        html[data-theme="dark"] .topbar,
+        html[data-theme="dark"] .iframe-header,
+        html[data-theme="dark"] .sidebar-header {
+            background: rgba(10, 10, 12, 0.88) !important;
+            border-color: rgba(255, 255, 255, 0.08) !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28) !important;
+            -webkit-backdrop-filter: blur(14px) saturate(120%);
+            backdrop-filter: blur(14px) saturate(120%);
+        }
+
+        html[data-theme="dark"] .topbar::before,
+        html[data-theme="dark"] .iframe-header::before,
+        html[data-theme="dark"] .sidebar-header::before {
+            content: none !important;
+            display: none !important;
+            background: none !important;
+            opacity: 0 !important;
+        }
+
+        html[data-theme="dark"] .topbar-title,
+        html[data-theme="dark"] .iframe-header,
+        html[data-theme="dark"] .sidebar-brand,
+        html[data-theme="dark"] .sidebar-store-name {
+            color: #f5f7fb !important;
+        }
+
+
+
+        /* Footer do sidebar + atalhos do painel */
+        .sidebar {
             display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-nav {
+            flex: 1 1 auto;
+            min-height: 0;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            min-height: 100dvh;
+        }
+
+        .panel-shortcuts-footer {
+            margin-top: auto;
+            padding: 2px 2px 2px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(10px) saturate(110%);
+            -webkit-backdrop-filter: blur(10px) saturate(110%);
+        }
+
+        .panel-shortcuts-card {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 11px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.025);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+            opacity: 0.9;
+        }
+
+        .panel-shortcuts-title {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-right: 2px;
+            white-space: nowrap;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .shortcut-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            min-height: 28px;
+            padding: 4px 8px;
+            border-radius: 999px;
+            font-size: 0.74rem;
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .shortcut-chip kbd {
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            flex-direction: column;
-            gap: 32px;
+            min-width: 30px;
+            height: 20px;
+            padding: 0 6px;
+            border-radius: 6px;
+            font: inherit;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #f5f7fb;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: none;
         }
 
-        .splash-brand {
-            display: flex;
-            align-items: center;
-            gap: 13px;
-            opacity: 0;
-            animation: fadeUp 0.5s 0.1s ease forwards;
+        html[data-theme="light"] .panel-shortcuts-footer {
+            border-top-color: rgba(16, 24, 40, 0.06);
+            background: rgba(255, 255, 255, 0.62);
         }
 
-        .splash-brand-mark {
-            width: 48px;
-            height: 48px;
-            border-radius: 13px;
-            overflow: hidden;
-            flex-shrink: 0;
-            box-shadow: 0 6px 20px rgba(0,0,0,.5), 0 0 0 1px rgba(45,255,158,.28), 0 0 26px rgba(45,255,158,.25);
+        html[data-theme="light"] .panel-shortcuts-card,
+        html[data-theme="light"] .shortcut-chip {
+            background: rgba(255, 255, 255, 0.68);
+            border-color: rgba(15, 23, 42, 0.06);
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
         }
 
-        .splash-brand-mark img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
+        html[data-theme="light"] .panel-shortcuts-title,
+        html[data-theme="light"] .shortcut-chip kbd {
+            color: #111827;
         }
 
-        .splash-brand-text {
-            display: flex;
-            flex-direction: column;
-            line-height: 1.12;
+        html[data-theme="light"] .shortcut-chip kbd {
+            background: rgba(15, 23, 42, 0.04);
+            border-color: rgba(15, 23, 42, 0.06);
+            box-shadow: none;
         }
 
-        .splash-logo {
-            font-size: 1.5rem;
-            font-weight: 800;
-            letter-spacing: -0.03em;
-            color: #f4f5f4;
+        @media (max-width: 860px) {
+            .panel-shortcuts-card {
+                align-items: flex-start;
+            }
+
+            .panel-shortcuts-title {
+                width: 100%;
+                margin-right: 0;
+            }
         }
 
-        .splash-logo span { color: #2dff9e; }
-
-        .splash-sub {
-            font-size: 0.78rem;
-            color: #7d847f;
-            font-weight: 600;
-            margin-top: 4px;
-            letter-spacing: 0.01em;
-        }
-
-        .splash-spinner {
-            width: 28px;
-            height: 28px;
-            border: 2px solid rgba(255,255,255,0.08);
-            border-top-color: rgba(255,255,255,0.5);
-            border-radius: 50%;
-            animation: spin 0.7s linear infinite, fadeUp 0.5s 0.3s ease forwards;
-            opacity: 0;
-        }
-
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(8px); }
-            to   { opacity: 1; transform: none; }
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
-    <div class="splash-brand">
-        <div class="splash-brand-mark"><img src="icon-192.png" alt="Pedra Delivery"></div>
-        <div class="splash-brand-text">
-            <div class="splash-logo"><span>Pedra</span> Delivery</div>
-            <div class="splash-sub">Painel do estabelecimento</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Notification Popup -->
+<div class="notif-popup" id="notifPopup">
+    <div class="notif-popup-icon">🔔</div>
+    <div class="notif-popup-text">
+        <div class="notif-popup-title">Novo Pedido!</div>
+        <div class="notif-popup-body" id="notifBody">—</div>
+    </div>
+    <button class="notif-popup-close" onclick="hideNotifPopup()">×</button>
+</div>
+
+<!-- ══════════ AUTH ══════════ -->
+<div id="authPage" class="auth-page">
+    <div class="auth-box">
+        <div class="auth-logo">
+            <div class="auth-brand-mark"><img src="icon-192.png" alt="Pedra Delivery"></div>
+            <div class="auth-brand-text"><span>Pedra</span> Delivery</div>
+            <p>Painel do estabelecimento</p>
+        </div>
+        <div class="auth-card">
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label class="form-label">E-mail</label>
+                    <input type="email" class="form-input" id="loginEmail" placeholder="loja@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Senha</label>
+                    <input type="password" class="form-input" id="loginPassword" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Entrar</button>
+            </form>
         </div>
     </div>
-    <div class="splash-spinner"></div>
+</div>
 
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="firebase-config.js"></script>
-    <script>
-        // app.js já inicializou o Firebase — só escuta o auth
-        const fallback = setTimeout(() => window.location.replace('login.html'), 6000);
+<!-- ══════════ MAIN APP ══════════ -->
+<div id="mainApp" class="hidden">
+    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
-        firebase.auth().onAuthStateChanged((user) => {
-            clearTimeout(fallback);
-            window.location.replace(user ? 'home.html' : 'login.html');
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-brand">Pedra Delivery</div>
+            <div class="sidebar-store">
+                <div class="sidebar-avatar" id="sidebarAvatar">🏪</div>
+                <div>
+                    <div class="sidebar-store-name" id="sidebarStoreName">Minha Loja</div>
+                    <div class="sidebar-store-status" id="sidebarStatus">🟢 Aberto</div>
+                </div>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">Principal</div>
+                <div class="nav-item active" data-page="dashboard" onclick="navigateTo('dashboard')">
+                    <span class="icon">⊞</span> Painel Central
+                </div>
+                <div class="nav-item" data-page="history" onclick="navigateTo('history')">
+                    <span class="icon">☰</span> Historico
+                    <span class="nav-badge" id="pendingBadge" style="display:none">0</span>
+                </div>
+                <div class="nav-item" onclick="openPopup('estatisticas.html')">
+                    <span class="icon">◴</span> Estatisticas
+                </div>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">Cardápio</div>
+               
+	                <div class="nav-item" onclick="openPopup('products.html')">
+	                    <span class="icon">◉</span> Produtos
+	                </div>
+                <div class="nav-item" onclick="openPopup('categories.html')">
+                    <span class="icon">▦</span> Categorias
+                </div>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">Ferramentas</div>
+                <div class="nav-item" onclick="openPopup('clientes-da-casa.html')">
+                    <span class="icon">☺</span> Clientes da Casa
+                </div>
+                <div class="nav-item" onclick="openPopup('layout-editor.html')">
+                    <span class="icon">◫</span> Layout da Loja
+                </div>
+                <div class="nav-item" onclick="openPopup('promocoes.html')">
+                    <span class="icon">%</span> Promoções
+                </div>
+                <div class="nav-item" onclick="openPopup('meu-entregador.html')">
+                    <span class="icon">↗</span> Meu Entregador
+                </div>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">Conta</div>
+                <div class="nav-item" onclick="openPopup('fatura-loja.html')">
+                    <span class="icon">▤</span> Minha Fatura
+                </div>
+                <div class="nav-item" onclick="openPopup('config.html')">
+                    <span class="icon">⚙</span> Configurações
+                </div>
+                <div class="nav-item" onclick="handleLogout()">
+                    <span class="icon">→</span> Sair
+                </div>
+            </div>
+        </nav>
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+                <h1 class="topbar-title" id="pageTitle">Painel Central</h1>
+            </div>
+            <div class="topbar-actions">
+                <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="Alternar tema">◐</button>
+                <button class="topbar-btn" id="notifBtn" onclick="requestNotifPermission()" title="Notificações">🔔</button>
+                <div class="toggle" id="storeToggle" onclick="toggleStoreStatus()"></div>
+            </div>
+        </header>
+
+        <!-- ═══ DASHBOARD ═══ -->
+        <div id="dashboardPage" class="page active">
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-number" id="statPending">0</div>
+                    <div class="stat-label">Pendentes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="statActive">0</div>
+                    <div class="stat-label">Ativos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="statToday">0</div>
+                    <div class="stat-label">Hoje</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="statRevenue">R$ 0</div>
+                    <div class="stat-label">Faturamento</div>
+                </div>
+            </div>
+
+            <div class="section-title">
+                <span>Pedidos Ativos</span>
+                <span class="section-count" id="activeCount" style="display:none">0</span>
+            </div>
+            <div id="activeOrdersList"></div>
+
+            <div class="history-link" onclick="openPDV()" style="margin-top:16px;border-style:solid;font-weight:500">
+                Abrir PDV Local <kbd style="margin-left:6px;font-size:.7rem;padding:2px 6px;border-radius:4px;background:var(--bg-3);border:1px solid var(--border)">F5</kbd>
+            </div>
+
+            <div class="history-link" onclick="navigateTo('history')">
+                Ver histórico da semana →
+            </div>
+        </div>
+
+        <!-- ═══ HISTORY ═══ -->
+        <div id="historyPage" class="page">
+            <div class="history-controls">
+                <input type="text" class="form-input" style="max-width:260px;" placeholder="🔍 Buscar pedido..." id="historySearch" oninput="renderHistory()">
+                <button class="btn btn-ghost btn-sm" onclick="validateLocalPersistence()">Validar persistencia local</button>
+                <div class="filter-chips">
+                    <button class="filter-chip active" onclick="setHistoryFilter('all', this)">Todos</button>
+                    <button class="filter-chip" onclick="setHistoryFilter('delivered', this)">✅ Entregues</button>
+                    <button class="filter-chip" onclick="setHistoryFilter('cancelled', this)">❌ Cancelados</button>
+                </div>
+            </div>
+            <div id="historyList"></div>
+        </div>
+
+        <footer class="panel-shortcuts-footer" id="panelShortcutsFooter">
+            <div class="panel-shortcuts-card">
+                <span class="panel-shortcuts-title"></span>
+                <span class="shortcut-chip"><kbd>F1</kbd><span>Aceitar pedido</span></span>
+                <span class="shortcut-chip"><kbd>F2</kbd><span>Histórico</span></span>
+                <span class="shortcut-chip"><kbd>F3</kbd><span>Produtos</span></span>
+                <span class="shortcut-chip"><kbd>F4</kbd><span>Configurações</span></span>
+                <span class="shortcut-chip"><kbd>F5</kbd><span>PDV Local</span></span>
+                <span class="shortcut-chip"><kbd>F6</kbd><span>Tema</span></span>
+                <span class="shortcut-chip"><kbd>F7</kbd><span>Status loja</span></span>
+                <span class="shortcut-chip"><kbd>F8</kbd><span>Notificações</span></span>
+            </div>
+        </footer>
+    </main>
+</div>
+
+<!-- Confirm Modal -->
+<div class="modal" id="confirmModal">
+    <div class="modal-box" style="max-width:380px">
+        <div class="modal-body" style="text-align:center;padding:28px;">
+            <div class="modal-title" id="confirmTitle" style="margin-bottom:10px">Confirmar</div>
+            <div style="color:var(--text-muted);margin-bottom:24px;font-size:.9rem" id="confirmText">Deseja continuar?</div>
+            <div style="display:flex;gap:10px">
+                <button class="btn btn-ghost" onclick="closeModal('confirmModal')" style="flex:1">Cancelar</button>
+                <button class="btn btn-danger" id="confirmOk" style="flex:1">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Aviso de versão WEB (boot) -->
+<div class="modal" id="webNoticeModal" onclick="if(event.target===this)closeWebNotice()">
+    <div class="modal-box" style="max-width:420px">
+        <div class="modal-body" style="text-align:center;padding:30px 26px;">
+            <div style="font-size:2.4rem;line-height:1;margin-bottom:12px">🖥️</div>
+            <div class="modal-title" style="margin-bottom:10px">Você está na versão web</div>
+            <div style="color:var(--text-1);margin-bottom:22px;font-size:.9rem;line-height:1.55">
+                Este painel pela web funciona, mas o nosso <b>aplicativo para PC</b> é
+                mais rápido e completo — impressão, funcionamento offline, banco local
+                e atalhos. Baixe grátis no site oficial.
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+                <a class="btn btn-primary" href="https://www.pedradelivery.com.br/download.html" target="_blank" rel="noopener" style="width:100%;text-decoration:none">
+                    ⬇ Baixar o app para PC
+                </a>
+                <button class="btn btn-ghost" onclick="closeWebNotice()" style="width:100%">Continuar na web</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Iframe Modal (subpages) -->
+<div class="iframe-modal" id="iframeModal" onclick="if(event.target===this) closePopup()">
+    <div class="iframe-box">
+        <div class="iframe-header">
+            <span>Pedra Delivery</span>
+            <button class="btn btn-ghost btn-sm" onclick="closePopup()">✕ Fechar</button>
+        </div>
+        <iframe id="popupFrame" src="about:blank"></iframe>
+    </div>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
+
+<!-- App -->
+<!-- WEB: emula window.PedraElectron (banco local) via localStorage. Deve vir antes de tudo que o usa. -->
+<script src="pedra-web-db.js"></script>
+<script src="modules/fcm.js"></script>
+<script src="modules/update-guard.js"></script>
+<script src="dist/renderer/bootstrap.js"></script>
+<script src="legacy/app.js"></script>
+
+
+<script>
+/* ===== Pedra Delivery UX Sound FX ===== */
+(function () {
+  const SoundFX = {
+    enabled: true,
+    ctx: null,
+    hoverThrottle: 0,
+    lastVisibility: new Map(),
+
+    ensureContext() {
+      if (!this.enabled) return null;
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return null;
+        if (!this.ctx) this.ctx = new AudioCtx();
+        if (this.ctx.state === 'suspended') this.ctx.resume().catch(() => {});
+        return this.ctx;
+      } catch (_) {
+        return null;
+      }
+    },
+
+    tone({ freq = 440, type = 'sine', duration = 0.06, gain = 0.02, attack = 0.003, release = 0.05, when = 0 }) {
+      const ctx = this.ensureContext();
+      if (!ctx) return;
+      const now = ctx.currentTime + when;
+      const osc = ctx.createOscillator();
+      const amp = ctx.createGain();
+
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, now);
+
+      amp.gain.setValueAtTime(0.0001, now);
+      amp.gain.linearRampToValueAtTime(gain, now + attack);
+      amp.gain.exponentialRampToValueAtTime(0.0001, now + duration + release);
+
+      osc.connect(amp);
+      amp.connect(ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + duration + release + 0.02);
+    },
+
+    playHover() {
+      const now = performance.now();
+      if (now - this.hoverThrottle < 65) return;
+      this.hoverThrottle = now;
+      this.tone({ freq: 720, type: 'sine', duration: 0.025, gain: 0.012, attack: 0.002, release: 0.03 });
+      this.tone({ freq: 980, type: 'triangle', duration: 0.02, gain: 0.008, attack: 0.002, release: 0.025, when: 0.012 });
+    },
+
+    playOpen() {
+      this.tone({ freq: 420, type: 'triangle', duration: 0.04, gain: 0.02, attack: 0.002, release: 0.04 });
+      this.tone({ freq: 640, type: 'sine', duration: 0.05, gain: 0.018, attack: 0.002, release: 0.05, when: 0.02 });
+      this.tone({ freq: 880, type: 'triangle', duration: 0.045, gain: 0.013, attack: 0.002, release: 0.05, when: 0.045 });
+    },
+
+    playClose() {
+      this.tone({ freq: 820, type: 'triangle', duration: 0.035, gain: 0.015, attack: 0.002, release: 0.03 });
+      this.tone({ freq: 560, type: 'sine', duration: 0.04, gain: 0.014, attack: 0.002, release: 0.04, when: 0.018 });
+      this.tone({ freq: 360, type: 'triangle', duration: 0.05, gain: 0.012, attack: 0.002, release: 0.05, when: 0.04 });
+    },
+
+    initUnlock() {
+      const unlock = () => this.ensureContext();
+      ['pointerdown', 'touchstart', 'keydown'].forEach(evt => {
+        window.addEventListener(evt, unlock, { passive: true, once: true });
+      });
+    },
+
+    bindHover() {
+      const selector = [
+        'button',
+        '.btn',
+        '.nav-item',
+        '.filter-chip',
+        '.toggle',
+        '.menu-toggle',
+        '.theme-btn',
+        '.topbar-btn',
+        '.history-link',
+        '[role="button"]'
+      ].join(',');
+
+      document.addEventListener('pointerover', (e) => {
+        const target = e.target.closest(selector);
+        if (!target) return;
+        if (target.disabled) return;
+        this.playHover();
+      }, { passive: true });
+    },
+
+    patchFunction(name, beforeFn) {
+      const original = window[name];
+      if (typeof original !== 'function') return false;
+      window[name] = function (...args) {
+        try { beforeFn(...args); } catch (_) {}
+        return original.apply(this, args);
+      };
+      return true;
+    },
+
+    elementVisible(el) {
+      if (!el) return false;
+      const style = window.getComputedStyle(el);
+      if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) === 0) return false;
+      const rect = el.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0;
+    },
+
+    watchVisibility(el, key) {
+      if (!el) return;
+      this.lastVisibility.set(key, this.elementVisible(el));
+
+      const check = () => {
+        const prev = this.lastVisibility.get(key);
+        const next = this.elementVisible(el);
+        if (prev === next) return;
+        this.lastVisibility.set(key, next);
+        if (next) this.playOpen();
+        else this.playClose();
+      };
+
+      const observer = new MutationObserver(check);
+      observer.observe(el, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'hidden', 'aria-hidden']
+      });
+
+      window.addEventListener('resize', check, { passive: true });
+    },
+
+    bindPopupSounds() {
+      this.patchFunction('openPopup', () => this.playOpen());
+      this.patchFunction('closePopup', () => this.playClose());
+      this.patchFunction('hideNotifPopup', () => this.playClose());
+      this.patchFunction('showNotifPopup', () => this.playOpen());
+      this.patchFunction('openModal', () => this.playOpen());
+      this.patchFunction('closeModal', () => this.playClose());
+
+      document.addEventListener('click', (e) => {
+        const openTrigger = e.target.closest('[onclick*="openPopup("], [onclick*="openModal("]');
+        if (openTrigger) this.playOpen();
+
+        const closeTrigger = e.target.closest('[onclick*="closePopup()"], [onclick*="closeModal("], [onclick*="hideNotifPopup()"], .notif-popup-close');
+        if (closeTrigger) this.playClose();
+      }, true);
+
+      this.watchVisibility(document.getElementById('iframeModal'), 'iframeModal');
+      this.watchVisibility(document.getElementById('notifPopup'), 'notifPopup');
+      this.watchVisibility(document.getElementById('confirmModal'), 'confirmModal');
+    },
+
+    init() {
+      this.initUnlock();
+      this.bindHover();
+      this.bindPopupSounds();
+    }
+  };
+
+  window.PedraSoundFX = SoundFX;
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => SoundFX.init(), { once: true });
+  } else {
+    SoundFX.init();
+  }
+})();
+</script>
+
+<script>
+/* ===== Pedra Delivery Config Bridge ===== */
+(function () {
+  const UI_SOUND_KEY = 'pedrad_ui_sounds';
+  const CONFIG_EVENT = 'pedrad-ui-sounds-changed';
+
+  function normalizeBoolean(value, fallback = true) {
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'string') {
+      if (value === 'true') return true;
+      if (value === 'false') return false;
+    }
+    return fallback;
+  }
+
+  function readUiSoundPreference() {
+    try {
+      return normalizeBoolean(localStorage.getItem(UI_SOUND_KEY), true);
+    } catch (_) {
+      return true;
+    }
+  }
+
+  function persistUiSoundPreference(enabled) {
+    try {
+      localStorage.setItem(UI_SOUND_KEY, enabled ? 'true' : 'false');
+    } catch (_) {}
+  }
+
+  function applyUiSoundPreference(enabled, options = {}) {
+    const normalized = normalizeBoolean(enabled, true);
+
+    if (window.PedraSoundFX) {
+      window.PedraSoundFX.enabled = normalized;
+      if (normalized && typeof window.PedraSoundFX.ensureContext === 'function') {
+        window.PedraSoundFX.ensureContext();
+      }
+    }
+
+    window.UI_SOUNDS_ENABLED = normalized;
+    document.documentElement.dataset.uiSounds = normalized ? 'on' : 'off';
+
+    if (!options.silent) {
+      window.dispatchEvent(new CustomEvent(CONFIG_EVENT, {
+        detail: { enabled: normalized, source: options.source || 'local' }
+      }));
+    }
+
+    return normalized;
+  }
+
+  window.setUiSoundEnabled = function (enabled) {
+    const normalized = applyUiSoundPreference(enabled, { source: 'direct' });
+    persistUiSoundPreference(normalized);
+    return normalized;
+  };
+
+  window.getUiSoundEnabled = function () {
+    return normalizeBoolean(window.UI_SOUNDS_ENABLED, readUiSoundPreference());
+  };
+
+  function handleIncomingConfig(payload, source) {
+    if (!payload || typeof payload !== 'object') return;
+
+    if (payload.type === CONFIG_EVENT || payload.type === 'pedrad-config-changed') {
+      if (typeof payload.enabled === 'boolean') {
+        const normalized = applyUiSoundPreference(payload.enabled, { source });
+        persistUiSoundPreference(normalized);
+      }
+
+      if (payload.settings && typeof payload.settings.uiSoundEnabled === 'boolean') {
+        const normalized = applyUiSoundPreference(payload.settings.uiSoundEnabled, { source });
+        persistUiSoundPreference(normalized);
+      }
+    }
+  }
+
+  window.addEventListener('message', (event) => {
+    handleIncomingConfig(event.data, 'message');
+  });
+
+  window.addEventListener('storage', (event) => {
+    if (event.key !== UI_SOUND_KEY) return;
+    applyUiSoundPreference(event.newValue, { source: 'storage' });
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      applyUiSoundPreference(readUiSoundPreference(), { source: 'visibility', silent: true });
+    }
+  });
+
+  const initialUiSounds = readUiSoundPreference();
+  applyUiSoundPreference(initialUiSounds, { source: 'boot', silent: true });
+})();
+</script>
+
+
+<script>
+/* ===== Pedra Delivery Atalhos ===== */
+(function () {
+  function isTypingContext(target) {
+    if (!target) return false;
+    const tag = (target.tagName || '').toLowerCase();
+    return tag === 'input' || tag === 'textarea' || tag === 'select' || target.isContentEditable;
+  }
+
+  function closeTransientUi() {
+    const iframeModal = document.getElementById('iframeModal');
+    const confirmModal = document.getElementById('confirmModal');
+    const notifPopup = document.getElementById('notifPopup');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+
+    const iframeVisible = iframeModal && getComputedStyle(iframeModal).display !== 'none' && !iframeModal.classList.contains('hidden');
+    const confirmVisible = confirmModal && getComputedStyle(confirmModal).display !== 'none' && !confirmModal.classList.contains('hidden');
+    const notifVisible = notifPopup && getComputedStyle(notifPopup).display !== 'none' && !notifPopup.classList.contains('hidden');
+    const sidebarOpen = sidebar && overlay && getComputedStyle(overlay).display !== 'none' && !overlay.classList.contains('hidden');
+
+    if (iframeVisible && typeof window.closePopup === 'function') {
+      window.closePopup();
+      return true;
+    }
+
+    if (confirmVisible && typeof window.closeModal === 'function') {
+      window.closeModal('confirmModal');
+      return true;
+    }
+
+    if (notifVisible && typeof window.hideNotifPopup === 'function') {
+      window.hideNotifPopup();
+      return true;
+    }
+
+    if (sidebarOpen && typeof window.toggleSidebar === 'function') {
+      window.toggleSidebar();
+      return true;
+    }
+
+    return false;
+  }
+
+  function bindShortcuts() {
+    document.addEventListener('keydown', (event) => {
+      const key = (event.key || '').toLowerCase();
+      const typing = isTypingContext(event.target);
+
+      if (key === 'escape') {
+        if (closeTransientUi()) event.preventDefault();
+        return;
+      }
+
+      if (typing || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+
+      const actions = {
+        'f1': () => typeof window.navigateTo === 'function' && window.navigateTo('dashboard'),
+        'f2': () => typeof window.navigateTo === 'function' && window.navigateTo('history'),
+        'f3': () => typeof window.openPopup === 'function' && window.openPopup('products.html'),
+        'f4': () => typeof window.openPopup === 'function' && window.openPopup('config.html'),
+        'f6': () => typeof window.toggleTheme === 'function' && window.toggleTheme(),
+        'f7': () => typeof window.toggleStoreStatus === 'function' && window.toggleStoreStatus(),
+        'f8': () => typeof window.requestNotifPermission === 'function' && window.requestNotifPermission()
+      };
+
+      const action = actions[key];
+      if (!action) return;
+      event.preventDefault();
+      try {
+        action();
+      } catch (_) {}
+    });
+  }
+
+  function init() {
+    bindShortcuts();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init, { once: true });
+  } else {
+    init();
+  }
+})();
+</script>
+
+<script>
+/* ===== Oculta Badge Beta ===== */
+(function () {
+  const BETA_PATTERN = /\bBeta\s*:\s*v[\w.-]+/i;
+
+  function hideBetaLabels(root = document) {
+    const elements = root.querySelectorAll('body *');
+    elements.forEach((el) => {
+      const text = (el.textContent || '').trim();
+      if (!text) return;
+      if (!BETA_PATTERN.test(text)) return;
+      if (el.children.length > 0) return;
+      el.style.display = 'none';
+    });
+  }
+
+  function init() {
+    hideBetaLabels();
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        mutation.addedNodes.forEach((node) => {
+          if (node.nodeType !== Node.ELEMENT_NODE) return;
+          hideBetaLabels(node);
         });
-    </script>
+      });
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init, { once: true });
+  } else {
+    init();
+  }
+})();
+</script>
+
+<!-- Aviso de versão WEB no boot (1x por sessão) -->
+<script>
+(function () {
+  function closeWebNotice() {
+    var m = document.getElementById('webNoticeModal');
+    if (m) m.classList.remove('active');
+    try { sessionStorage.setItem('pedrad_web_notice_seen', '1'); } catch (e) {}
+  }
+  window.closeWebNotice = closeWebNotice;
+
+  function showWebNotice() {
+    try { if (sessionStorage.getItem('pedrad_web_notice_seen') === '1') return; } catch (e) {}
+    var m = document.getElementById('webNoticeModal');
+    if (m) m.classList.add('active');
+  }
+
+  function schedule() { setTimeout(showWebNotice, 900); }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', schedule, { once: true });
+  } else {
+    schedule();
+  }
+})();
+</script>
+
 </body>
 </html>

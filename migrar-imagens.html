@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Migrar imagens para o Storage</title>
+<style>
+  :root{color-scheme:dark}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#09090b;color:#e7e7ea;padding:24px;max-width:820px;margin:0 auto}
+  h1{font-size:1.25rem;margin:0 0 4px}
+  p.sub{color:#a1a1aa;margin:0 0 20px;font-size:.92rem}
+  .card{background:#18181b;border:1px solid #27272a;border-radius:12px;padding:16px;margin-bottom:16px}
+  button{background:#f97316;color:#fff;border:0;border-radius:8px;padding:10px 18px;font-size:.95rem;font-weight:600;cursor:pointer}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  .stat{display:flex;gap:18px;flex-wrap:wrap;margin:12px 0;font-size:.9rem}
+  .stat b{color:#fafafa}
+  #log{background:#0c0c0e;border:1px solid #27272a;border-radius:8px;padding:12px;height:300px;overflow:auto;font-family:ui-monospace,Menlo,monospace;font-size:.8rem;white-space:pre-wrap;line-height:1.5}
+  .ok{color:#4ade80}.warn{color:#fbbf24}.err{color:#f87171}.muted{color:#71717a}
+</style>
+</head>
+<body>
+<h1>Migrar imagens base64 → Firebase Storage</h1>
+<p class="sub">Sobe as imagens que estão embutidas como base64 no Firestore para o Storage e troca os documentos por uma <code>imageUrl</code>. Seguro de rodar mais de uma vez: pula o que já foi migrado.</p>
+
+<div class="card">
+  <div id="store" class="muted">Verificando loja e login…</div>
+  <div class="stat">
+    <span>Produtos migrados: <b id="cP">0</b></span>
+    <span>Categorias migradas: <b id="cC">0</b></span>
+    <span>Pulados: <b id="cS">0</b></span>
+    <span>Erros: <b id="cE">0</b></span>
+  </div>
+  <button id="run" disabled>Iniciar migração</button>
+</div>
+
+<div id="log"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+<script src="image-storage.js"></script>
+<script>
+const FC={apiKey:"AIzaSyAnIJRcUxN-0swpVnonPbJjTSK87o4CQ_g",authDomain:"pedrad-814d0.firebaseapp.com",projectId:"pedrad-814d0",storageBucket:"pedrad-814d0.appspot.com",messagingSenderId:"293587190550",appId:"1:293587190550:web:80c9399f82847c80e20637"};
+if(!firebase.apps.length)firebase.initializeApp(FC);
+const db=firebase.firestore(),auth=firebase.auth();
+const storeId=(new URLSearchParams(location.search)).get('storeId')||localStorage.getItem('currentStoreId');
+
+let counts={p:0,c:0,s:0,e:0};
+const $=id=>document.getElementById(id);
+function bump(k){counts[k]++;$('c'+k.toUpperCase()).textContent=counts[k]}
+function log(msg,cls){const d=document.createElement('div');if(cls)d.className=cls;d.textContent=msg;$('log').appendChild(d);$('log').scrollTop=$('log').scrollHeight}
+function isB64(v){return typeof v==='string'&&v.startsWith('data:')}
+
+async function migrateProducts(){
+    log('— Produtos —','muted');
+    const snap=await db.collection('products').where('storeId','==',storeId).get();
+    for(const doc of snap.docs){
+        const p=doc.data()||{};
+        if(!isB64(p.imageData)){bump('s');continue}
+        try{
+            const url=await ImageStorage.uploadDataUrl(p.imageData,`stores/${storeId}/products/${doc.id}`);
+            await doc.ref.update({imageUrl:url,imageData:''});
+            bump('p');log('✓ '+(p.name||doc.id),'ok');
+        }catch(e){bump('e');log('✗ '+(p.name||doc.id)+': '+e.message,'err')}
+    }
+}
+
+async function migrateCategories(){
+    log('— Categorias —','muted');
+    const snap=await db.collection('stores').doc(storeId).collection('categoryMedia').get();
+    for(const doc of snap.docs){
+        const m=doc.data()||{};
+        if(!isB64(m.imageData)){bump('s');continue}
+        try{
+            const url=await ImageStorage.uploadDataUrl(m.imageData,`stores/${storeId}/categories/${doc.id}`);
+            await doc.ref.update({imageUrl:url,imageData:''});
+            bump('c');log('✓ '+(m.name||doc.id),'ok');
+        }catch(e){bump('e');log('✗ '+(m.name||doc.id)+': '+e.message,'err')}
+    }
+}
+
+async function run(){
+    $('run').disabled=true;
+    counts={p:0,c:0,s:0,e:0};['cP','cC','cS','cE'].forEach(i=>$(i).textContent='0');
+    log('Iniciando migração da loja '+storeId+'…','muted');
+    try{
+        await migrateProducts();
+        await migrateCategories();
+        log('Concluído. Produtos: '+counts.p+' | Categorias: '+counts.c+' | Pulados: '+counts.s+' | Erros: '+counts.e,'ok');
+    }catch(e){log('Falha geral: '+e.message,'err')}
+    $('run').disabled=false;
+}
+
+(async()=>{
+    if(!storeId){$('store').textContent='Nenhuma loja selecionada. Abra o painel e selecione a loja primeiro.';$('store').className='err';return}
+    const user=auth.currentUser||await new Promise(r=>{const u=auth.onAuthStateChanged(x=>{u();r(x)})});
+    if(!user||user.isAnonymous){$('store').textContent='Faça login com a conta dona da loja antes de migrar.';$('store').className='err';return}
+    $('store').innerHTML='Loja: <b>'+storeId+'</b> · Logado como '+(user.email||user.uid);
+    $('store').className='';
+    $('run').disabled=false;
+    $('run').addEventListener('click',run);
+})();
+</script>
+</body>
+</html>

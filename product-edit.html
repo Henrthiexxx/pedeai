@@ -146,6 +146,21 @@ textarea.form-input{resize:vertical;min-height:86px}
 .btn-success:hover{background:rgba(52,211,153,.14)!important;color:var(--green)!important;border-color:rgba(52,211,153,.34)!important}
 .loading-state{padding:46px 20px;text-align:center;color:var(--text-2)}
 .loading-state .spinner{margin:0 auto 10px}
+.bank-grid{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-height:300px;overflow-y:auto;
+    padding:4px 2px
+}
+.bank-item{
+    border:1px solid var(--border);border-radius:var(--rs);overflow:hidden;cursor:pointer;
+    transition:all .18s;background:var(--bg-2);box-shadow:var(--sh-sm);text-align:center
+}
+.bank-item:hover{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-bg);transform:translateY(-1px)}
+.bank-item.selected{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-bg)}
+.bank-item-img{width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--bg-3)}
+.bank-item-img img{width:100%;height:100%;object-fit:cover}
+.bank-item-name{font-size:.7rem;padding:6px 4px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-1)}
+.bank-empty{text-align:center;padding:20px;color:var(--text-2);font-size:.82rem}
+
 @media(max-width:560px){
     .grid-2{grid-template-columns:1fr}
     .new-group-row{grid-template-columns:1fr}
@@ -153,6 +168,7 @@ textarea.form-input{resize:vertical;min-height:86px}
     .page-header{flex-direction:column;align-items:stretch}
     .group-item{grid-template-columns:20px 1fr 82px 34px}
     .group-add-row{grid-template-columns:1fr 84px 84px}
+    .bank-grid{grid-template-columns:repeat(3,1fr)}
 }
 </style>
 <link rel="stylesheet" href="modules/popup-desktop.css">
@@ -180,6 +196,7 @@ textarea.form-input{resize:vertical;min-height:86px}
             <div class="img-tabs">
                 <div class="img-tab active" id="tabUrl" onclick="switchTab('url')">Usar URL</div>
                 <div class="img-tab" id="tabUpload" onclick="switchTab('upload')">Enviar arquivo</div>
+                <div class="img-tab" id="tabBank" onclick="switchTab('bank')">Banco de Imagens</div>
             </div>
 
             <div id="urlPanel">
@@ -190,9 +207,15 @@ textarea.form-input{resize:vertical;min-height:86px}
             <div id="uploadPanel" style="display:none">
                 <div class="upload-area" onclick="document.getElementById('fileInput').click()">
                     <div class="upload-area-title">Selecionar imagem</div>
-                    <div class="upload-area-sub">Clique ou arraste um arquivo. Limite de 3 MB.</div>
+                    <div class="upload-area-sub">Até 3 MB. Otimização em alta definição, com tamanho reduzido.</div>
                 </div>
                 <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleFile(this.files[0])">
+            </div>
+
+            <div id="bankPanel" style="display:none">
+                <input type="text" class="form-input" id="bankSearch" placeholder="Buscar produto..." oninput="filterBank()" style="margin-bottom:10px">
+                <div id="bankResults" class="bank-grid"></div>
+                <div class="help" id="bankHelp">Digite para buscar imagens disponíveis.</div>
             </div>
 
             <div class="img-preview" id="imgPreview"><span class="text-muted">Prévia</span></div>
@@ -217,8 +240,15 @@ textarea.form-input{resize:vertical;min-height:86px}
                 </div>
                 <div class="form-group">
                     <label class="form-label">Categoria *</label>
-                    <select class="form-select" id="pCategory"><option value="">Carregando...</option></select>
+                    <select class="form-select" id="pCategory" onchange="refreshSubcatSuggestions()"><option value="">Carregando...</option></select>
                 </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Subcategoria</label>
+                <input type="text" class="form-input" id="pSubcategory" list="subcatList" placeholder="Ex: Caramelo, Copo (opcional)">
+                <datalist id="subcatList"></datalist>
+                <div class="help">Agrupa o produto dentro da categoria no cardápio. Deixe vazio se não usar.</div>
             </div>
 
             <div class="toggle-row">
@@ -276,17 +306,24 @@ textarea.form-input{resize:vertical;min-height:86px}
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+<script src="image-storage.js"></script>
+<script src="dist/renderer/bootstrap.js"></script>
 <script>
 const FC={apiKey:"AIzaSyAnIJRcUxN-0swpVnonPbJjTSK87o4CQ_g",authDomain:"pedrad-814d0.firebaseapp.com",projectId:"pedrad-814d0",storageBucket:"pedrad-814d0.appspot.com",messagingSenderId:"293587190550",appId:"1:293587190550:web:80c9399f82847c80e20637"};
 if(!firebase.apps.length)firebase.initializeApp(FC);
 const db=firebase.firestore(),auth=firebase.auth();
 
 const params=new URLSearchParams(location.search);
-const storeId=params.get('storeId')||localStorage.getItem('currentStoreId');
+let storeId=params.get('storeId')||localStorage.getItem('currentStoreId');
 const productId=params.get('productId')||null;
+// Caminho estável da imagem no Storage: id do produto (edição) ou um id gerado
+// uma única vez (criação). Reenviar a imagem sobrescreve o mesmo objeto.
+const imageUploadId=productId||db.collection('products').doc().id;
 
 let addonGroups=[];
 let categories=[];
+let subcatsByCat={};
 let currentTab='url';
 let dragState={gi:null,ii:null};
 
@@ -329,8 +366,11 @@ function switchTab(tab){
     currentTab=tab;
     document.getElementById('tabUrl').classList.toggle('active',tab==='url');
     document.getElementById('tabUpload').classList.toggle('active',tab==='upload');
+    document.getElementById('tabBank').classList.toggle('active',tab==='bank');
     document.getElementById('urlPanel').style.display=tab==='url'?'block':'none';
     document.getElementById('uploadPanel').style.display=tab==='upload'?'block':'none';
+    document.getElementById('bankPanel').style.display=tab==='bank'?'block':'none';
+    if(tab==='bank'&&!bankItems.length)loadBank();
 }
 
 function previewUrl(url){
@@ -344,72 +384,91 @@ async function handleFile(file){
     if(!file)return;
     if(file.size>3*1024*1024){toast('Máximo de 3 MB');return}
     try{
-        toast('Processando imagem...');
-        const b64=shouldUseTinySvgTransform()?await resizeImage128Svg(file):await resizeImage(file);
-        document.getElementById('imageData').value=b64;
-        document.getElementById('imageUrl').value='';
+        toast('Enviando imagem...');
+        const path=`stores/${storeId}/products/${imageUploadId}`;
+        const url=await ImageStorage.uploadImage(file,path);
+        // Se havia uma imagem nossa em outro caminho do Storage, remove o objeto órfão.
+        const prev=(document.getElementById('imageUrl').value||'').trim();
+        if(prev&&prev!==url&&ImageStorage.isStorageUrl(prev))ImageStorage.deleteByUrl(prev);
+        document.getElementById('imageUrl').value=url;
+        document.getElementById('imageData').value='';
         const box=document.getElementById('imgPreview');
-        box.innerHTML=`<img src="${b64}"><button class="img-remove" onclick="removeImage()">×</button>`;
-        toast('Imagem preparada');
-    }catch(e){toast('Erro na imagem')}
-}
-
-function resizeImage(file){
-    return new Promise((res,rej)=>{
-        const r=new FileReader();
-        r.onload=e=>{
-            const img=new Image();
-            img.onload=()=>{
-                const c=document.createElement('canvas');c.width=600;c.height=600;
-                const s=Math.min(img.width,img.height),x=(img.width-s)/2,y=(img.height-s)/2;
-                c.getContext('2d').drawImage(img,x,y,s,s,0,0,600,600);
-                res(c.toDataURL('image/jpeg',.85));
-            };
-            img.onerror=()=>rej();img.src=e.target.result;
-        };
-        r.onerror=()=>rej();r.readAsDataURL(file);
-    });
-}
-
-function isPcApp(){
-    return !!window.PedraElectron;
-}
-
-function isMobileDevice(){
-    return /android|iphone|ipad|ipod/i.test(navigator.userAgent||'');
-}
-
-function shouldUseTinySvgTransform(){
-    return isPcApp()||isMobileDevice();
-}
-
-function resizeImage128Svg(file){
-    return new Promise((res,rej)=>{
-        const r=new FileReader();
-        r.onload=e=>{
-            const img=new Image();
-            img.onload=()=>{
-                const c=document.createElement('canvas');
-                c.width=128;c.height=128;
-                const s=Math.min(img.width,img.height),x=(img.width-s)/2,y=(img.height-s)/2;
-                const ctx=c.getContext('2d');
-                ctx.imageSmoothingEnabled=true;
-                ctx.imageSmoothingQuality='high';
-                ctx.drawImage(img,x,y,s,s,0,0,128,128);
-                const jpeg128=c.toDataURL('image/jpeg',.9);
-                const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><image href="${jpeg128}" x="0" y="0" width="128" height="128" preserveAspectRatio="none"/></svg>`;
-                res(`data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svg)))}`);
-            };
-            img.onerror=()=>rej();img.src=e.target.result;
-        };
-        r.onerror=()=>rej();r.readAsDataURL(file);
-    });
+        box.innerHTML=`<img src="${esc(url)}"><button class="img-remove" onclick="removeImage()">×</button>`;
+        toast('Imagem enviada');
+    }catch(e){console.error(e);toast('Erro ao enviar imagem')}
 }
 
 function removeImage(){
+    const prev=(document.getElementById('imageUrl').value||'').trim();
+    if(ImageStorage.isStorageUrl(prev))ImageStorage.deleteByUrl(prev);
     document.getElementById('imageData').value='';
     document.getElementById('imageUrl').value='';
     document.getElementById('imgPreview').innerHTML='<span class="text-muted">Prévia</span>';
+}
+
+// ── Image Bank ──
+let bankItems=[];
+let bankUnsub=null;
+let bankSelectedUrl='';
+
+function loadBank(){
+    if(bankUnsub)return;
+    bankUnsub=db.collection('imageBank').where('active','==',true).orderBy('name').onSnapshot(snap=>{
+        bankItems=snap.docs.map(d=>({id:d.id,...d.data()}));
+        filterBank();
+    },err=>{
+        console.error('Bank load error',err);
+        document.getElementById('bankResults').innerHTML='<div class="bank-empty">Erro ao carregar banco de imagens</div>';
+    });
+}
+
+function filterBank(){
+    const q=(document.getElementById('bankSearch').value||'').toLowerCase().trim();
+    const results=q
+        ?bankItems.filter(i=>{
+            const name=(i.name||'').toLowerCase();
+            const terms=Array.isArray(i.searchTerms)?i.searchTerms.join(' ').toLowerCase():'';
+            const cat=(i.category||'').toLowerCase();
+            return name.includes(q)||terms.includes(q)||cat.includes(q);
+        })
+        :bankItems;
+    renderBankResults(results);
+}
+
+function renderBankResults(list){
+    const el=document.getElementById('bankResults');
+    const help=document.getElementById('bankHelp');
+    if(!list.length){
+        el.innerHTML='<div class="bank-empty">Nenhuma imagem encontrada.</div>';
+        help.textContent='Tente outro termo de busca.';
+        return;
+    }
+    el.innerHTML=list.map(i=>`
+        <div class="bank-item ${bankSelectedUrl===i.imageUrl?'selected':''}" onclick="selectBankImage('${esc(i.id)}')">
+            <div class="bank-item-img">
+                <img src="${esc(i.imageUrl)}" alt="${esc(i.name)}" loading="lazy" onerror="this.parentElement.innerHTML='<span style=font-size:1.4rem>📦</span>'">
+            </div>
+            <div class="bank-item-name">${esc(i.name)}</div>
+        </div>
+    `).join('');
+    help.textContent=list.length+(list.length===1?' imagem encontrada':' imagens encontradas')+'. Clique para selecionar.';
+}
+
+function selectBankImage(id){
+    const item=bankItems.find(i=>i.id===id);
+    if(!item)return;
+
+    bankSelectedUrl=item.imageUrl||'';
+    document.getElementById('imageUrl').value=bankSelectedUrl;
+    document.getElementById('imageData').value='';
+    previewUrl(bankSelectedUrl);
+
+    document.querySelectorAll('.bank-item').forEach(el=>el.classList.remove('selected'));
+    const cards=document.getElementById('bankResults').querySelectorAll('.bank-item');
+    const idx=bankItems.findIndex(i=>i.id===id);
+    if(cards[idx])cards[idx].classList.add('selected');
+
+    toast('Imagem selecionada: '+item.name);
 }
 
 // ── Addon Groups ──
@@ -548,12 +607,28 @@ async function loadCategories(){
         const d=storeDoc.exists?storeDoc.data():{};
         const raw=Array.isArray(d.categories)?d.categories:[];
         const set=new Set(raw.map(c=>String(c||'').trim()).filter(Boolean));
-        snap.docs.forEach(doc=>{const c=(doc.data()?.category||'').trim();if(c)set.add(c)});
+        subcatsByCat={};
+        snap.docs.forEach(doc=>{
+            const data=doc.data()||{};
+            const c=(data.category||'').trim();if(c)set.add(c);
+            const s=(data.subcategory||'').trim();
+            if(c&&s){(subcatsByCat[c]||(subcatsByCat[c]=new Set())).add(s)}
+        });
         categories=[...set].sort((a,b)=>a.localeCompare(b,'pt-BR'));
         select.innerHTML=categories.length
             ?'<option value="">Selecione...</option>'+categories.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('')
             :'<option value="">Sem categorias</option>';
+        refreshSubcatSuggestions();
     }catch(e){select.innerHTML='<option value="">Erro</option>'}
+}
+
+// Sugestões de subcategoria (datalist) para a categoria escolhida.
+function refreshSubcatSuggestions(){
+    const cat=(document.getElementById('pCategory').value||'').trim();
+    const dl=document.getElementById('subcatList');
+    if(!dl)return;
+    const subs=subcatsByCat[cat]?[...subcatsByCat[cat]].sort((a,b)=>a.localeCompare(b,'pt-BR')):[];
+    dl.innerHTML=subs.map(s=>`<option value="${esc(s)}"></option>`).join('');
 }
 
 async function loadProduct(){
@@ -571,6 +646,8 @@ async function loadProduct(){
             const o=document.createElement('option');o.value=cat;o.textContent=cat;sel.appendChild(o);
         }
         sel.value=cat;
+        refreshSubcatSuggestions();
+        document.getElementById('pSubcategory').value=(p.subcategory||'').trim();
 
         if(p.active===false)document.getElementById('activeToggle').classList.remove('active');
 
@@ -621,6 +698,7 @@ async function save(){
         name,
         description:(document.getElementById('pDesc').value||'').trim(),
         price,category,
+        subcategory:(document.getElementById('pSubcategory').value||'').trim(),
         active:document.getElementById('activeToggle').classList.contains('active'),
         imageUrl:imageData?'':imageUrl,
         imageData:imageData||'',
@@ -647,6 +725,17 @@ async function save(){
     if(!storeId){document.getElementById('loading').innerHTML='⚠️ Loja não identificada';return}
     const user=auth.currentUser||await new Promise(r=>{const u=auth.onAuthStateChanged(x=>{u();r(x)})});
     if(!user){document.getElementById('loading').innerHTML='⚠️ Faça login';return}
+    if(window.PedraPcTs?.resolveStoreForFirebaseUser){
+        const resolvedStore=await window.PedraPcTs.resolveStoreForFirebaseUser(db,{
+            uid:String(user.uid||'').trim(),
+            email:String(user.email||'').trim()
+        },{knownIds:storeId?[storeId]:[]});
+        if(resolvedStore?.id){
+            storeId=resolvedStore.id;
+            localStorage.setItem('currentStoreId', storeId);
+        }
+    }
+    if(!storeId){document.getElementById('loading').innerHTML='⚠️ Loja não identificada';return}
 
     await loadCategories();
     if(productId)await loadProduct();

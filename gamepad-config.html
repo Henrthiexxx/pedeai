@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Configuração de Botões do Controle</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: #121a30;
+      --panel-2: #18213b;
+      --text: #eef2ff;
+      --muted: #a9b4d0;
+      --line: rgba(255,255,255,.08);
+      --accent: #5ea1ff;
+      --accent-2: #7dd3fc;
+      --danger: #ff6b6b;
+      --ok: #46d39a;
+      --warn: #ffd166;
+      --shadow: 0 18px 45px rgba(0,0,0,.28);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(180deg, #0a0f1d 0%, #0d1326 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .wrap {
+      width: min(1100px, calc(100% - 32px));
+      margin: 24px auto 48px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .hero, .card {
+      background: rgba(18, 26, 48, .95);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .hero {
+      padding: 24px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .title {
+      margin: 0;
+      font-size: clamp(1.5rem, 2.5vw, 2.2rem);
+      line-height: 1.1;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+      max-width: 900px;
+    }
+
+    .statusbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .pill {
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      font-size: .95rem;
+    }
+
+    .pill.ok { border-color: rgba(70,211,154,.35); color: #b6f3da; }
+    .pill.warn { border-color: rgba(255,209,102,.35); color: #ffe5a2; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 18px;
+    }
+
+    @media (max-width: 920px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      padding: 18px;
+    }
+
+    .card h2 {
+      margin: 0 0 6px;
+      font-size: 1.15rem;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    button, .fake-btn {
+      appearance: none;
+      border: 0;
+      border-radius: 12px;
+      padding: 11px 14px;
+      font: inherit;
+      cursor: pointer;
+      transition: transform .12s ease, opacity .12s ease, background .12s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+      color: #06111d;
+      font-weight: 700;
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,.08);
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+
+    .btn-danger {
+      background: rgba(255,107,107,.12);
+      color: #ffc3c3;
+      border: 1px solid rgba(255,107,107,.22);
+    }
+
+    .btn-capture {
+      background: rgba(94,161,255,.13);
+      color: #d7e7ff;
+      border: 1px solid rgba(94,161,255,.28);
+    }
+
+    .mapping-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .map-row {
+      display: grid;
+      grid-template-columns: 1.25fr .9fr auto auto;
+      gap: 10px;
+      align-items: center;
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.03);
+    }
+
+    @media (max-width: 760px) {
+      .map-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .map-label {
+      display: grid;
+      gap: 4px;
+    }
+
+    .map-label strong { font-size: 1rem; }
+    .map-label span { color: var(--muted); font-size: .92rem; }
+
+    .binding {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 44px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.05);
+      font-weight: 700;
+    }
+
+    .binding small {
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .binding.waiting {
+      border-color: rgba(255,209,102,.32);
+      color: #ffe2a0;
+      background: rgba(255,209,102,.08);
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(255,209,102,.18); }
+      70% { box-shadow: 0 0 0 10px rgba(255,209,102,0); }
+      100% { box-shadow: 0 0 0 0 rgba(255,209,102,0); }
+    }
+
+    .viewer {
+      display: grid;
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .live-box {
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.03);
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .live-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(86px, 1fr));
+      gap: 8px;
+    }
+
+    .live-item {
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      padding: 10px;
+      text-align: center;
+      color: var(--muted);
+      min-height: 72px;
+      display: grid;
+      place-items: center;
+      gap: 4px;
+    }
+
+    .live-item.active {
+      color: #08111d;
+      background: linear-gradient(135deg, #8bd0ff 0%, #7fe7c6 100%);
+      border-color: transparent;
+      font-weight: 800;
+    }
+
+    .input-group {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    label {
+      font-size: .92rem;
+      color: var(--muted);
+    }
+
+    input[type="text"], textarea, select {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.05);
+      color: var(--text);
+      padding: 12px 14px;
+      font: inherit;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 180px;
+      resize: vertical;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: .92rem;
+    }
+
+    .footer-note {
+      color: var(--muted);
+      font-size: .9rem;
+      line-height: 1.5;
+      margin-top: 10px;
+    }
+
+    .mini {
+      font-size: .84rem;
+      color: var(--muted);
+    }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <h1 class="title">Configuração de Botões do Controle</h1>
+      <p class="subtitle">
+        Página única para mapear ações do seu controle sem tocar no HTML do sistema principal.
+        Você escolhe a ação, clica em capturar e aperta o botão no controle. Milagre modesto, mas útil.
+      </p>
+      <div class="statusbar">
+        <div class="pill" id="padStatus">Nenhum controle detectado</div>
+        <div class="pill warn">Tecla padrão salva em <strong>localStorage</strong></div>
+        <div class="pill">Chave: <strong id="storageKeyLabel">pedra_gamepad_config</strong></div>
+      </div>
+    </section>
+
+    <div class="grid">
+      <section class="card">
+        <h2>Mapeamento de ações</h2>
+        <p>Defina quais botões executam as ações da interface. O mesmo botão pode ser usado em mais de uma ação, embora seja uma péssima ideia na maioria dos casos.</p>
+
+        <div class="toolbar">
+          <button class="btn-primary" id="saveBtn">Salvar configuração</button>
+          <button class="btn-secondary" id="presetXboxBtn">Padrão Xbox</button>
+          <button class="btn-secondary" id="presetPsBtn">Padrão PlayStation</button>
+          <button class="btn-danger" id="resetBtn">Limpar tudo</button>
+        </div>
+
+        <div class="mapping-list" id="mappingList"></div>
+
+        <div class="footer-note">
+          Ações sugeridas para seu caso: <strong>confirmar</strong> e <strong>cancelar</strong> com botões universais,
+          além de navegação por cima, baixo, esquerda e direita.
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Leitura ao vivo</h2>
+        <p>Quando apertar um botão, ele acende aqui. Também serve para descobrir o índice do botão sem adivinhar no escuro, como fazem tantos projetos por aí.</p>
+
+        <div class="viewer">
+          <div class="live-box">
+            <div class="row">
+              <strong>Controle ativo:</strong>
+              <span class="mini" id="padName">-</span>
+            </div>
+            <div class="row">
+              <span class="mini" id="padMeta">index: - | mapping: -</span>
+            </div>
+            <div class="live-grid" id="liveGrid"></div>
+          </div>
+
+          <div class="live-box">
+            <strong>JSON atual</strong>
+            <textarea id="jsonOutput" spellcheck="false"></textarea>
+            <div class="toolbar">
+              <button class="btn-secondary" id="copyJsonBtn">Copiar JSON</button>
+              <button class="btn-secondary" id="loadJsonBtn">Carregar JSON do campo</button>
+            </div>
+          </div>
+
+          <div class="live-box">
+            <strong>Integração</strong>
+            <p class="mini">
+              Sua aplicação pode ler a configuração em <code>localStorage.getItem('pedra_gamepad_config')</code>
+              e usar esse JSON para trocar os botões de confirmar, cancelar e navegação.
+            </p>
+            <div class="input-group">
+              <label for="storageKeyInput">Nome da chave no localStorage</label>
+              <input type="text" id="storageKeyInput" value="pedra_gamepad_config" />
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const ACTIONS = [
+        { key: 'confirm', label: 'Confirmar', hint: 'Executa clique / OK / avançar' },
+        { key: 'cancel', label: 'Cancelar', hint: 'Fecha modal / volta / cancela' },
+        { key: 'up', label: 'Navegar para cima', hint: 'Move o foco para cima' },
+        { key: 'down', label: 'Navegar para baixo', hint: 'Move o foco para baixo' },
+        { key: 'left', label: 'Navegar para esquerda', hint: 'Move o foco para esquerda' },
+        { key: 'right', label: 'Navegar para direita', hint: 'Move o foco para direita' },
+        { key: 'menu', label: 'Abrir menu', hint: 'Abre sidebar ou menu principal' },
+        { key: 'home', label: 'Ir para dashboard', hint: 'Volta para tela principal' }
+      ];
+
+      const PRESET_XBOX = {
+        confirm: 0,
+        cancel: 1,
+        up: 12,
+        down: 13,
+        left: 14,
+        right: 15,
+        menu: 9,
+        home: 8
+      };
+
+      const PRESET_PS = {
+        confirm: 0,
+        cancel: 1,
+        up: 12,
+        down: 13,
+        left: 14,
+        right: 15,
+        menu: 9,
+        home: 8
+      };
+
+      const liveGrid = document.getElementById('liveGrid');
+      const mappingList = document.getElementById('mappingList');
+      const padStatus = document.getElementById('padStatus');
+      const padName = document.getElementById('padName');
+      const padMeta = document.getElementById('padMeta');
+      const jsonOutput = document.getElementById('jsonOutput');
+      const storageKeyInput = document.getElementById('storageKeyInput');
+      const storageKeyLabel = document.getElementById('storageKeyLabel');
+
+      const saveBtn = document.getElementById('saveBtn');
+      const resetBtn = document.getElementById('resetBtn');
+      const presetXboxBtn = document.getElementById('presetXboxBtn');
+      const presetPsBtn = document.getElementById('presetPsBtn');
+      const copyJsonBtn = document.getElementById('copyJsonBtn');
+      const loadJsonBtn = document.getElementById('loadJsonBtn');
+
+      let activePadIndex = null;
+      let captureAction = null;
+      let mappings = {};
+      let prevPressed = [];
+      let liveButtonCount = 18;
+
+      renderMappingRows();
+      loadConfig();
+      refreshJson();
+      buildLiveGrid(liveButtonCount);
+
+      window.addEventListener('gamepadconnected', (e) => {
+        if (activePadIndex === null) activePadIndex = e.gamepad.index;
+        toast(`Controle conectado: ${e.gamepad.id}`);
+      });
+
+      window.addEventListener('gamepaddisconnected', (e) => {
+        if (activePadIndex === e.gamepad.index) activePadIndex = null;
+        prevPressed = [];
+        toast(`Controle desconectado: ${e.gamepad.id}`);
+      });
+
+      storageKeyInput.addEventListener('input', () => {
+        storageKeyLabel.textContent = storageKeyInput.value.trim() || 'pedra_gamepad_config';
+      });
+
+      saveBtn.addEventListener('click', () => {
+        saveConfig();
+        toast('Configuração salva. Pelo menos uma coisa obediente hoje.');
+      });
+
+      resetBtn.addEventListener('click', () => {
+        mappings = {};
+        renderMappingRows();
+        refreshJson();
+      });
+
+      presetXboxBtn.addEventListener('click', () => {
+        mappings = { ...PRESET_XBOX };
+        renderMappingRows();
+        refreshJson();
+      });
+
+      presetPsBtn.addEventListener('click', () => {
+        mappings = { ...PRESET_PS };
+        renderMappingRows();
+        refreshJson();
+      });
+
+      copyJsonBtn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(jsonOutput.value);
+          toast('JSON copiado. A civilização avança aos tropeços.');
+        } catch {
+          toast('Não consegui copiar automaticamente.');
+        }
+      });
+
+      loadJsonBtn.addEventListener('click', () => {
+        try {
+          const parsed = JSON.parse(jsonOutput.value || '{}');
+          if (!parsed || typeof parsed !== 'object') throw new Error('JSON inválido');
+          mappings = sanitizeMappings(parsed);
+          renderMappingRows();
+          refreshJson();
+          toast('JSON carregado.');
+        } catch (err) {
+          toast('JSON inválido: ' + err.message);
+        }
+      });
+
+      requestAnimationFrame(loop);
+
+      function loop() {
+        const gp = getPreferredGamepad();
+
+        if (!gp) {
+          padStatus.textContent = 'Nenhum controle detectado';
+          padStatus.className = 'pill';
+          padName.textContent = '-';
+          padMeta.textContent = 'index: - | mapping: -';
+          clearLiveGrid();
+          requestAnimationFrame(loop);
+          return;
+        }
+
+        if (liveButtonCount !== gp.buttons.length) {
+          liveButtonCount = gp.buttons.length;
+          buildLiveGrid(liveButtonCount);
+        }
+
+        padStatus.textContent = 'Controle conectado';
+        padStatus.className = 'pill ok';
+        padName.textContent = gp.id || 'Controle sem nome';
+        padMeta.textContent = `index: ${gp.index} | mapping: ${gp.mapping || 'desconhecido'}`;
+
+        updateLiveGrid(gp);
+        capturePressedButton(gp);
+
+        requestAnimationFrame(loop);
+      }
+
+      function getStorageKey() {
+        return (storageKeyInput.value || '').trim() || 'pedra_gamepad_config';
+      }
+
+      function loadConfig() {
+        const key = getStorageKey();
+        storageKeyLabel.textContent = key;
+
+        try {
+          const raw = localStorage.getItem(key);
+          if (!raw) {
+            mappings = { ...PRESET_XBOX };
+            renderMappingRows();
+            refreshJson();
+            return;
+          }
+
+          mappings = sanitizeMappings(JSON.parse(raw));
+          renderMappingRows();
+          refreshJson();
+        } catch {
+          mappings = { ...PRESET_XBOX };
+          renderMappingRows();
+          refreshJson();
+        }
+      }
+
+      function saveConfig() {
+        const key = getStorageKey();
+        storageKeyLabel.textContent = key;
+        const payload = {
+          version: 1,
+          updatedAt: new Date().toISOString(),
+          mappings: sanitizeMappings(mappings)
+        };
+        localStorage.setItem(key, JSON.stringify(payload, null, 2));
+        refreshJson();
+      }
+
+      function refreshJson() {
+        const payload = {
+          version: 1,
+          updatedAt: new Date().toISOString(),
+          mappings: sanitizeMappings(mappings)
+        };
+        jsonOutput.value = JSON.stringify(payload, null, 2);
+      }
+
+      function sanitizeMappings(source) {
+        const base = source && source.mappings ? source.mappings : source;
+        const out = {};
+
+        for (const action of ACTIONS) {
+          const value = base?.[action.key];
+          if (Number.isInteger(value) && value >= 0) {
+            out[action.key] = value;
+          }
+        }
+
+        return out;
+      }
+
+      function renderMappingRows() {
+        mappingList.innerHTML = '';
+
+        for (const action of ACTIONS) {
+          const row = document.createElement('div');
+          row.className = 'map-row';
+
+          const left = document.createElement('div');
+          left.className = 'map-label';
+          left.innerHTML = `<strong>${action.label}</strong><span>${action.hint}</span>`;
+
+          const binding = document.createElement('div');
+          binding.className = 'binding' + (captureAction === action.key ? ' waiting' : '');
+          binding.id = `binding-${action.key}`;
+          binding.innerHTML = bindingText(action.key);
+
+          const captureBtn = document.createElement('button');
+          captureBtn.className = 'btn-capture';
+          captureBtn.textContent = captureAction === action.key ? 'Aguardando...' : 'Capturar';
+          captureBtn.addEventListener('click', () => {
+            captureAction = action.key;
+            renderMappingRows();
+          });
+
+          const clearBtn = document.createElement('button');
+          clearBtn.className = 'btn-danger';
+          clearBtn.textContent = 'Limpar';
+          clearBtn.addEventListener('click', () => {
+            delete mappings[action.key];
+            if (captureAction === action.key) captureAction = null;
+            renderMappingRows();
+            refreshJson();
+          });
+
+          row.append(left, binding, captureBtn, clearBtn);
+          mappingList.appendChild(row);
+        }
+      }
+
+      function bindingText(actionKey) {
+        if (captureAction === actionKey) {
+          return `<span>Aperte um botão no controle</span>`;
+        }
+        const value = mappings[actionKey];
+        if (Number.isInteger(value)) {
+          return `<span>Botão ${value}</span> <small>index</small>`;
+        }
+        return `<span>Não definido</span>`;
+      }
+
+      function getGamepads() {
+        return navigator.getGamepads ? Array.from(navigator.getGamepads()).filter(Boolean).filter(g => g.connected) : [];
+      }
+
+      function hasActivity(gp) {
+        if (!gp) return false;
+        for (const btn of gp.buttons) {
+          if (btn.pressed || btn.value > 0.5) return true;
+        }
+        for (const axis of gp.axes) {
+          if (Math.abs(axis) > 0.5) return true;
+        }
+        return false;
+      }
+
+      function getPreferredGamepad() {
+        const pads = getGamepads();
+        if (!pads.length) return null;
+
+        for (const gp of pads) {
+          if (hasActivity(gp)) {
+            activePadIndex = gp.index;
+            return gp;
+          }
+        }
+
+        if (activePadIndex !== null) {
+          const active = pads.find(g => g.index === activePadIndex);
+          if (active) return active;
+        }
+
+        activePadIndex = pads[0].index;
+        return pads[0];
+      }
+
+      function buildLiveGrid(count) {
+        liveGrid.innerHTML = '';
+        for (let i = 0; i < count; i++) {
+          const el = document.createElement('div');
+          el.className = 'live-item';
+          el.id = `live-${i}`;
+          el.innerHTML = `<div>Botão ${i}</div><small>solto</small>`;
+          liveGrid.appendChild(el);
+        }
+      }
+
+      function clearLiveGrid() {
+        Array.from(liveGrid.children).forEach((el, i) => {
+          el.className = 'live-item';
+          el.innerHTML = `<div>Botão ${i}</div><small>solto</small>`;
+        });
+      }
+
+      function updateLiveGrid(gp) {
+        gp.buttons.forEach((btn, index) => {
+          const el = document.getElementById(`live-${index}`);
+          if (!el) return;
+          const value = Number(btn.value || 0).toFixed(2);
+          if (btn.pressed || btn.value > 0.5) {
+            el.className = 'live-item active';
+            el.innerHTML = `<div>Botão ${index}</div><small>pressionado (${value})</small>`;
+          } else {
+            el.className = 'live-item';
+            el.innerHTML = `<div>Botão ${index}</div><small>solto (${value})</small>`;
+          }
+        });
+      }
+
+      function capturePressedButton(gp) {
+        if (!captureAction) {
+          prevPressed = gp.buttons.map(b => !!b.pressed);
+          return;
+        }
+
+        if (!prevPressed.length || prevPressed.length !== gp.buttons.length) {
+          prevPressed = gp.buttons.map(() => false);
+        }
+
+        for (let i = 0; i < gp.buttons.length; i++) {
+          const isPressed = !!gp.buttons[i].pressed;
+          const wasPressed = !!prevPressed[i];
+          if (isPressed && !wasPressed) {
+            mappings[captureAction] = i;
+            toast(`${labelFromKey(captureAction)} mapeado para botão ${i}`);
+            captureAction = null;
+            renderMappingRows();
+            refreshJson();
+            break;
+          }
+        }
+
+        prevPressed = gp.buttons.map(b => !!b.pressed);
+      }
+
+      function labelFromKey(key) {
+        return ACTIONS.find(a => a.key === key)?.label || key;
+      }
+
+      function toast(message) {
+        console.log('[gamepad-config]', message);
+        document.title = '✔ ' + message;
+        clearTimeout(window.__toastTimer);
+        window.__toastTimer = setTimeout(() => {
+          document.title = 'Configuração de Botões do Controle';
+        }, 1400);
+      }
+    })();
+  </script>
+</body>
+</html>

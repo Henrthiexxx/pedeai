@@ -64,7 +64,7 @@
         body{
             min-height:100dvh;
             padding:20px;
-            max-width:680px;
+            max-width:980px;
             margin:0 auto;
             background:radial-gradient(ellipse at 50% 0%,var(--bg-2) 0%,var(--bg-0) 72%);
         }
@@ -72,6 +72,12 @@
         .popup-page{
             width:100%;
             padding-bottom:12px;
+        }
+
+        .content-grid{
+            display:grid;
+            grid-template-columns:1fr;
+            gap:14px;
         }
 
         .popup-header{
@@ -95,7 +101,6 @@
             border:1px solid var(--border);
             border-radius:var(--r);
             padding:18px;
-            margin-bottom:14px;
             box-shadow:var(--sh-md);
         }
 
@@ -379,6 +384,10 @@
             color:var(--text-2);
         }
 
+        .drivers-card{
+            min-height:0;
+        }
+
         .spinner{
             width:26px;
             height:26px;
@@ -401,7 +410,12 @@
             .status-label{ justify-content:space-between; }
             .remove-btn{ width:100%; }
         }
+
+        @media(min-width:1080px){
+            body{max-width:980px}
+        }
     </style>
+    <link rel="stylesheet" href="modules/popup-desktop.css">
 </head>
 <body>
     <div class="toast" id="toast"></div>
@@ -426,7 +440,8 @@
                 </div>
             </div>
 
-            <div class="popup-card">
+            <div class="content-grid">
+            <div class="popup-card link-card">
                 <div class="popup-card-title">Vincular Entregador</div>
 
                 <div id="favoritesRow" style="display:none;flex-wrap:wrap;gap:8px;margin-bottom:12px;"></div>
@@ -449,7 +464,7 @@
                 </div>
             </div>
 
-            <div class="popup-card">
+            <div class="popup-card drivers-card">
                 <div class="card-top">
                     <div class="popup-card-title" style="margin-bottom:0;">Entregadores Vinculados</div>
                     <div class="driver-count"><span class="num" id="driverCount">0</span></div>
@@ -461,6 +476,7 @@
                         <div class="empty-sub">Insira um token acima para vincular.<br>Enquanto não houver vínculo, pedidos irão para todos os entregadores livres.</div>
                     </div>
                 </div>
+            </div>
             </div>
         </div>
     </div>
@@ -479,7 +495,10 @@
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-functions-compat.js"></script>
+    <script src="dist/renderer/bootstrap.js"></script>
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyAnIJRcUxN-0swpVnonPbJjTSK87o4CQ_g",
@@ -489,29 +508,92 @@
             messagingSenderId: "293587190550",
             appId: "1:293587190550:web:80c9399f82847c80e20637"
         };
-        firebase.initializeApp(firebaseConfig);
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+        const auth = firebase.auth();
+        const cloudFunctions = firebase.functions();
 
         let currentStore = null;
         let linkedDrivers = [];
         let unsubDrivers = null;
         let pendingRemoveId = null;
 
-        const currentStoreId = localStorage.getItem('currentStoreId')
+        const initialStoreId = new URLSearchParams(location.search).get('storeId')
+            || localStorage.getItem('currentStoreId')
             || localStorage.getItem('CURRENT_STORE_ID')
             || localStorage.getItem('storeId');
 
-        const FAV_KEY = 'pedrad_fav_tokens_' + (currentStoreId || '');
+        let FAV_KEY = 'pedrad_fav_tokens_' + (initialStoreId || '');
 
-        if (!currentStoreId) {
-            document.getElementById('loadingState').innerHTML =
-                '<div style="color:var(--red);font-size:.85rem;">Loja não encontrada.<br>Feche e reabra o painel.</div>';
-        } else {
-            currentStore = { id: currentStoreId };
-            document.getElementById('loadingState').style.display = 'none';
-            document.getElementById('mainContent').style.display = 'block';
-            listenDrivers();
-            renderFavorites();
+        bootstrapPage();
+
+        async function bootstrapPage() {
+            try {
+                await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+                const user = await waitForAuthUser();
+                if (!user) {
+                    document.getElementById('loadingState').innerHTML =
+                        '<div style="color:var(--red);font-size:.85rem;">Sessão expirada.<br>Faça login novamente no painel.</div>';
+                    return;
+                }
+
+                const resolvedStore = await resolveCurrentStore(user);
+                if (!resolvedStore?.id) {
+                    document.getElementById('loadingState').innerHTML =
+                        '<div style="color:var(--red);font-size:.85rem;">Loja não encontrada.<br>Feche e reabra o painel.</div>';
+                    return;
+                }
+
+                currentStore = resolvedStore;
+                localStorage.setItem('currentStoreId', currentStore.id);
+                localStorage.setItem('CURRENT_STORE_ID', currentStore.id);
+                FAV_KEY = 'pedrad_fav_tokens_' + currentStore.id;
+
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+                listenDrivers();
+                renderFavorites();
+            } catch (err) {
+                console.error(err);
+                document.getElementById('loadingState').innerHTML =
+                    '<div style="color:var(--red);font-size:.85rem;">Erro ao carregar entregadores.</div>';
+            }
+        }
+
+        function waitForAuthUser() {
+            if (auth.currentUser) return Promise.resolve(auth.currentUser);
+            return new Promise(resolve => {
+                const unsub = auth.onAuthStateChanged(user => {
+                    unsub();
+                    resolve(user);
+                });
+            });
+        }
+
+        async function resolveCurrentStore(user) {
+            const knownId = String(initialStoreId || '').trim();
+            if (window.PedraPcTs?.resolveStoreForFirebaseUser) {
+                const resolved = await window.PedraPcTs.resolveStoreForFirebaseUser(db, {
+                    uid: String(user.uid || '').trim(),
+                    email: String(user.email || '').trim()
+                }, { knownIds: knownId ? [knownId] : [] });
+                if (resolved) return resolved;
+            }
+
+            if (!knownId) return null;
+            const snap = await db.collection('stores').doc(knownId).get();
+            return snap.exists ? { id: snap.id, ...snap.data() } : null;
+        }
+
+        function callableMessage(err, fallback) {
+            const code = String(err?.code || '').replace(/^functions\//, '');
+            const message = String(err?.message || '');
+            if (code === 'not-found') return 'Token não encontrado';
+            if (code === 'failed-precondition') return message || 'Este entregador já pertence a outra loja';
+            if (code === 'permission-denied') return 'Sem permissão para gerenciar esta loja';
+            if (code === 'unauthenticated') return 'Sessão expirada. Faça login novamente';
+            if (code === 'invalid-argument') return message || 'Dados inválidos';
+            return fallback;
         }
 
         // ==================== FAVORITES ====================
@@ -568,33 +650,13 @@
             btn.textContent = '...';
 
             try {
-                const snap = await db.collection('drivers')
-                    .where('driverToken', '==', token).limit(1).get();
-
-                if (snap.empty) {
-                    showToast('Token não encontrado');
-                    return;
-                }
-
-                const driverDoc = snap.docs[0];
-                const driverData = driverDoc.data();
-                const existingStores = driverData.linkedStores || [];
-
-                if (existingStores.length > 0 && !existingStores.includes(currentStore.id)) {
-                    showToast('Este entregador já pertence a outra loja');
-                    input.value = '';
-                    return;
-                }
-
-                await db.collection('drivers').doc(driverDoc.id).update({
-                    linkedStores:   firebase.firestore.FieldValue.arrayUnion(currentStore.id),
-                    linkedStoreId:  currentStore.id,
-                    storeId:        currentStore.id,
-                    driverType:     'store',
-                    appEligible:    false
+                const linkDriverToStore = cloudFunctions.httpsCallable('linkDriverToStoreByToken');
+                const result = await linkDriverToStore({
+                    storeId: currentStore.id,
+                    token
                 });
 
-                const driverName = driverData.name || token;
+                const driverName = result?.data?.driverName || token;
                 input.value = '';
                 showToast('✓ ' + driverName + ' vinculado!');
 
@@ -603,7 +665,7 @@
 
             } catch (err) {
                 console.error(err);
-                showToast('Erro ao vincular');
+                showToast(callableMessage(err, 'Erro ao vincular'));
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'Vincular';
@@ -620,13 +682,17 @@
         function listenDrivers() {
             if (unsubDrivers) unsubDrivers();
             unsubDrivers = db.collection('drivers')
-                .where('linkedStores', 'array-contains', currentStore.id)
+                .where('linkedStoreId', '==', currentStore.id)
                 .onSnapshot(snap => {
                     linkedDrivers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                     renderDrivers();
                 }, err => {
                     console.error('Listener error:', err);
-                    setTimeout(() => { if (currentStore) listenDrivers(); }, 5000);
+                    linkedDrivers = [];
+                    renderDrivers();
+                    showToast(err?.code === 'permission-denied'
+                        ? 'Sem permissão para listar entregadores'
+                        : 'Erro ao listar entregadores');
                 });
         }
 
@@ -689,26 +755,15 @@
             const driverId = pendingRemoveId;
             closeConfirm();
             try {
-                const ref = db.collection('drivers').doc(driverId);
-                const snap = await ref.get();
-                if (!snap.exists) { showToast('Entregador não encontrado'); return; }
-                const data = snap.data();
-                const current = Array.isArray(data.linkedStores) ? data.linkedStores : [];
-                const newStores = current.filter(s => s !== currentStore.id);
-                const update = {
-                    linkedStores: newStores,
-                    linkedStoreId: newStores[0] || null,
-                    storeId: newStores[0] || null
-                };
-                if (newStores.length === 0) {
-                    update.driverType  = 'app';
-                    update.appEligible = true;
-                }
-                await ref.update(update);
+                const unlinkDriver = cloudFunctions.httpsCallable('unlinkDriverFromStore');
+                await unlinkDriver({
+                    storeId: currentStore.id,
+                    driverId
+                });
                 showToast('✓ Entregador desvinculado');
             } catch (err) {
                 console.error(err);
-                showToast('Erro ao desvincular');
+                showToast(callableMessage(err, 'Erro ao desvincular'));
             }
         }
 
@@ -729,50 +784,6 @@
             clearTimeout(window._tt);
             window._tt = setTimeout(() => t.classList.remove('show'), 2800);
         }
-        // Chame SEMPRE que desvincular um entregador de loja.
-// Limpa todos os resíduos de vínculo em um só lugar.
-async function unlinkDriverFromStore(driverId, storeId) {
-  if (!driverId) return;
-  const ref = db.collection('drivers').doc(driverId);
-  const snap = await ref.get();
-  if (!snap.exists) return;
-
-  const d = snap.data() || {};
-  const update = {};
-
-  // linkedStores[] — remove só o storeId específico, mantém outros vínculos
-  if (Array.isArray(d.linkedStores) && storeId) {
-    const filtered = d.linkedStores.filter(id => String(id) !== String(storeId));
-    update.linkedStores = filtered;
-  }
-
-  // Se o vínculo "principal" é esse storeId, limpa
-  if (!storeId || String(d.linkedStoreId) === String(storeId)) {
-    update.linkedStoreId = firebase.firestore.FieldValue.delete();
-  }
-  if (!storeId || String(d.storeId) === String(storeId)) {
-    update.storeId = firebase.firestore.FieldValue.delete();
-  }
-
-  // Se depois disso não sobrou vínculo nenhum, tira o driverType 'store'
-  const remaining = new Set();
-  if (Array.isArray(update.linkedStores)) {
-    update.linkedStores.forEach(id => remaining.add(String(id)));
-  } else if (Array.isArray(d.linkedStores)) {
-    d.linkedStores.forEach(id => remaining.add(String(id)));
-  }
-  if (update.linkedStoreId === undefined && d.linkedStoreId) remaining.add(String(d.linkedStoreId));
-  if (update.storeId === undefined && d.storeId) remaining.add(String(d.storeId));
-
-  if (remaining.size === 0 && d.driverType === 'store') {
-    update.driverType = firebase.firestore.FieldValue.delete();
-  }
-
-  update.appEligible = remaining.size === 0; // sem vínculo → elegível ao app
-  update.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
-
-  await ref.update(update);
-}
     </script>
 </body>
 </html>

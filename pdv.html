@@ -86,12 +86,71 @@ body{display:flex;flex-direction:column;padding:0;background:var(--bg-0);color:v
 /* Toast */
 .toast{position:fixed;left:50%;bottom:-80px;transform:translateX(-50%);background:var(--bg-1);border:1px solid var(--border);color:var(--text-0);padding:10px 20px;border-radius:var(--r);font-size:.84rem;z-index:9999;box-shadow:var(--sh-lg);transition:bottom .35s cubic-bezier(.175,.885,.32,1.275);max-width:90vw;text-align:center;font-weight:500}
 .toast.show{bottom:24px}
+.payment-modal{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;z-index:10000;padding:16px}
+.payment-modal.show{display:flex}
+.payment-box{width:min(520px,100%);background:var(--bg-1);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh-lg);padding:18px}
+.payment-title{font-size:1rem;font-weight:800;margin-bottom:6px}
+.payment-sub{font-size:.82rem;color:var(--text-2);margin-bottom:14px}
+.payment-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.payment-opt{border:1px solid var(--border);background:var(--bg-2);color:var(--text-0);border-radius:var(--rs);padding:10px 12px;text-align:left;font-weight:700;cursor:pointer;transition:all .18s}
+.payment-opt:hover{background:var(--bg-3);border-color:var(--border-h);transform:translateY(-1px)}
+.payment-opt.active{border-color:var(--accent);box-shadow:0 0 0 2px var(--blue-bg)}
+.payment-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+@media(max-width:520px){.payment-grid{grid-template-columns:1fr}}
+
+.addon-modal{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:10001;padding:16px}
+.addon-modal.show{display:flex}
+.addon-box{width:min(620px,100%);max-height:min(760px,92vh);display:flex;flex-direction:column;background:var(--bg-1);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh-lg)}
+.addon-head{padding:16px 18px;border-bottom:1px solid var(--border)}
+.addon-title{font-size:1rem;font-weight:800}.addon-description{font-size:.78rem;color:var(--text-2);margin-top:4px;line-height:1.4}
+.addon-groups{padding:14px 18px;overflow-y:auto;display:grid;gap:14px}
+.addon-group{border:1px solid var(--border);border-radius:var(--rs);overflow:hidden}
+.addon-group-head{padding:10px 12px;background:var(--bg-2);display:flex;justify-content:space-between;gap:10px}
+.addon-group-name{font-size:.84rem;font-weight:700}.addon-rule{font-size:.7rem;color:var(--text-2)}
+.addon-options{display:grid;gap:1px;background:var(--border)}
+.addon-option{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg-1);cursor:pointer}
+.addon-option:hover{background:var(--bg-2)}.addon-option input{width:17px;height:17px;accent-color:var(--accent)}
+.addon-option-name{flex:1;font-size:.82rem}.addon-option-price{font-size:.78rem;font-weight:700;color:var(--text-1)}
+.addon-error{min-height:20px;padding:0 18px;color:var(--red);font-size:.76rem}
+.addon-footer{padding:12px 18px 16px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.addon-total{font-weight:800}.addon-actions{display:flex;gap:8px}
+.ci-addons{font-size:.68rem;color:var(--text-2);line-height:1.35;margin-top:3px}
+.p-options{font-size:.65rem;color:var(--accent);font-weight:700;margin-top:4px}
 
 .pdv-empty{text-align:center;color:var(--text-3);padding:60px 20px;font-size:.88rem}
 </style>
+<link rel="stylesheet" href="modules/popup-desktop.css">
 </head>
 <body>
 <div class="toast" id="toast"></div>
+<div id="paymentModal" class="payment-modal" aria-hidden="true">
+    <div class="payment-box" role="dialog" aria-modal="true" aria-labelledby="paymentTitle">
+        <div class="payment-title" id="paymentTitle">Forma de pagamento</div>
+        <div class="payment-sub">Selecione como essa venda foi paga.</div>
+        <div class="payment-grid" id="paymentGrid"></div>
+        <div class="payment-actions">
+            <button class="btn btn-ghost" type="button" id="paymentCancelBtn">Cancelar</button>
+            <button class="btn btn-primary" type="button" id="paymentConfirmBtn">Confirmar</button>
+        </div>
+    </div>
+</div>
+<div id="addonModal" class="addon-modal" aria-hidden="true">
+    <div class="addon-box" role="dialog" aria-modal="true" aria-labelledby="addonTitle">
+        <div class="addon-head">
+            <div class="addon-title" id="addonTitle">Personalizar produto</div>
+            <div class="addon-description" id="addonDescription"></div>
+        </div>
+        <div class="addon-groups" id="addonGroups"></div>
+        <div class="addon-error" id="addonError"></div>
+        <div class="addon-footer">
+            <div class="addon-total" id="addonTotal"></div>
+            <div class="addon-actions">
+                <button class="btn btn-ghost" type="button" onclick="closeAddonModal()">Cancelar</button>
+                <button class="btn btn-primary" type="button" onclick="confirmAddonSelection()">Adicionar</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="pdv-header">
     <div class="pdv-title">PDV Local</div>
@@ -138,16 +197,18 @@ body{display:flex;flex-direction:column;padding:0;background:var(--bg-0);color:v
     </div>
 </div>
 
+<script src="pedra-web-db.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="dist/renderer/bootstrap.js"></script>
 <script>
 // ── Firebase ──
 const FC={apiKey:"AIzaSyAnIJRcUxN-0swpVnonPbJjTSK87o4CQ_g",authDomain:"pedrad-814d0.firebaseapp.com",projectId:"pedrad-814d0",storageBucket:"pedrad-814d0.appspot.com",messagingSenderId:"293587190550",appId:"1:293587190550:web:80c9399f82847c80e20637"};
 if(!firebase.apps.length)firebase.initializeApp(FC);
 const db=firebase.firestore(),auth=firebase.auth();
 
-const storeId=(new URLSearchParams(location.search)).get('storeId')||localStorage.getItem('currentStoreId');
+let storeId=(new URLSearchParams(location.search)).get('storeId')||localStorage.getItem('currentStoreId');
 
 // ── State ──
 let allProducts=[];
@@ -157,6 +218,8 @@ let selectedCat='all';
 let viewMode='grid';  // 'grid' | 'list'
 let unsub=null;
 let storeData=null;
+let _paymentSelected=null;
+let addonProduct=null;
 
 // Presets: top 5 combos from localStorage
 const PRESETS_KEY='pedrad-pdv-presets-'+storeId;
@@ -164,6 +227,148 @@ const PRESETS_KEY='pedrad-pdv-presets-'+storeId;
 function esc(s){const d=document.createElement('div');d.textContent=String(s||'');return d.innerHTML}
 function money(v){return(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2500)}
+function sameCategory(a,b){return String(a||'').trim().toLocaleLowerCase('pt-BR')===String(b||'').trim().toLocaleLowerCase('pt-BR')}
+function productImage(product){
+    const own=product?.imageData&&product.imageData.startsWith('data:')?product.imageData:String(product?.imageUrl||'').trim();
+    if(own)return own;
+    const media=(Array.isArray(storeData?.categoryMedia)?storeData.categoryMedia:[]).find(item=>sameCategory(item?.name,product?.category));
+    return String(media?.imageData||media?.imageUrl||'').trim();
+}
+function normalizeAddonGroups(product){
+    return (Array.isArray(product?.addonGroups)?product.addonGroups:[]).map((group,index)=>({
+        name:String(group?.name||`Grupo ${index+1}`).trim(),
+        type:group?.type==='free'?'free':'paid',
+        min:Math.max(0,parseInt(group?.min)||0),
+        max:Math.max(0,parseInt(group?.max)||0),
+        items:(Array.isArray(group?.items)?group.items:[]).map((item,itemIndex)=>({
+            name:String(item?.name||'').trim(),
+            price:parseFloat(item?.price)||0,
+            order:item?.order??itemIndex
+        })).filter(item=>item.name).sort((a,b)=>a.order-b.order)
+    })).filter(group=>group.items.length);
+}
+function addonSum(addons){return(Array.isArray(addons)?addons:[]).reduce((sum,item)=>sum+(parseFloat(item?.price)||0),0)}
+function unitPrice(item){return(parseFloat(item?.price)||0)+addonSum(item?.addons)}
+function addonSignature(addons){
+    return (Array.isArray(addons)?addons:[]).map(item=>`${item.groupName||''}:${item.name}:${parseFloat(item.price)||0}`).sort().join('|');
+}
+function cartKey(productId,addons){return`${productId}::${addonSignature(addons)}`}
+function addonRule(group){
+    if(group.min&&group.max)return`Escolha de ${group.min} a ${group.max}`;
+    if(group.min)return`Escolha no mínimo ${group.min}`;
+    if(group.max)return`Escolha até ${group.max}`;
+    return'Escolha opcional';
+}
+function openAddonModal(product){
+    addonProduct=product;
+    const groups=normalizeAddonGroups(product);
+    document.getElementById('addonTitle').textContent=product.name||'Personalizar produto';
+    document.getElementById('addonDescription').textContent=product.description||'Selecione as opções desejadas.';
+    document.getElementById('addonError').textContent='';
+    document.getElementById('addonGroups').innerHTML=groups.map((group,groupIndex)=>`
+        <section class="addon-group" data-group="${groupIndex}" data-min="${group.min}" data-max="${group.max}">
+            <div class="addon-group-head">
+                <div class="addon-group-name">${esc(group.name)}</div>
+                <div class="addon-rule">${esc(addonRule(group))}</div>
+            </div>
+            <div class="addon-options">${group.items.map((item,itemIndex)=>`
+                <label class="addon-option">
+                    <input type="checkbox" data-group="${groupIndex}" data-item="${itemIndex}" onchange="handleAddonChange(this)">
+                    <span class="addon-option-name">${esc(item.name)}</span>
+                    <span class="addon-option-price">${item.price>0?`+ ${money(item.price)}`:'Grátis'}</span>
+                </label>`).join('')}
+            </div>
+        </section>`).join('');
+    updateAddonTotal();
+    const modal=document.getElementById('addonModal');
+    modal.classList.add('show');
+    modal.setAttribute('aria-hidden','false');
+}
+function closeAddonModal(){
+    addonProduct=null;
+    const modal=document.getElementById('addonModal');
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden','true');
+}
+function selectedModalAddons(){
+    if(!addonProduct)return[];
+    const groups=normalizeAddonGroups(addonProduct);
+    return [...document.querySelectorAll('#addonGroups input:checked')].map(input=>{
+        const group=groups[Number(input.dataset.group)];
+        const item=group?.items[Number(input.dataset.item)];
+        return item?{name:item.name,price:item.price,order:item.order,groupName:group.name}:null;
+    }).filter(Boolean);
+}
+function handleAddonChange(input){
+    const section=input.closest('.addon-group');
+    const max=parseInt(section?.dataset.max)||0;
+    const checked=section?[...section.querySelectorAll('input:checked')]:[];
+    if(max>0&&checked.length>max){
+        input.checked=false;
+        document.getElementById('addonError').textContent=`Este grupo permite no máximo ${max} opção(ões).`;
+    }else document.getElementById('addonError').textContent='';
+    updateAddonTotal();
+}
+function updateAddonTotal(){
+    if(!addonProduct)return;
+    document.getElementById('addonTotal').textContent=`Total unitário: ${money((parseFloat(addonProduct.price)||0)+addonSum(selectedModalAddons()))}`;
+}
+function confirmAddonSelection(){
+    if(!addonProduct)return;
+    const groups=normalizeAddonGroups(addonProduct);
+    for(let index=0;index<groups.length;index++){
+        const count=document.querySelectorAll(`#addonGroups input[data-group="${index}"]:checked`).length;
+        if(count<groups[index].min){
+            document.getElementById('addonError').textContent=`Selecione pelo menos ${groups[index].min} opção(ões) em "${groups[index].name}".`;
+            return;
+        }
+        if(groups[index].max>0&&count>groups[index].max){
+            document.getElementById('addonError').textContent=`Selecione no máximo ${groups[index].max} opção(ões) em "${groups[index].name}".`;
+            return;
+        }
+    }
+    const product=addonProduct;
+    const addons=selectedModalAddons();
+    closeAddonModal();
+    addConfiguredProduct(product,addons);
+}
+function askPaymentMethod(){
+    const options=[
+        {value:'pix',label:'PIX'},
+        {value:'cash',label:'Dinheiro'},
+        {value:'credit',label:'Cartão de crédito'},
+        {value:'debit',label:'Cartão de débito'},
+        {value:'picpay',label:'PicPay'},
+        {value:'food_voucher',label:'Vale alimentação'}
+    ];
+    const modal=document.getElementById('paymentModal');
+    const grid=document.getElementById('paymentGrid');
+    const cancelBtn=document.getElementById('paymentCancelBtn');
+    const confirmBtn=document.getElementById('paymentConfirmBtn');
+    _paymentSelected=options[1];
+    grid.innerHTML=options.map((o,i)=>`<button type="button" class="payment-opt ${i===1?'active':''}" data-pay="${o.value}">${o.label}</button>`).join('');
+    grid.querySelectorAll('.payment-opt').forEach(btn=>{
+        btn.onclick=()=>{
+            const val=btn.getAttribute('data-pay');
+            _paymentSelected=options.find(o=>o.value===val)||null;
+            grid.querySelectorAll('.payment-opt').forEach(b=>b.classList.remove('active'));
+            btn.classList.add('active');
+        };
+    });
+    modal.classList.add('show');
+    modal.setAttribute('aria-hidden','false');
+    return new Promise((resolve)=>{
+        const close=(result)=>{
+            modal.classList.remove('show');
+            modal.setAttribute('aria-hidden','true');
+            cancelBtn.onclick=null;
+            confirmBtn.onclick=null;
+            resolve(result);
+        };
+        cancelBtn.onclick=()=>close(null);
+        confirmBtn.onclick=()=>close(_paymentSelected||null);
+    });
+}
 
 // ── Theme ──
 function getTheme(){return localStorage.getItem('pedrad-theme')||'dark'}
@@ -193,8 +398,13 @@ function listenProducts(){
 
 async function loadStore(){
     try{
-        const doc=await db.collection('stores').doc(storeId).get();
+        const[doc,mediaSnap]=await Promise.all([
+            db.collection('stores').doc(storeId).get(),
+            db.collection('stores').doc(storeId).collection('categoryMedia').get()
+        ]);
         storeData=doc.exists?doc.data():{};
+        storeData.categoryMedia=mediaSnap.docs.map(mediaDoc=>({id:mediaDoc.id,...mediaDoc.data()}));
+        if(!storeData.categoryMedia.length&&doc.exists&&Array.isArray(doc.data()?.categoryMedia))storeData.categoryMedia=doc.data().categoryMedia;
     }catch(e){}
 }
 
@@ -219,12 +429,14 @@ function renderProducts(){
 
     const isGrid=viewMode==='grid';
     container.innerHTML=`<div class="${isGrid?'pdv-grid':'pdv-list'}">${list.map(p=>{
-        const img=p.imageData&&p.imageData.startsWith('data:')?p.imageData:(p.imageUrl||'');
+        const img=productImage(p);
+        const groups=normalizeAddonGroups(p);
         return`<div class="p-card" onclick="addToCart('${p.id}')">
             <div class="p-img">${img?`<img src="${esc(img)}" alt="" onerror="this.parentElement.innerHTML='<div class=ph>—</div>'">`:'<div class="ph">—</div>'}</div>
             <div class="p-body">
                 <div><div class="p-name">${esc(p.name)}</div><div class="p-cat">${esc(p.category||'')}</div></div>
                 <div class="p-price">${money(p.price)}</div>
+                ${groups.length?`<div class="p-options">${groups.length} grupo(s) de opções</div>`:''}
             </div>
         </div>`;
     }).join('')}</div>`;
@@ -234,21 +446,44 @@ function renderProducts(){
 function addToCart(productId){
     const p=allProducts.find(x=>x.id===productId);
     if(!p)return;
-    const existing=cart.find(c=>c.id===p.id);
+    if(normalizeAddonGroups(p).length){openAddonModal(p);return}
+    addConfiguredProduct(p,[]);
+}
+
+function addConfiguredProduct(p,addons){
+    const key=cartKey(p.id,addons);
+    const existing=cart.find(c=>c.key===key);
     if(existing){existing.qty++;} 
-    else{cart.push({id:p.id,name:p.name,price:p.price,qty:1})}
+    else{cart.push({key,id:p.id,name:p.name,price:parseFloat(p.price)||0,qty:1,addons})}
     renderCart();
 }
 
-function setQty(productId,delta){
-    const item=cart.find(c=>c.id===productId);
+function setQty(index,delta){
+    const item=cart[index];
     if(!item)return;
     item.qty+=delta;
-    if(item.qty<=0)cart=cart.filter(c=>c.id!==productId);
+    if(item.qty<=0)cart.splice(index,1);
     renderCart();
 }
 
 function clearCart(){cart=[];renderCart()}
+
+function isPcApp(){
+    return !!window.PedraElectron?.sales?.add;
+}
+
+async function persistPdvRecord(order, kind){
+    if(isPcApp()){
+        return window.PedraElectron.sales.add({
+            ...order,
+            kind:kind||'sale',
+            persistedIn:'local-db',
+            createdAtLocal:new Date().toISOString(),
+            updatedAtLocal:new Date().toISOString()
+        });
+    }
+    return db.collection('orders').add(order);
+}
 
 function renderCart(){
     const el=document.getElementById('cartItems');
@@ -263,32 +498,37 @@ function renderCart(){
         return;
     }
 
-    el.innerHTML=cart.map(c=>{
-        const itemTotal=c.price*c.qty;
+    el.innerHTML=cart.map((c,index)=>{
+        const itemTotal=unitPrice(c)*c.qty;
+        const addons=Array.isArray(c.addons)?c.addons:[];
         return`<div class="cart-item">
-            <div class="ci-info"><div class="ci-name">${esc(c.name)}</div><div class="ci-price">${money(c.price)} un.</div></div>
+            <div class="ci-info">
+                <div class="ci-name">${esc(c.name)}</div>
+                ${addons.length?`<div class="ci-addons">${addons.map(a=>`${esc(a.name)}${a.price>0?` (+${money(a.price)})`:''}`).join(' · ')}</div>`:''}
+                <div class="ci-price">${money(unitPrice(c))} un.</div>
+            </div>
             <div class="ci-qty">
-                <button onclick="event.stopPropagation();setQty('${c.id}',-1)">−</button>
+                <button onclick="event.stopPropagation();setQty(${index},-1)">−</button>
                 <span>${c.qty}</span>
-                <button onclick="event.stopPropagation();setQty('${c.id}',1)">+</button>
+                <button onclick="event.stopPropagation();setQty(${index},1)">+</button>
             </div>
             <div class="ci-total">${money(itemTotal)}</div>
         </div>`;
     }).join('');
 
     // Totals
-    const subtotal=cart.reduce((s,c)=>s+c.price*c.qty,0);
+    const subtotal=cart.reduce((s,c)=>s+unitPrice(c)*c.qty,0);
     const taxType=storeData?.localTaxType||'fixed'; // 'fixed' ou 'percent'
     const taxValue=storeData?.localTax||0;
     const taxAmount=taxType==='percent'?(subtotal*taxValue/100):taxValue;
-    const total=subtotal+taxAmount;
+    const total=subtotal;
 
-    let html=`<div class="cart-row"><span>Subtotal</span><span>${money(subtotal)}</span></div>`;
+    let html=`<div class="cart-row"><span>Venda da loja</span><span>${money(subtotal)}</span></div>`;
     if(taxAmount>0){
-        const taxLabel=taxType==='percent'?`Taxa PDV (${taxValue}%)`:`Taxa PDV`;
+        const taxLabel=taxType==='percent'?`Taxa aplicativo PDV (${taxValue}%)`:`Taxa aplicativo PDV`;
         html+=`<div class="cart-row tax"><span>${taxLabel}</span><span>${money(taxAmount)}</span></div>`;
     }
-    html+=`<div class="cart-row final"><span>Total</span><span>${money(total)}</span></div>`;
+    html+=`<div class="cart-row final"><span>Total da venda</span><span>${money(total)}</span></div>`;
     totals.innerHTML=html;
 }
 
@@ -296,34 +536,39 @@ function renderCart(){
 async function finalizeSale(){
     if(!cart.length){toast('Carrinho vazio');return}
     if(!storeId){toast('StoreId não encontrado');return}
+    const payment=await askPaymentMethod();
+    if(payment===null){toast('Venda cancelada');return}
+    if(!payment){toast('Forma de pagamento inválida');return}
 
-    const subtotal=cart.reduce((s,c)=>s+c.price*c.qty,0);
+    const subtotal=cart.reduce((s,c)=>s+unitPrice(c)*c.qty,0);
     const taxType=storeData?.localTaxType||'fixed';
     const taxValue=storeData?.localTax||0;
     const taxAmount=taxType==='percent'?(subtotal*taxValue/100):taxValue;
-    const total=subtotal+taxAmount;
+    const total=subtotal;
 
+    const nowIso=new Date().toISOString();
     const order={
         storeId,
         source:'pdv',
         status:'delivered', // PDV local = entregue imediatamente
-        items:cart.map(c=>({productId:c.id,name:c.name,price:c.price,qty:c.qty,addons:[]})),
+        items:cart.map(c=>({productId:c.id,name:c.name,price:c.price,qty:c.qty,addons:c.addons||[]})),
         subtotal,
         localTax:taxAmount,
         localTaxType:taxType,
+        localTaxIncludedInTotal:false,
         total,
         deliveryFee:0,
-        orderType:'local',deliveryMode:'local',deliveryPool:'none',dispatchVersion:2,dispatchState:'not_applicable',noDelivery:true,
-        paymentMethod:'local',
+        deliveryMode:'local',noDelivery:true,
+        paymentMethod:payment.value,
         userName:'PDV Local',
-        createdAt:firebase.firestore.FieldValue.serverTimestamp(),
-        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+        createdAt:isPcApp()?nowIso:firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt:isPcApp()?nowIso:firebase.firestore.FieldValue.serverTimestamp()
     };
 
     try{
-        await db.collection('orders').add(order);
+        await persistPdvRecord(order,'sale');
         savePreset(cart);
-        toast(`Venda de ${money(total)} registrada!`);
+        toast(isPcApp()?`Venda de ${money(total)} salva no PC (${payment.label})!`:`Venda de ${money(total)} registrada (${payment.label})!`);
         if(window.opener)window.opener.postMessage({type:'pdvSale'},'*');
         cart=[];
         renderCart();
@@ -335,34 +580,36 @@ async function launchAsOrder(){
     if(!cart.length){toast('Carrinho vazio');return}
     if(!storeId){toast('StoreId não encontrado');return}
 
-    const subtotal=cart.reduce((s,c)=>s+c.price*c.qty,0);
+    const subtotal=cart.reduce((s,c)=>s+unitPrice(c)*c.qty,0);
     const taxType=storeData?.localTaxType||'fixed';
     const taxValue=storeData?.localTax||0;
     const taxAmount=taxType==='percent'?(subtotal*taxValue/100):taxValue;
-    const total=subtotal+taxAmount;
+    const total=subtotal;
 
+    const nowIso=new Date().toISOString();
     const order={
         storeId,
         source:'pdv',
         status:'confirmed', // entra direto como confirmado → fila de preparo
-        items:cart.map(c=>({productId:c.id,name:c.name,price:c.price,qty:c.qty,addons:[]})),
+        items:cart.map(c=>({productId:c.id,name:c.name,price:c.price,qty:c.qty,addons:c.addons||[]})),
         subtotal,
         localTax:taxAmount,
         localTaxType:taxType,
+        localTaxIncludedInTotal:false,
         total,
         deliveryFee:0,
-        orderType:'local',deliveryMode:'local',deliveryPool:'none',dispatchVersion:2,dispatchState:'not_applicable',noDelivery:true,
+        deliveryMode:'local',noDelivery:true,
         paymentMethod:'local',
         userName:'PDV Local',
-        createdAt:firebase.firestore.FieldValue.serverTimestamp(),
-        updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
+        createdAt:isPcApp()?nowIso:firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt:isPcApp()?nowIso:firebase.firestore.FieldValue.serverTimestamp(),
         timeline:[{status:'confirmed',timestamp:new Date().toISOString(),message:'Confirmado via PDV'}]
     };
 
     try{
-        await db.collection('orders').add(order);
+        await persistPdvRecord(order,'queue');
         savePreset(cart);
-        toast(`Pedido de ${money(total)} lançado na fila!`);
+        toast(isPcApp()?`Pedido de ${money(total)} salvo localmente!`:`Pedido de ${money(total)} lançado na fila!`);
         if(window.opener)window.opener.postMessage({type:'pdvSale'},'*');
         cart=[];
         renderCart();
@@ -376,7 +623,7 @@ function loadPresets(){
 
 function savePreset(cartItems){
     // Cria key do combo (ids+qtys ordenados)
-    const key=cartItems.map(c=>c.id+':'+c.qty).sort().join('|');
+    const key=cartItems.map(c=>cartKey(c.id,c.addons)+':'+c.qty).sort().join('|');
     const presets=loadPresets();
     const existing=presets.find(p=>p.key===key);
     if(existing){existing.count++;existing.lastUsed=Date.now()}
@@ -384,7 +631,7 @@ function savePreset(cartItems){
         presets.push({
             key,
             label:cartItems.map(c=>c.qty>1?c.qty+'x '+c.name:c.name).join(' + '),
-            items:cartItems.map(c=>({id:c.id,name:c.name,price:c.price,qty:c.qty})),
+            items:cartItems.map(c=>({id:c.id,name:c.name,price:c.price,qty:c.qty,addons:c.addons||[]})),
             count:1,
             lastUsed:Date.now()
         });
@@ -414,8 +661,10 @@ function applyPreset(idx){
     cart=[];
     p.items.forEach(it=>{
         const product=allProducts.find(x=>x.id===it.id);
-        if(product){cart.push({id:product.id,name:product.name,price:product.price,qty:it.qty})}
-        else{cart.push({id:it.id,name:it.name+'?',price:it.price,qty:it.qty})}
+        const addons=Array.isArray(it.addons)?it.addons:[];
+        const key=cartKey(it.id,addons);
+        if(product){cart.push({key,id:product.id,name:product.name,price:product.price,qty:it.qty,addons})}
+        else{cart.push({key,id:it.id,name:it.name+'?',price:it.price,qty:it.qty,addons})}
     });
     renderCart();
     toast('Combo aplicado');
@@ -423,9 +672,19 @@ function applyPreset(idx){
 
 // ── Init ──
 (async()=>{
-    if(!storeId){document.getElementById('productsContainer').innerHTML='<div class="pdv-empty">StoreId não encontrado</div>';return}
     const user=auth.currentUser||await new Promise(r=>{const u=auth.onAuthStateChanged(x=>{u();r(x)})});
     if(!user){document.getElementById('productsContainer').innerHTML='<div class="pdv-empty">Faça login primeiro</div>';return}
+    if(window.PedraPcTs?.resolveStoreForFirebaseUser){
+        const resolvedStore=await window.PedraPcTs.resolveStoreForFirebaseUser(db,{
+            uid:String(user.uid||'').trim(),
+            email:String(user.email||'').trim()
+        },{knownIds:storeId?[storeId]:[]});
+        if(resolvedStore?.id){
+            storeId=resolvedStore.id;
+            localStorage.setItem('currentStoreId',storeId);
+        }
+    }
+    if(!storeId){document.getElementById('productsContainer').innerHTML='<div class="pdv-empty">StoreId não encontrado</div>';return}
     await loadStore();
     listenProducts();
     renderPresets();
