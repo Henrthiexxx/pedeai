@@ -499,13 +499,13 @@ function showAuth() {
     }
 }
 
-window.showApp = function () {
-    const boot = document.getElementById('bootLoading');
-    if (boot) boot.style.display = 'none';
-    document.getElementById('mainApp').classList.remove('hidden');
-    updateStoreUI();
-    if (typeof window.__maybeShowWebNotice === 'function') window.__maybeShowWebNotice();
-};
+// window.showApp = function () {
+//    const boot = document.getElementById('bootLoading');
+//    if (boot) boot.style.display = 'none';
+//    document.getElementById('mainApp').classList.remove('hidden');
+//    updateStoreUI();
+//    if (typeof window.__maybeShowWebNotice === 'function') window.__maybeShowWebNotice();
+//};
 
 // ══════════════════════════════════════════════
 //  CLEANUP (unsub todos os listeners)
