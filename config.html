@@ -503,6 +503,10 @@
                     <label class="form-label">Tempo de entrega</label>
                     <input type="text" class="form-input" id="storeDeliveryTime" placeholder="30-45 min">
                 </div>
+                <div class="form-group">
+                    <label class="form-label">Chave PIX</label>
+                    <input type="text" class="form-input" id="storePixKey" placeholder="CPF, telefone, e-mail ou chave aleatória">
+                </div>
             </div>
 
             <div class="form-group">
@@ -803,6 +807,7 @@
             document.getElementById('storeCategory').value = currentStore.category || 'Hambúrgueres';
             document.getElementById('storeDescription').value = currentStore.description || '';
             document.getElementById('storeDeliveryTime').value = currentStore.deliveryTime || '';
+            document.getElementById('storePixKey').value = currentStore.pixKey || currentStore.pix || '';
             document.getElementById('storeAddress').value = currentStore.address || '';
 
             currentImageBase64 = currentStore.imageUrl || null;
@@ -1048,6 +1053,7 @@
                     category: document.getElementById('storeCategory').value,
                     description: (document.getElementById('storeDescription').value || '').trim(),
                     deliveryTime: (document.getElementById('storeDeliveryTime').value || '').trim(),
+                    pixKey: (document.getElementById('storePixKey').value || '').trim(),
                     address: (document.getElementById('storeAddress').value || '').trim(),
                     imageUrl: currentImageBase64 || '',
                     status: 'active',
